@@ -27,22 +27,14 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
-      - name: Deploy to Vercel (with retry)
+      - name: Deploy to Vercel (simplified CLI)
         working-directory: ./frontend
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         run: |
           echo "Starting Vercel deployment..."
-          npx vercel --prod --yes \
-            --token=$VERCEL_TOKEN \
-            --project-id=$VERCEL_PROJECT_ID \
-            --org-id=$VERCEL_ORG_ID || (
-              echo "First deploy failed — retrying in 10s..." &&
-              sleep 10 &&
-              npx vercel --prod --yes \
-                --token=$VERCEL_TOKEN \
-                --project-id=$VERCEL_PROJECT_ID \
-                --org-id=$VERCEL_ORG_ID
-            )
+          npx vercel --prod --yes --token=$VERCEL_TOKEN || (
+            echo "First deploy failed — retrying in 10s..." &&
+            sleep 10 &&
+            npx vercel --prod --yes --token=$VERCEL_TOKEN
+          )
