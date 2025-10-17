@@ -1,0 +1,15 @@
+# Node
+node_modules/
+dist/
+.yarn/
+pnpm-lock.yaml
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# OS/IDE
+.DS_Store
+.vscode/
