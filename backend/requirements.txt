@@ -1,6 +1,0 @@
-fastapi
-uvicorn
-ruff
-mypy
-requests
-python-dotenv
