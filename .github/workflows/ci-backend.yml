@@ -1,4 +1,4 @@
-name: CI - Backend
+name: CI/CD - Backend
 
 on:
   push:
@@ -56,3 +56,10 @@ jobs:
           assert data.get("status") == "ok"
           print("✅ Backend health check passed!")
           PY
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy Hook
+        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
