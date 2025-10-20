@@ -33,9 +33,7 @@ jobs:
           cd $GITHUB_WORKSPACE/frontend
           echo "Deploying from $(pwd)"
           vercel deploy --token ${{ secrets.VERCEL_TOKEN }} \
-            --org ${{ secrets.VERCEL_ORG_ID }} \
-            --project ${{ secrets.VERCEL_PROJECT_ID }} \
-            --cwd $GITHUB_WORKSPACE/frontend \
+            --scope ${{ secrets.VERCEL_ORG_ID }} \
             --prod --yes --confirm
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
