@@ -37,12 +37,11 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # ✅ Use official Vercel CLI for deployment
+      # ✅ Deploy via official Vercel CLI
       - name: Deploy via Vercel CLI
         run: |
           npm install -g vercel
-          vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes --confirm
-        working-directory: ./frontend
+          vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
