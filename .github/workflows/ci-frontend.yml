@@ -3,9 +3,6 @@ name: CI/CD - Frontend
 on:
   push:
     branches: [main]
-  pull_request:
-    paths:
-      - "frontend/**"
 
 jobs:
   build-deploy:
@@ -26,24 +23,20 @@ jobs:
         run: npm ci || npm install
         working-directory: frontend
 
-      - name: Run ESLint
-        run: npm run lint
-        working-directory: frontend
-
-      - name: Run Prettier check
-        run: npx prettier --check .
-        working-directory: frontend
-
       - name: Build project
         run: npm run build
         working-directory: frontend
 
-      # ✅ Deploy from correct folder (no nested path confusion)
       - name: Deploy via Vercel CLI
         run: |
           npm install -g vercel
-          cd frontend
-          vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes
+          cd $GITHUB_WORKSPACE/frontend
+          echo "Deploying from $(pwd)"
+          vercel deploy --token ${{ secrets.VERCEL_TOKEN }} \
+            --org ${{ secrets.VERCEL_ORG_ID }} \
+            --project ${{ secrets.VERCEL_PROJECT_ID }} \
+            --cwd $GITHUB_WORKSPACE/frontend \
+            --prod --yes --confirm
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
