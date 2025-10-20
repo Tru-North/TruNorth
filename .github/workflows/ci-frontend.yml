@@ -39,7 +39,7 @@ jobs:
 
       # ✅ Replaced deprecated amondnet action with official Vercel action
       - name: Deploy to Vercel
-        uses: vercel/actions@v1
+        uses: vercel/vercel-action@v1
         with:
           token: ${{ secrets.VERCEL_TOKEN }}
           org-id: ${{ secrets.VERCEL_ORG_ID }}
