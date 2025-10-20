@@ -37,12 +37,12 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # ✅ Replaced deprecated amondnet action with official Vercel action
-      - name: Deploy to Vercel
-        uses: vercel/vercel-action@v1
-        with:
-          token: ${{ secrets.VERCEL_TOKEN }}
-          org-id: ${{ secrets.VERCEL_ORG_ID }}
-          project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./frontend
-          production: true
+      # ✅ Use official Vercel CLI for deployment
+      - name: Deploy via Vercel CLI
+        run: |
+          npm install -g vercel
+          vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes --confirm
+        working-directory: ./frontend
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
