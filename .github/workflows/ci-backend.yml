@@ -1,4 +1,4 @@
-name: CI/CD - Backend
+name: CI - Backend
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
           source .venv/bin/activate
           mypy app
 
-      - name: Run Health Check Test
+      - name: Health Check Test
         run: |
           source .venv/bin/activate
           python - <<'PY'
@@ -56,10 +56,3 @@ jobs:
           assert data.get("status") == "ok"
           print("✅ Backend health check passed!")
           PY
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Render Deploy Hook
-        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
