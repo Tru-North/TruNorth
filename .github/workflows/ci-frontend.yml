@@ -1,12 +1,18 @@
-name: CI/CD - Frontend
+name: CI - Frontend
 
 on:
   push:
     branches: [main]
+  pull_request:
+    paths:
+      - "frontend/**"
 
 jobs:
-  build-deploy:
+  build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
 
     steps:
       - name: Checkout repository
@@ -16,25 +22,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
-          cache-dependency-path: "frontend/package-lock.json"
 
       - name: Install dependencies
         run: npm ci || npm install
-        working-directory: frontend
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Prettier check
+        run: npx prettier --check .
 
       - name: Build project
         run: npm run build
-        working-directory: frontend
-
-      - name: Deploy via Vercel CLI
-        run: |
-          npm install -g vercel
-          cd $GITHUB_WORKSPACE/frontend
-          echo "Deploying from $(pwd)"
-          vercel deploy --token ${{ secrets.VERCEL_TOKEN }} \
-            --scope ${{ secrets.VERCEL_ORG_ID }} \
-            --prod --yes
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
