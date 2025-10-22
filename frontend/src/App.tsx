@@ -1,8 +1,8 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Welcome from "./pages/Welcome";
-import Onboarding from "./pages/Onboarding";
-import Auth from "./pages/Auth";
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import Welcome from './pages/Welcome'
+import Onboarding from './pages/Onboarding'
+import Auth from './pages/Auth'
 
 const App: React.FC = () => {
   return (
@@ -13,7 +13,7 @@ const App: React.FC = () => {
         <Route path="/auth" element={<Auth />} />
       </Routes>
     </Router>
-  );
-};
+  )
+}
 
-export default App;
+export default App

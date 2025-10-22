@@ -4,7 +4,7 @@
   justify-content: center;
   align-items: center;
   background: linear-gradient(180deg, #fdfdff 0%, #ffffff 100%);
-  font-family: "Oxanium", sans-serif;
+  font-family: 'Oxanium', sans-serif;
   overflow: hidden;
   text-align: center;
 }
@@ -44,7 +44,7 @@
 
 /* Button */
 .welcome-btn {
-  background: #9D8BF9;
+  background: #9d8bf9;
   color: white;
   border: none;
   border-radius: 25px;
@@ -57,13 +57,14 @@
 }
 
 .welcome-btn:hover {
-  background-color: #9D8BF9;
+  background-color: #9d8bf9;
   transform: scale(1.05);
 }
 
 /* Subtle float + fade-in animations */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {

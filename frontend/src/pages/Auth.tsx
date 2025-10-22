@@ -1,74 +1,72 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "../styles/global.css";
-import "../styles/auth.css";
-import googleIcon from "../assets/google_logo.svg";
-import { registerUser, loginUser } from "../utils/api";
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import '../styles/global.css'
+import '../styles/auth.css'
+import googleIcon from '../assets/google_logo.svg'
+import { registerUser, loginUser } from '../utils/api'
 
 const Auth: React.FC = () => {
-  const [tab, setTab] = useState<"login" | "signup">("signup");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const [tab, setTab] = useState<'login' | 'signup'>('signup')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
     try {
-      if (tab === "signup") {
+      if (tab === 'signup') {
         const result = await registerUser({
           FirstName: firstName,
           LastName: lastName,
           Email: email,
           Password: password,
-        });
+        })
 
         if (result?.id) {
-          alert("🎉 Registration successful!");
-          navigate("/intro");
+          alert('🎉 Registration successful!')
+          navigate('/intro')
         } else {
-          setError(result?.error || "Signup failed");
+          setError(result?.error || 'Signup failed')
         }
       } else {
-        const result = await loginUser(email, password);
+        const result = await loginUser(email, password)
         if (result?.access_token) {
-          alert("✅ Login successful!");
-          navigate("/intro");
+          alert('✅ Login successful!')
+          navigate('/intro')
         } else {
-          setError(result?.detail || "Invalid credentials");
+          setError(result?.detail || 'Invalid credentials')
         }
       }
     } catch (err: any) {
-      setError(err.message || "Something went wrong");
+      setError(err.message || 'Something went wrong')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="auth-wrapper">
       <div className="mobile-frame">
         <div className="auth-header">
-          <h1 className="auth-heading">
-            {tab === "login" ? "Welcome Back!" : "Getting Started"}
-          </h1>
+          <h1 className="auth-heading">{tab === 'login' ? 'Welcome Back!' : 'Getting Started'}</h1>
           <div className="auth-tabs">
             <button
-              onClick={() => setTab("login")}
-              className={`tab ${tab === "login" ? "active" : ""}`}
+              onClick={() => setTab('login')}
+              className={`tab ${tab === 'login' ? 'active' : ''}`}
               disabled={loading}
             >
               Login
             </button>
             <button
-              onClick={() => setTab("signup")}
-              className={`tab ${tab === "signup" ? "active" : ""}`}
+              onClick={() => setTab('signup')}
+              className={`tab ${tab === 'signup' ? 'active' : ''}`}
               disabled={loading}
             >
               Signup
@@ -77,7 +75,7 @@ const Auth: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {tab === "signup" && (
+          {tab === 'signup' && (
             <>
               <div className="input-group">
                 <label htmlFor="firstName">First Name</label>
@@ -128,7 +126,7 @@ const Auth: React.FC = () => {
             />
           </div>
 
-          {tab === "login" && (
+          {tab === 'login' && (
             <div className="login-options">
               <label className="remember-me">
                 <input type="checkbox" /> Remember Me
@@ -139,19 +137,15 @@ const Auth: React.FC = () => {
 
           <button type="submit" className="primary-btn" disabled={loading}>
             {loading
-              ? tab === "login"
-                ? "Logging in..."
-                : "Signing up..."
-              : tab === "login"
-              ? "Login"
-              : "Sign Up"}
+              ? tab === 'login'
+                ? 'Logging in...'
+                : 'Signing up...'
+              : tab === 'login'
+                ? 'Login'
+                : 'Sign Up'}
           </button>
 
-          {error && (
-            <p style={{ color: "red", textAlign: "center", marginTop: "10px" }}>
-              {error}
-            </p>
-          )}
+          {error && <p style={{ color: 'red', textAlign: 'center', marginTop: '10px' }}>{error}</p>}
 
           <div className="divider">
             <span>Or</span>
@@ -163,22 +157,20 @@ const Auth: React.FC = () => {
           </button>
 
           <p className="auth-footer">
-            {tab === "login" ? (
+            {tab === 'login' ? (
               <>
-                Don’t have an account?{" "}
-                <span onClick={() => setTab("signup")}>Sign Up</span>
+                Don’t have an account? <span onClick={() => setTab('signup')}>Sign Up</span>
               </>
             ) : (
               <>
-                Already have an account?{" "}
-                <span onClick={() => setTab("login")}>Login</span>
+                Already have an account? <span onClick={() => setTab('login')}>Login</span>
               </>
             )}
           </p>
         </form>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Auth;
+export default Auth

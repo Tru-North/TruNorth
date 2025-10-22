@@ -1,21 +1,21 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { useScreenSize } from "../hooks/useScreenSize";
-import "../styles/global.css";
-import "../styles/welcome.css";
-import logo from "../assets/onboarding/logo.svg";
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useScreenSize } from '../hooks/useScreenSize'
+import '../styles/global.css'
+import '../styles/welcome.css'
+import logo from '../assets/onboarding/logo.svg'
 
 const Welcome: React.FC = () => {
-  const navigate = useNavigate();
-  const { width } = useScreenSize();
-  const isMobile = width <= 480;
+  const navigate = useNavigate()
+  const { width } = useScreenSize()
+  const isMobile = width <= 480
 
   return (
     <div
       className="mobile-frame"
       style={{
-        width: isMobile ? "100vw" : "390px",
-        height: isMobile ? "100vh" : "844px",
+        width: isMobile ? '100vw' : '390px',
+        height: isMobile ? '100vh' : '844px',
       }}
     >
       <div className="welcome-container">
@@ -24,20 +24,17 @@ const Welcome: React.FC = () => {
 
           <h1 className="welcome-title">Welcome to TruNorth</h1>
           <p className="welcome-text">
-            Find clarity, purpose, and direction in your next career move,
-            guided by your personal AI coach.
+            Find clarity, purpose, and direction in your next career move, guided by your personal
+            AI coach.
           </p>
 
-          <button
-            className="welcome-btn"
-            onClick={() => navigate("/onboarding")}
-          >
+          <button className="welcome-btn" onClick={() => navigate('/onboarding')}>
             Get Started
           </button>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Welcome;
+export default Welcome
