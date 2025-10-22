@@ -14,7 +14,21 @@ export default [
       parser: tsParser,
       ecmaVersion: 'latest',
       sourceType: 'module',
-      globals: { window: 'readonly', document: 'readonly' },
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        console: 'readonly',
+        fetch: 'readonly',
+        localStorage: 'readonly',
+        alert: 'readonly',
+        URLSearchParams: 'readonly',
+        HTMLFormElement: 'readonly',
+      },
+    },
+    settings: {
+      react: {
+        version: 'detect',
+      },
     },
     plugins: {
       '@typescript-eslint': tseslint,
