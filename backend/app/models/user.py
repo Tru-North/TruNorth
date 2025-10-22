@@ -1,7 +1,3 @@
-##########################################################
-###### Database connection logic and initialization ######
-##########################################################
-
 import psycopg2
 from app.core.config import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
 from psycopg2 import Error

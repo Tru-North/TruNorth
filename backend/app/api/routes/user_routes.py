@@ -1,7 +1,3 @@
-#########################################
-###### All FastAPI routes for User ######
-#########################################
-
 import firebase_admin
 from app.api.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.models.user import get_connection
@@ -14,7 +10,6 @@ router = APIRouter()
 
 # OAuth2 scheme for Swagger UI authentication flow
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-
 
 def firebase_token_dependency(token: str = Security(oauth2_scheme)):
     """

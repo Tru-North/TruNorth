@@ -1,7 +1,3 @@
-#############################################
-###### Firebase authentication helpers ######
-#############################################
-
 import firebase_admin
 import pyrebase
 from app.core.config import FIREBASE_ADMIN_CRED, firebase_config

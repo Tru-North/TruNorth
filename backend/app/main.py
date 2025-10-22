@@ -1,7 +1,3 @@
-#####################
-###### main.py ######
-#####################
-
 from app.api.routes.user_routes import router as user_router
 from app.models.user import setup_database
 from fastapi import FastAPI
@@ -13,12 +9,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# ✅ Enable CORS so frontend (Vite) can talk to backend
+# ✅ Enable CORS so frontend (Vercel + local dev) can talk to backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://127.0.0.1:5173",  # Vite dev server
-        "http://localhost:5173"   # alternate local dev URL
+        "https://tru-north-kappa.vercel.app",  # deployed frontend
+        "http://127.0.0.1:5173",               # local dev server
+        "http://localhost:5173"                # alternate local dev URL
     ],
     allow_credentials=True,
     allow_methods=["*"],

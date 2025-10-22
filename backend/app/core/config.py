@@ -1,7 +1,3 @@
-######################################################################
-###### Environment loading, database and Firebase configuration ######
-######################################################################
-
 import os
 from dotenv import load_dotenv
 
