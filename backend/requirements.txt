@@ -1,3 +1,7 @@
+# --- Build Tools (required for Pyrebase/gcloud dependencies) ---
+setuptools
+wheel
+
 # --- Core Backend Dependencies ---
 fastapi==0.111.0
 uvicorn[standard]==0.30.3
