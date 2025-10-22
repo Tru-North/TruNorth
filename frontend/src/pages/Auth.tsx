@@ -38,10 +38,11 @@ const Auth: React.FC = () => {
       } else {
         const result = await loginUser(email, password)
         if (result?.access_token) {
-          alert('✅ Login successful!')
-          navigate('/intro')
+          localStorage.setItem("token", result.access_token); // ✅ Save token
+          alert("✅ Login successful!");
+          navigate("/journey"); // Go directly to the logged-in app
         } else {
-          setError(result?.detail || 'Invalid credentials')
+          setError(result?.detail || "Invalid credentials");
         }
       }
     } catch (err: any) {
