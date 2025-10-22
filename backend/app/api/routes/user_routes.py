@@ -2,13 +2,12 @@
 ###### All FastAPI routes for User ######
 #########################################
 
-from fastapi import APIRouter, Depends, HTTPException, Security
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from app.api.schemas.user import UserCreate, UserUpdate, UserResponse
-from app.models.user import get_connection
-from app.utils.firebase_util import pyre_auth, verify_firebase_token, auth
 import firebase_admin
-
+from app.api.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.models.user import get_connection
+from app.utils.firebase_util import auth, pyre_auth, verify_firebase_token
+from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 # Create FastAPI router for user routes
 router = APIRouter()

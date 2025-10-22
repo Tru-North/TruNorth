@@ -2,10 +2,10 @@
 ###### Firebase authentication helpers ######
 #############################################
 
-import pyrebase
 import firebase_admin
-from firebase_admin import credentials, auth
-from app.core.config import firebase_config, FIREBASE_ADMIN_CRED
+import pyrebase
+from app.core.config import FIREBASE_ADMIN_CRED, firebase_config
+from firebase_admin import auth, credentials
 
 firebase = pyrebase.initialize_app(firebase_config)
 pyre_auth = firebase.auth()

@@ -3,8 +3,9 @@
 ##########################################################
 
 import psycopg2
+from app.core.config import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
 from psycopg2 import Error
-from app.core.config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+
 
 def get_connection():
     return psycopg2.connect(

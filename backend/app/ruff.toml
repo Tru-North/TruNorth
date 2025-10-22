@@ -1,0 +1,23 @@
+# ✅ Ruff configuration (compatible with latest version)
+
+# Tell Ruff what to ignore
+exclude = [
+    ".venv",
+    "venv",
+    "env",
+    "__pycache__",
+    "migrations",
+    "site-packages"
+]
+
+# Limit Ruff to your app folder
+src = ["app"]
+
+# Auto-fix simple issues (like import order)
+fix = true
+
+# Set the maximum allowed line length
+line-length = 140
+
+[lint]
+select = ["E", "F", "I"]

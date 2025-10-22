@@ -2,10 +2,10 @@
 ###### main.py ######
 #####################
 
+from app.api.routes.user_routes import router as user_router
+from app.models.user import setup_database
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.models.user import setup_database
-from app.api.routes.user_routes import router as user_router
 
 app = FastAPI(
     title="TruNorth",
