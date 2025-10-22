@@ -1,4 +1,13 @@
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
+psycopg2-binary==2.9.6
+python-dotenv==1.0.0
+firebase-admin==6.1.0
+pydantic[email]==2.2.1
+python-multipart==0.0.9
+# Maintained Pyrebase fork (fixes urllib3 import issue)
+git+https://github.com/nhorvath/Pyrebase4.git
+
+# Optional dev tools
 ruff==0.6.8
 mypy==1.13.0

@@ -1,0 +1,119 @@
+.welcome-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(180deg, #fdfdff 0%, #ffffff 100%);
+  font-family: "Oxanium", sans-serif;
+  overflow: hidden;
+  text-align: center;
+}
+
+/* Centered content box */
+.welcome-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 85%;
+  max-width: 400px;
+  animation: fadeIn 1.2s ease-in-out;
+}
+
+/* Logo */
+.welcome-logo {
+  width: 180px;
+  height: auto;
+  margin-bottom: 2rem;
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Text */
+.welcome-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #0f1416;
+  margin-bottom: 1rem;
+}
+
+.welcome-text {
+  font-size: 1rem;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 2.5rem;
+}
+
+/* Button */
+.welcome-btn {
+  background: #9D8BF9;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 0.9rem 2.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(76, 76, 255, 0.25);
+}
+
+.welcome-btn:hover {
+  background-color: #9D8BF9;
+  transform: scale(1.05);
+}
+
+/* Subtle float + fade-in animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .welcome-logo {
+    width: 150px;
+    margin-bottom: 1.5rem;
+  }
+
+  .welcome-title {
+    font-size: 1.5rem;
+  }
+
+  .welcome-text {
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+  }
+
+  .welcome-btn {
+    width: 100%;
+    padding: 0.85rem 0;
+  }
+}
+
+@media (max-width: 400px) {
+  .welcome-logo {
+    width: 130px;
+  }
+
+  .welcome-title {
+    font-size: 1.3rem;
+  }
+
+  .welcome-text {
+    font-size: 0.9rem;
+  }
+}

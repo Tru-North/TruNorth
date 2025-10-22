@@ -1,0 +1,10 @@
+README.md
+setup.py
+Pyrebase4.egg-info/PKG-INFO
+Pyrebase4.egg-info/SOURCES.txt
+Pyrebase4.egg-info/dependency_links.txt
+Pyrebase4.egg-info/requires.txt
+Pyrebase4.egg-info/top_level.txt
+pyrebase/__init__.py
+pyrebase/pyre_sseclient.py
+pyrebase/pyrebase.py

@@ -1,0 +1,55 @@
+
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <!-- 
+    TruNorth AI Coach Avatar
+    Design: A minimalist and modern compass/star symbol representing guidance, clarity, and calm.
+    Inspiration: North Star, glowing compass.
+    Palette: Navy, Teal, Gold.
+    Style: Trustworthy, slightly spiritual, not robotic.
+  -->
+
+  <defs>
+    <!-- Gradient for the main body, creating a deep, trustworthy feel -->
+    <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#192A51; stop-opacity:1" /> <!-- Deep Navy -->
+      <stop offset="100%" style="stop-color:#468189; stop-opacity:1" /> <!-- Muted Teal -->
+    </linearGradient>
+
+    <!-- Gradient for the central glow, representing the 'north star' -->
+    <radialGradient id="glowGradient">
+      <stop offset="10%" style="stop-color:#F4D35E; stop-opacity:1" /> <!-- Bright Gold -->
+      <stop offset="60%" style="stop-color:#FFEEB3; stop-opacity:0.7" /> <!-- Soft Yellow -->
+      <stop offset="100%" style="stop-color:#468189; stop-opacity:0" /> <!-- Fades to transparent Teal -->
+    </radialGradient>
+  </defs>
+
+  <!-- Group for the entire avatar -->
+  <g id="truNorthAvatar">
+    
+    <!-- Outer background shape, providing a container and a hint of color -->
+    <circle cx="50" cy="50" r="45" fill="url(#bodyGradient)" />
+
+    <!-- A subtle inner shadow/ring to add depth -->
+    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="1.5" />
+    
+    <!-- 
+      The North Star element. A four-pointed star with rounded corners for a softer, more spiritual feel.
+      The path is constructed from four symmetrical bezier curves.
+    -->
+    <path 
+      d="M50,15 
+         C52,35 65,48 85,50 
+         C65,52 52,65 50,85 
+         C48,65 35,52 15,50 
+         C35,48 48,35 50,15 Z"
+      fill="#FFFFFF" 
+      opacity="0.15" />
+
+    <!-- The central glowing core, the focal point of the AI coach -->
+    <circle cx="50" cy="50" r="30" fill="url(#glowGradient)" />
+
+    <!-- A smaller, brighter point of light to represent clarity and focus -->
+    <circle cx="50" cy="50" r="5" fill="#FFFFFF" opacity="0.8" />
+
+  </g>
+</svg>
