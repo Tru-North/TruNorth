@@ -1,61 +1,69 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import '../styles/global.css'
-import '../styles/auth.css'
-import googleIcon from '../assets/google_logo.svg'
-import { registerUser, loginUser } from '../utils/api'
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "../styles/global.css";
+import "../styles/auth.css";
+import googleIcon from "../assets/google_logo.svg";
+import { registerUser, loginUser } from "../utils/api";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../utils/firebaseClient";
 
 const Auth: React.FC = () => {
-  const [tab, setTab] = useState<'login' | 'signup'>('signup')
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const navigate = useNavigate()
+  const [tab, setTab] = useState<"login" | "signup">("signup");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
 
     try {
-      if (tab === 'signup') {
+      if (tab === "signup") {
         const result = await registerUser({
           FirstName: firstName,
           LastName: lastName,
           Email: email,
           Password: password,
-        })
+        });
 
         if (result?.id) {
-          alert('🎉 Registration successful!')
-          navigate('/intro')
+          setSuccess("Account created successfully! Redirecting...");
+          setTimeout(() => navigate("/intro"), 1200);
         } else {
-          setError(result?.error || 'Signup failed')
+          setError(result?.error || "Signup failed. Please try again.");
         }
       } else {
-        const result = await loginUser(email, password)
+        const result = await loginUser(email, password);
         if (result?.access_token) {
-          localStorage.setItem("token", result.access_token); // ✅ Save token
-          alert("✅ Login successful!");
-          navigate("/journey"); // Go directly to the logged-in app
+          localStorage.setItem("token", result.access_token);
+          setSuccess("Login successful! Redirecting...");
+          setTimeout(() => navigate("/journey"), 1200);
         } else {
-          setError(result?.detail || "Invalid credentials");
+          setError(result?.detail || "Invalid email or password.");
         }
       }
     } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+      const msg = err.message?.includes("EMAIL_EXISTS")
+        ? "This email is already registered."
+        : err.message?.includes("INVALID_LOGIN_CREDENTIALS")
+        ? "Incorrect email or password."
+        : "Something went wrong. Please try again.";
+      setError(msg);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignIn = async () => {
-    // ✅ Dynamically pick backend URL from environment
+    setError("");
+    setSuccess("");
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     try {
@@ -63,12 +71,11 @@ const Auth: React.FC = () => {
       const user = result.user;
       const idToken = await user.getIdToken();
 
-      // 👇 Send user info to backend
       const response = await fetch(`${API_BASE_URL}/register-google`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`, 
+          Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({
           FirstName: user.displayName?.split(" ")[0] || "",
@@ -81,14 +88,26 @@ const Auth: React.FC = () => {
       const data = await response.json();
       console.log("Backend response:", data);
 
-      // ✅ Save token locally
+      // ✅ Save token locally for both new & existing users
       localStorage.setItem("token", idToken);
 
-      alert(`Welcome ${user.displayName || user.email}!`);
-      navigate("/journey");
+      if (data.status === "existing_user") {
+        setSuccess("Welcome back! Redirecting...");
+        setTimeout(() => navigate("/journey"), 1200);
+        return;
+      }
+
+      if (data.status === "new_user" || data.id) {
+        setSuccess("Account created successfully! Redirecting...");
+        setTimeout(() => navigate("/journey"), 1200);
+        return;
+      }
+
+      // Fallback if neither case matches
+      setError("Something went wrong. Please try again.");
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
-      alert("Google Sign-In failed: " + error.message);
+      setError("Google Sign-In failed. Please try again.");
     }
   };
 
@@ -96,18 +115,20 @@ const Auth: React.FC = () => {
     <div className="auth-wrapper">
       <div className="mobile-frame">
         <div className="auth-header">
-          <h1 className="auth-heading">{tab === 'login' ? 'Welcome Back!' : 'Getting Started'}</h1>
+          <h1 className="auth-heading">
+            {tab === "login" ? "Welcome Back!" : "Getting Started"}
+          </h1>
           <div className="auth-tabs">
             <button
-              onClick={() => setTab('login')}
-              className={`tab ${tab === 'login' ? 'active' : ''}`}
+              onClick={() => setTab("login")}
+              className={`tab ${tab === "login" ? "active" : ""}`}
               disabled={loading}
             >
               Login
             </button>
             <button
-              onClick={() => setTab('signup')}
-              className={`tab ${tab === 'signup' ? 'active' : ''}`}
+              onClick={() => setTab("signup")}
+              className={`tab ${tab === "signup" ? "active" : ""}`}
               disabled={loading}
             >
               Signup
@@ -116,7 +137,7 @@ const Auth: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {tab === 'signup' && (
+          {tab === "signup" && (
             <>
               <div className="input-group">
                 <label htmlFor="firstName">First Name</label>
@@ -167,7 +188,7 @@ const Auth: React.FC = () => {
             />
           </div>
 
-          {tab === 'login' && (
+          {tab === "login" && (
             <div className="login-options">
               <label className="remember-me">
                 <input type="checkbox" /> Remember Me
@@ -178,40 +199,55 @@ const Auth: React.FC = () => {
 
           <button type="submit" className="primary-btn" disabled={loading}>
             {loading
-              ? tab === 'login'
-                ? 'Logging in...'
-                : 'Signing up...'
-              : tab === 'login'
-                ? 'Login'
-                : 'Sign Up'}
+              ? tab === "login"
+                ? "Logging in..."
+                : "Signing up..."
+              : tab === "login"
+              ? "Login"
+              : "Sign Up"}
           </button>
 
-          {error && <p style={{ color: 'red', textAlign: 'center', marginTop: '10px' }}>{error}</p>}
+          {/* Inline error/success message */}
+          {error && <p className="error-text">{error}</p>}
+          {success && <p className="success-text">{success}</p>}
 
           <div className="divider">
             <span>Or</span>
           </div>
 
-          <button type="button" className="google-btn" onClick={handleGoogleSignIn}>
+          <button
+            type="button"
+            className="google-btn"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+          >
             <img src={googleIcon} alt="Google" className="google-icon" />
             Continue with Google
           </button>
 
+          {tab === "signup" && error.includes("Account already exists") && (
+            <p className="error-text">
+              Account already exists. Please login instead.
+            </p>
+          )}
+
           <p className="auth-footer">
-            {tab === 'login' ? (
+            {tab === "login" ? (
               <>
-                Don’t have an account? <span onClick={() => setTab('signup')}>Sign Up</span>
+                Don’t have an account?{" "}
+                <span onClick={() => setTab("signup")}>Sign Up</span>
               </>
             ) : (
               <>
-                Already have an account? <span onClick={() => setTab('login')}>Login</span>
+                Already have an account?{" "}
+                <span onClick={() => setTab("login")}>Login</span>
               </>
             )}
           </p>
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Auth
+export default Auth;

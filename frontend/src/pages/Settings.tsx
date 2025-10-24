@@ -19,11 +19,8 @@ const Settings: React.FC = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    const confirmLogout = window.confirm("Are you sure you want to log out?");
-    if (confirmLogout) {
-      localStorage.removeItem("token");
-      navigate("/auth");
-    }
+    localStorage.removeItem("token");
+    navigate("/auth", { state: { logout: true } }); // 👈 silently redirect + trigger message
   };
 
   const settingsOptions = [

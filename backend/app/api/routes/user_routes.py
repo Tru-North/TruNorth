@@ -4,7 +4,7 @@ from app.models.user import get_connection
 from app.utils.firebase_util import auth, pyre_auth, verify_firebase_token
 from fastapi import APIRouter, Depends, HTTPException, Security
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi import Request
+from fastapi import Request, HTTPException
 
 # Create FastAPI router for user routes
 router = APIRouter()
@@ -52,13 +52,14 @@ def register(user: UserCreate):
         return {"error": f"Database error: {str(e)}"}
 
 @router.post("/register-google", tags=["Auth"])
-def register_google(request: Request, user: dict = None):
+def register_google(request: Request, user: dict):
     """
-    Registers Google OAuth user.
-    Verifies Firebase ID token and stores user in PostgreSQL if not exists.
+    Registers a Google OAuth user securely.
+    - Verifies Firebase ID token from headers.
+    - Inserts new user only if email doesn't already exist.
     """
     try:
-        # ✅ Extract and verify Firebase ID token
+        # ✅ Verify Firebase token
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="Missing or invalid token")
@@ -67,27 +68,45 @@ def register_google(request: Request, user: dict = None):
         if not decoded:
             raise HTTPException(status_code=401, detail="Invalid Firebase token")
 
-        # ✅ Proceed with DB insert if new
+        # ✅ Connect to DB
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT id FROM users WHERE Email = %s;", (user["Email"],))
+
+        # Check if user already exists
+        cursor.execute("SELECT id, firebase_uid FROM users WHERE Email = %s;", (user["Email"],))
         existing = cursor.fetchone()
 
         if existing:
             cursor.close()
             conn.close()
-            return {"message": "User already exists", "firebase_uid": user["firebase_uid"]}
+            return {
+                "message": "User already exists",
+                "firebase_uid": existing[1],
+                "status": "existing_user"
+            }
 
+        # Insert new Google user
         cursor.execute(
-            "INSERT INTO users (FirstName, LastName, Email, Password, firebase_uid) VALUES (%s, %s, %s, %s, %s) RETURNING id;",
-            (user.get("FirstName", ""), user.get("LastName", ""), user["Email"], "", user["firebase_uid"])
+            """
+            INSERT INTO users (FirstName, LastName, Email, Password, firebase_uid)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id;
+            """,
+            (
+                user.get("FirstName", ""),
+                user.get("LastName", ""),
+                user["Email"],
+                "",  # No password for Google users
+                user["firebase_uid"],
+            ),
         )
         user_id = cursor.fetchone()[0]
         conn.commit()
         cursor.close()
         conn.close()
 
-        return {"id": user_id, "message": "Google registration successful"}
+        return {"id": user_id, "message": "Google registration successful", "status": "new_user"}
+
     except HTTPException as e:
         raise e
     except Exception as e:

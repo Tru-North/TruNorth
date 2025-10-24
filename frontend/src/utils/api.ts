@@ -22,7 +22,10 @@ export async function registerUser(userData: {
     return data
   } catch (error: any) {
     console.error('❌ Register error:', error.message)
-    throw error
+    if (error.message.includes("EMAIL_EXISTS")) {
+      throw new Error("This email is already registered.");
+    }
+    throw new Error(error.message);
   }
 }
 
@@ -47,7 +50,10 @@ export async function loginUser(email: string, password: string) {
     return data
   } catch (error: any) {
     console.error('❌ Login error:', error.message)
-    throw error
+    if (error.message.includes("INVALID_LOGIN_CREDENTIALS")) {
+      throw new Error("Incorrect email or password.");
+    }
+    throw new Error(error.message);
   }
 }
 
