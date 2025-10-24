@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import '../styles/ForgotPassword.css'
+import '../styles/forgotpassword.css'
 import { forgotPassword } from '../utils/api' // ✅ import backend call
 
 const ForgotPassword: React.FC = () => {
