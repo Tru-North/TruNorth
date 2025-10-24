@@ -4,6 +4,7 @@ from app.models.user import get_connection
 from app.utils.firebase_util import auth, pyre_auth, verify_firebase_token
 from fastapi import APIRouter, Depends, HTTPException, Security
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import Request
 
 # Create FastAPI router for user routes
 router = APIRouter()
@@ -50,6 +51,47 @@ def register(user: UserCreate):
     except Exception as e:
         return {"error": f"Database error: {str(e)}"}
 
+@router.post("/register-google", tags=["Auth"])
+def register_google(request: Request, user: dict = None):
+    """
+    Registers Google OAuth user.
+    Verifies Firebase ID token and stores user in PostgreSQL if not exists.
+    """
+    try:
+        # ✅ Extract and verify Firebase ID token
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Missing or invalid token")
+        id_token = auth_header.split(" ")[1]
+        decoded = verify_firebase_token(id_token)
+        if not decoded:
+            raise HTTPException(status_code=401, detail="Invalid Firebase token")
+
+        # ✅ Proceed with DB insert if new
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM users WHERE Email = %s;", (user["Email"],))
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.close()
+            conn.close()
+            return {"message": "User already exists", "firebase_uid": user["firebase_uid"]}
+
+        cursor.execute(
+            "INSERT INTO users (FirstName, LastName, Email, Password, firebase_uid) VALUES (%s, %s, %s, %s, %s) RETURNING id;",
+            (user.get("FirstName", ""), user.get("LastName", ""), user["Email"], "", user["firebase_uid"])
+        )
+        user_id = cursor.fetchone()[0]
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return {"id": user_id, "message": "Google registration successful"}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error registering Google user: {str(e)}")
 
 @router.post("/login", tags=["Auth"])
 def login(form_data: OAuth2PasswordRequestForm = Depends()):

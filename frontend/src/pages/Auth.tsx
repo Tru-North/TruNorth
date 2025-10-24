@@ -4,6 +4,8 @@ import '../styles/global.css'
 import '../styles/auth.css'
 import googleIcon from '../assets/google_logo.svg'
 import { registerUser, loginUser } from '../utils/api'
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "../utils/firebaseClient";
 
 const Auth: React.FC = () => {
   const [tab, setTab] = useState<'login' | 'signup'>('signup')
@@ -51,6 +53,44 @@ const Auth: React.FC = () => {
       setLoading(false)
     }
   }
+
+  const handleGoogleSignIn = async () => {
+    // ✅ Dynamically pick backend URL from environment
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      const idToken = await user.getIdToken();
+
+      // 👇 Send user info to backend
+      const response = await fetch(`${API_BASE_URL}/register-google`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`, 
+        },
+        body: JSON.stringify({
+          FirstName: user.displayName?.split(" ")[0] || "",
+          LastName: user.displayName?.split(" ")[1] || "",
+          Email: user.email,
+          firebase_uid: user.uid,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("Backend response:", data);
+
+      // ✅ Save token locally
+      localStorage.setItem("token", idToken);
+
+      alert(`Welcome ${user.displayName || user.email}!`);
+      navigate("/journey");
+    } catch (error: any) {
+      console.error("Google Sign-In Error:", error);
+      alert("Google Sign-In failed: " + error.message);
+    }
+  };
 
   return (
     <div className="auth-wrapper">
@@ -152,7 +192,7 @@ const Auth: React.FC = () => {
             <span>Or</span>
           </div>
 
-          <button type="button" className="google-btn">
+          <button type="button" className="google-btn" onClick={handleGoogleSignIn}>
             <img src={googleIcon} alt="Google" className="google-icon" />
             Continue with Google
           </button>
