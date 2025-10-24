@@ -18,3 +18,15 @@ class UserResponse(BaseModel):
     FirstName: str
     LastName: str
     Email: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class VerifyCodeRequest(BaseModel):
+    email: EmailStr
+    code: str
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    code: str
+    new_password: str

@@ -193,7 +193,13 @@ const Auth: React.FC = () => {
               <label className="remember-me">
                 <input type="checkbox" /> Remember Me
               </label>
-              <span className="forgot-password">Forgot Password?</span>
+              <span
+                className="forgot-password"
+                onClick={() => navigate("/forgot-password")}
+                style={{ cursor: "pointer" }}
+              >
+                Forgot Password?
+              </span>
             </div>
           )}
 

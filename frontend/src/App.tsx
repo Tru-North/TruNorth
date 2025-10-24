@@ -7,6 +7,9 @@ import Journey from "./pages/Journey";
 import AICoach from "./pages/AICoach";
 import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ForgotPassword from "./pages/ForgotPassword";
+import VerifyCode from "./pages/VerifyCode";
+import SetNewPassword from "./pages/SetNewPassword";
 
 // ✅ Placeholder pages for Settings subroutes
 import Account from "./pages/Account";
@@ -24,6 +27,11 @@ const App: React.FC = () => {
         <Route path="/" element={<Welcome />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/auth" element={<Auth />} />
+
+        {/* 🔐 Password Reset Flow (Public) */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-code" element={<VerifyCode />} />
+        <Route path="/set-new-password" element={<SetNewPassword />} />
 
         {/* 🔒 Protected Routes */}
         <Route

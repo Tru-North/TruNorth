@@ -5,6 +5,8 @@ from app.utils.firebase_util import auth, pyre_auth, verify_firebase_token
 from fastapi import APIRouter, Depends, HTTPException, Security
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi import Request, HTTPException
+from app.api.schemas.user import ForgotPasswordRequest, VerifyCodeRequest, ResetPasswordRequest
+from app.services.password_reset_service import initiate_reset, check_code, reset_password
 
 # Create FastAPI router for user routes
 router = APIRouter()
@@ -285,6 +287,36 @@ def delete_user(user_id: int, user=Depends(firebase_token_dependency)):
         conn.close()
         raise HTTPException(status_code=500, detail=f"Error deleting user: {str(e)}")
 
+# PASSWORD RESET FLOW ENDPOINTS
+
+@router.post("/forgot-password", tags=["Auth"])
+async def forgot_password(request: ForgotPasswordRequest):
+    """
+    Step 1: Sends a 6-digit code to the user's email (if it exists).
+    """
+    return await initiate_reset(request.email)
+
+
+@router.post("/verify-code", tags=["Auth"])
+def verify_code(request: VerifyCodeRequest):
+    """
+    Step 2: Verifies the 6-digit code entered by the user.
+    """
+    result = check_code(request.email, request.code)
+    if not result["valid"]:
+        raise HTTPException(status_code=400, detail="Invalid or expired code")
+    return {"message": "Code verified"}
+
+
+@router.post("/reset-password", tags=["Auth"])
+def reset_password_endpoint(request: ResetPasswordRequest):
+    """
+    Step 3: Resets the user's password if the code is valid.
+    """
+    result = reset_password(request.email, request.code, request.new_password)
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["detail"])
+    return {"message": result["message"]}
 
 @router.get("/", tags=["Health"])
 def health_check():

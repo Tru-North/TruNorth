@@ -1,5 +1,6 @@
 // src/utils/api.ts
 // Centralized API helper for TruNorth frontend ↔ backend communication.
+import axios from "axios";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL
 
@@ -155,3 +156,26 @@ export async function deleteUser(userId: number) {
     throw error
   }
 }
+
+export const forgotPassword = async (email: string) => {
+  const res = await axios.post(`${API_BASE}/forgot-password`, { email });
+  return res.data;
+};
+
+export const verifyCode = async (email: string, code: string) => {
+  const res = await axios.post(`${API_BASE}/verify-code`, { email, code });
+  return res.data;
+};
+
+export const resetPassword = async (
+  email: string,
+  code: string,
+  newPassword: string
+) => {
+  const res = await axios.post(`${API_BASE}/reset-password`, {
+    email,
+    code,
+    new_password: newPassword,
+  });
+  return res.data;
+};
