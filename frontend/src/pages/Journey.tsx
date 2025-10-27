@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../components/BottomNav";
+import Sidebar from "../components/Sidebar";
+import { FiMenu } from "react-icons/fi";
 import "../styles/global.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -15,8 +17,21 @@ const Journey: React.FC = () => {
   const navigate = useNavigate();
   const [sections, setSections] = useState<Section[]>([]);
   const [completedSections, setCompletedSections] = useState<number[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [firstName, setFirstName] = useState<string>(
+    localStorage.getItem("first_name") || "User"
+  );
 
   const userId = localStorage.getItem("user_id");
+
+  // ✅ Helper function to safely extract name from any response structure
+  const pickFirstName = (p: any): string | undefined =>
+    p?.first_name ||
+    p?.firstname ||
+    p?.data?.first_name ||
+    p?.data?.firstname ||
+    p?.user?.first_name ||
+    p?.user?.firstname;
 
   // 🟣 Fetch questionnaire sections
   useEffect(() => {
@@ -24,7 +39,10 @@ const Journey: React.FC = () => {
       try {
         const res = await fetch(`${API_BASE_URL}/questionnaire/`);
         const data = await res.json();
-        if (data?.data?.sections) setSections(data.data.sections);
+        if (data?.data?.sections) {
+          console.log("✅ Sections loaded:", data.data.sections);
+          setSections(data.data.sections);
+        }
       } catch (err) {
         console.error("❌ Failed to load sections:", err);
       }
@@ -32,23 +50,23 @@ const Journey: React.FC = () => {
     fetchSections();
   }, []);
 
-  // 🟢 Fetch user progress summary (persisted unlocks)
-  // 🟢 Fetch unlocked sections from saved responses
+  // 🟢 Fetch unlocked sections from responses
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      console.warn("⚠️ No user_id found in localStorage.");
+      return;
+    }
+
     const fetchUnlockedSections = async () => {
       try {
-        // 1️⃣ Fetch questionnaire (for section list)
         const qRes = await fetch(`${API_BASE_URL}/questionnaire/`);
         const qData = await qRes.json();
         if (!qData?.data?.sections) return;
         setSections(qData.data.sections);
 
-        // 2️⃣ Fetch saved responses
         const rRes = await fetch(`${API_BASE_URL}/questionnaire/responses/${userId}`);
         const rData = await rRes.json();
 
-        // 3️⃣ Derive unlocked sections
         if (rData?.data && qData?.data?.sections) {
           const completedCategories = Array.from(
             new Set(rData.data.map((r: any) => r.category))
@@ -71,6 +89,69 @@ const Journey: React.FC = () => {
     fetchUnlockedSections();
   }, [userId]);
 
+  // 🧠 Fetch user's first name (with logging + fallback)
+  useEffect(() => {
+    const loadFirstName = async () => {
+      try {
+        const uid = localStorage.getItem("user_id");
+        const token = localStorage.getItem("token");
+
+        console.log("🔍 Fetching user name...");
+        console.log("🧾 user_id:", uid);
+        console.log("🔐 token present:", token ? "✅ Yes" : "❌ No");
+
+        if (!uid) {
+          console.warn("⚠️ No user_id found, skipping fetch.");
+          return;
+        }
+
+        // Show cached name immediately
+        const stored = localStorage.getItem("first_name");
+        if (stored) {
+          console.log("💾 Using cached first name:", stored);
+          setFirstName(stored);
+        }
+
+        const headers: Record<string, string> = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        // 🧭 Try primary endpoint
+        let res = await fetch(`${API_BASE_URL}/users/${uid}`, { headers });
+        console.log("📡 Response status from /users/:id:", res.status);
+
+        // 🧩 Try fallback if 404
+        if (res.status === 404) {
+          console.log("🔁 Trying fallback /user/:id endpoint...");
+          res = await fetch(`${API_BASE_URL}/user/${uid}`, { headers });
+          console.log("📡 Fallback response:", res.status);
+        }
+
+        // 🧱 If still unauthorized, log and skip
+        if (!res.ok) {
+          console.warn(`🚫 Failed to fetch name (status ${res.status})`);
+          return;
+        }
+
+        const data = await res.json();
+        console.log("🧾 Raw user data response:", data);
+
+        const name = pickFirstName(data);
+        console.log("✅ Extracted first name:", name);
+
+        if (name && typeof name === "string") {
+          setFirstName(name);
+          localStorage.setItem("first_name", name);
+        } else {
+          console.warn("⚠️ No valid name found in response; keeping default.");
+        }
+      } catch (e) {
+        console.error("❌ Error loading user name:", e);
+      }
+    };
+
+    loadFirstName();
+  }, []);
+
   const handleStartQuestionnaire = () => navigate("/questionnaire");
   const handleChatIntro = () => navigate("/chat-intro");
 
@@ -79,9 +160,65 @@ const Journey: React.FC = () => {
     if (!isLocked) navigate(`/questionnaire?section=${index}&category=${category}`);
   };
 
-
   return (
-    <div className="mobile-frame">
+    <div className="mobile-frame" 
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start",
+        alignItems: "stretch",
+        background: "#fff",
+      }}>
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          height: "70px",
+          background: "#fff",
+          padding: "0 16px",
+          flexShrink: 0,
+          borderBottom: "1px solid #eee",
+        }}
+      >
+        <div style={{ textAlign: "left" }}>
+          <h3
+            style={{
+              fontSize: "18px",
+              fontWeight: 700,
+              color: "#000",
+              margin: 0,
+              fontFamily: "Outfit, sans-serif",
+            }}
+          >
+            Welcome {firstName}
+          </h3>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#666",
+              margin: "2px 0 0",
+            }}
+          >
+            Your journey to a fulfilling career awaits.
+          </p>
+        </div>
+
+        <FiMenu
+          onClick={() => setIsSidebarOpen(true)}
+          style={{
+            fontSize: "22px",
+            cursor: "pointer",
+            color: "#000",
+          }}
+        />
+      </div>
+
+      {/* Sidebar */}
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+      {/* Body */}
       <div
         style={{
           flex: 1,
@@ -93,15 +230,7 @@ const Journey: React.FC = () => {
           overflowY: "auto",
         }}
       >
-        <h2 style={{ color: "#0f1416", fontSize: "1.4rem", fontWeight: 700 }}>
-          Your TruNorth Journey 🗺️
-        </h2>
-        <p style={{ color: "#6b6b6b", fontSize: "0.95rem", maxWidth: "300px" }}>
-          Begin your personalized AI career journey. Start with the questionnaire
-          or meet Ruby, your AI coach!
-        </p>
-
-        {/* Main actions */}
+        {/* Actions */}
         <div
           style={{
             marginTop: "1.2rem",

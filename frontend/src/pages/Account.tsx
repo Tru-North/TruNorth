@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../components/BottomNav";
-import { FiArrowLeft } from "react-icons/fi";
+import Sidebar from "../components/Sidebar";
+import { FiArrowLeft, FiMenu } from "react-icons/fi";
 import "../styles/global.css";
 
 const Account: React.FC = () => {
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div
@@ -24,7 +26,6 @@ const Account: React.FC = () => {
           alignItems: "center",
           justifyContent: "center",
           height: "56px",
-          borderBottom: "1px solid #eee",
           background: "#fff",
           position: "relative",
           flexShrink: 0,
@@ -37,6 +38,7 @@ const Account: React.FC = () => {
             left: "16px",
             fontSize: "22px",
             cursor: "pointer",
+            color: "#000",
           }}
         />
         <h3
@@ -49,7 +51,21 @@ const Account: React.FC = () => {
         >
           Account
         </h3>
+        <FiMenu
+          className="aboutyou-menu"
+          onClick={() => setIsSidebarOpen(true)}
+          style={{
+            position: "absolute",
+            right: "16px",
+            fontSize: "22px",
+            cursor: "pointer",
+            color: "#000",
+          }}
+        />
       </div>
+
+      {/* Sidebar */}
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {/* Content */}
       <div

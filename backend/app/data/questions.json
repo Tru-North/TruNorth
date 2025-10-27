@@ -54,23 +54,11 @@
         {
           "id": "about_4",
           "type": "text_short",
-          "question": "What do you want to move away from?",
-          "placeholder": "Write your answer here..."
-        },
-        {
-          "id": "about_5",
-          "type": "text_short",
-          "question": "What do you want to move toward?",
-          "placeholder": "Write your answer here..."
-        },
-        {
-          "id": "about_6",
-          "type": "text_short",
           "question": "Your experience and skills in one short paragraph",
           "placeholder": "Your experience and skills in one short paragraph..."
         },
         {
-          "id": "about_7",
+          "id": "about_5",
           "type": "multi_choice",
           "question": "What constraints do you have?",
           "options": [
@@ -87,7 +75,7 @@
     },
     {
       "category": "your_work_values",
-      "display_name": "Your Work Values",
+      "display_name": "Values",
       "order": 2,
       "required": true,
       "questions": [
@@ -124,7 +112,7 @@
     },
     {
       "category": "skills_and_interests",
-      "display_name": "Your Skills & Interests",
+      "display_name": "Skills & Interests",
       "order": 3,
       "required": true,
       "questions": [
@@ -342,7 +330,7 @@
     },
     {
       "category": "your_work_background",
-      "display_name": "Your Work Background",
+      "display_name": "Work Background",
       "order": 4,
       "required": true,
       "questions": [
@@ -379,7 +367,7 @@
     },
     {
       "category": "career_snapshot",
-      "display_name": "Your Career Snapshot",
+      "display_name": "Career Snapshot",
       "order": 5,
       "required": false,
       "questions": [

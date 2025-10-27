@@ -5,7 +5,7 @@ import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
 import Journey from "./pages/Journey";
 import AICoach from "./pages/AICoach";
-import Settings from "./pages/Settings";
+import AboutYou from "./pages/aboutYou"; // ✅ updated import
 import ProtectedRoute from "./components/ProtectedRoute";
 import ForgotPassword from "./pages/ForgotPassword";
 import VerifyCode from "./pages/VerifyCode";
@@ -13,7 +13,7 @@ import SetNewPassword from "./pages/SetNewPassword";
 import ChatIntro from "./pages/ChatIntro";
 import Questionnaire from "./pages/Questionnaire";
 
-// ✅ Placeholder pages for Settings subroutes
+// ✅ Placeholder pages for AboutYou subroutes
 import Account from "./pages/Account";
 import Notifications from "./pages/Notifications";
 import Privacy from "./pages/Privacy";
@@ -71,16 +71,18 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* 🧍 About You Page (formerly Settings) */}
         <Route
-          path="/settings"
+          path="/aboutyou"
           element={
             <ProtectedRoute>
-              <Settings />
+              <AboutYou />
             </ProtectedRoute>
           }
         />
 
-        {/* ⚙️ Settings sub-pages */}
+        {/* ⚙️ Sub-pages of About You */}
         <Route
           path="/account"
           element={

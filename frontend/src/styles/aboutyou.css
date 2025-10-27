@@ -1,0 +1,116 @@
+.aboutyou-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  background: #fff;
+  color: #000;
+  min-height: 100vh;
+  padding-bottom: 70px; /* for bottom nav */
+}
+
+/* ---------- HEADER ---------- */
+.aboutyou-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  /* 🚫 Removed the border line below */
+  border-bottom: none;
+  background: #fff;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.aboutyou-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #000;
+  margin: 0;
+}
+
+.aboutyou-back {
+  position: absolute;
+  left: 16px;
+  font-size: 22px;
+  cursor: pointer;
+  color: #000;
+}
+
+.aboutyou-menu {
+  position: absolute;
+  right: 16px;
+  font-size: 22px;
+  cursor: pointer;
+  color: #000;
+}
+
+/* ---------- SEARCH ---------- */
+.aboutyou-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  padding: 6px 12px;
+  width: 90%;
+  margin: 15px auto;
+}
+
+.search-icon {
+  color: #888;
+  font-size: 16px;
+  margin-right: 6px;
+}
+
+.aboutyou-search input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  outline: none;
+  color: #000;
+}
+
+/* ---------- LIST ---------- */
+.aboutyou-list {
+  flex: 1;
+  width: 90%;
+  margin: 0 auto;
+  background: #fff;
+}
+
+.aboutyou-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.aboutyou-item:hover {
+  background: #f9f9f9;
+}
+
+.aboutyou-item .left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+}
+
+.aboutyou-item .right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #999;
+}
+
+.value {
+  font-size: 14px;
+  color: #666;
+}
