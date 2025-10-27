@@ -54,3 +54,28 @@
     box-shadow: none;
   }
 }
+
+/* 🔒 Locked state styling */
+.nav-item.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.icon-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lock-icon {
+  position: absolute;
+  top: 2px;
+  right: -6px;
+  font-size: 0.65rem;
+  color: var(--accent);
+  background: white;
+  border-radius: 50%;
+  padding: 2px;
+}

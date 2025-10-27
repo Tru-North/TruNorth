@@ -1,0 +1,473 @@
+{
+  "version": "2025.10.25",
+  "checksum": "291ada1770aa66be5598281645fdaeea",
+  "sections": [
+    {
+      "category": "about_me",
+      "display_name": "About Me",
+      "order": 1,
+      "required": true,
+      "questions": [
+        {
+          "id": "about_1",
+          "type": "single_choice",
+          "question": "What interests you in a career change or direction at this time?",
+          "options": [
+            "Exploring new interests or passions",
+            "Seeking better work-life balance",
+            "Wanting more purpose or impact",
+            "Burnout or lack of growth in current role",
+            "Change in personal or life circumstances"
+          ]
+        },
+        {
+          "id": "about_2",
+          "type": "multi_choice",
+          "question": "What are your top three strengths?",
+          "options": [
+            "Problem-solving",
+            "Communication",
+            "Empathy and emotional intelligence",
+            "Creativity and innovation",
+            "Project management or execution",
+            "Strategic thinking",
+            "Teaching or mentoring",
+            "Adaptability or learning new things"
+          ],
+          "max_select": 3
+        },
+        {
+          "id": "about_3",
+          "type": "multi_choice",
+          "question": "What are two non-negotiables for your next role?",
+          "options": [
+            "Flexible schedule or remote work",
+            "Supportive and healthy team culture",
+            "Purpose-driven work",
+            "Competitive compensation",
+            "Clear growth or learning opportunities",
+            "Autonomy and trust",
+            "Stability and job security"
+          ],
+          "max_select": 2
+        },
+        {
+          "id": "about_4",
+          "type": "text_short",
+          "question": "What do you want to move away from?",
+          "placeholder": "Write your answer here..."
+        },
+        {
+          "id": "about_5",
+          "type": "text_short",
+          "question": "What do you want to move toward?",
+          "placeholder": "Write your answer here..."
+        },
+        {
+          "id": "about_6",
+          "type": "text_short",
+          "question": "Your experience and skills in one short paragraph",
+          "placeholder": "Your experience and skills in one short paragraph..."
+        },
+        {
+          "id": "about_7",
+          "type": "multi_choice",
+          "question": "What constraints do you have?",
+          "options": [
+            "I need to work remotely or hybrid only",
+            "I need a certain salary to meet financial needs",
+            "I can only work part-time or flexible hours",
+            "I need benefits like health insurance or paid leave",
+            "I have limited ability to relocate or travel",
+            "I don't have any"
+          ],
+          "max_select": 5
+        }
+      ]
+    },
+    {
+      "category": "your_work_values",
+      "display_name": "Your Work Values",
+      "order": 2,
+      "required": true,
+      "questions": [
+        {
+          "id": "values_1",
+          "type": "multi_choice",
+          "question": "Choose up to 5 values that best reflect what you seek at work.",
+          "options": [
+            "Autonomy",
+            "Stability",
+            "Purpose/Meaning",
+            "Growth & Learning",
+            "Recognition",
+            "Calm",
+            "Compensation",
+            "Teamwork",
+            "Respect",
+            "Creativity",
+            "Challenge",
+            "Helping Others",
+            "Structure",
+            "Influence",
+            "Variety",
+            "Trust",
+            "Status",
+            "Efficiency",
+            "Alignment",
+            "Connection",
+            "Something else"
+          ],
+          "max_select": 5
+        }
+      ]
+    },
+    {
+      "category": "skills_and_interests",
+      "display_name": "Your Skills & Interests",
+      "order": 3,
+      "required": true,
+      "questions": [
+        {
+          "id": "skills_1",
+          "type": "rating",
+          "question": "How much do you enjoy activities like these? Working with tools, machines, or building something physical (Hands-On Builder)",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_2",
+          "type": "rating",
+          "question": "How much do you enjoy activities like these? Analyzing data, solving puzzles, or researching ideas (Curious Thinker)",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_3",
+          "type": "rating",
+          "question": "How much do you enjoy activities like these? Designing, writing, or creating something new (Creative Maker)",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_4",
+          "type": "rating",
+          "question": "How much do you enjoy activities like these? Supporting, teaching, or mentoring others (People Helper)",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_5",
+          "type": "rating",
+          "question": "How much do you enjoy activities like these? Leading, persuading, or starting new ventures (Vision Driver)",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_6",
+          "type": "rating",
+          "question": "How much do you enjoy activities like these? Managing details, systems, or processes (Structured Organizer)",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_7",
+          "type": "rating",
+          "question": "How do you feel about these types of activities? Exploring new discoveries in science or technology (Science)",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_8",
+          "type": "rating",
+          "question": "How do you feel about these types of activities? Helping people improve their health and wellbeing (Healthcare Services)",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_9",
+          "type": "rating",
+          "question": "How do you feel about these types of activities? Creating visual designs, art, or digital media (Visual Arts & Design)",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_10",
+          "type": "rating",
+          "question": "How do you feel about these types of activities? Explaining ideas or coaching others (Teaching & Education)",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_11",
+          "type": "rating",
+          "question": "How do you feel about these types of activities? Debating issues or influencing public decisions (Law & Public Policy)",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_12",
+          "type": "rating",
+          "question": "How do you feel about these types of activities? Training, competing, or working in sports or fitness (Athletics)",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_13",
+          "type": "rating",
+          "question": "How do you feel about these types of activities? Coding, building apps, or working with data (Programming & Information Systems)",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_14",
+          "type": "rating",
+          "question": "How appealing does this career sound to you? Graphic Designer",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_15",
+          "type": "rating",
+          "question": "How appealing does this career sound to you? Civil Engineer",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_16",
+          "type": "rating",
+          "question": "How appealing does this career sound to you? Nurse Practitioner",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_17",
+          "type": "rating",
+          "question": "How appealing does this career sound to you? Data Scientist",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_18",
+          "type": "rating",
+          "question": "How appealing does this career sound to you? Teacher / Educator",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_19",
+          "type": "rating",
+          "question": "How appealing does this career sound to you? Social Worker",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_20",
+          "type": "rating",
+          "question": "How appealing does this career sound to you? Entrepreneur / Startup Founder",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        },
+        {
+          "id": "skills_21",
+          "type": "rating",
+          "question": "How appealing does this career sound to you? Environmental Sustainability Analyst",
+          "scale": {
+            "min": 1,
+            "max": 10,
+            "labels": ["Not at all", "Very much"]
+          }
+        }
+      ]
+    },
+    {
+      "category": "your_work_background",
+      "display_name": "Your Work Background",
+      "order": 4,
+      "required": true,
+      "questions": [
+        {
+          "id": "background_1",
+          "type": "text_long",
+          "question": "What type of work have you done thus far?",
+          "placeholder": "Write your answer here..."
+        },
+        {
+          "id": "background_2",
+          "type": "text_long",
+          "question": "What are some important skills you have on your resume?",
+          "placeholder": "Write your answer here..."
+        },
+        {
+          "id": "background_3",
+          "type": "text_long",
+          "question": "Are there any skills or experiences you'd like to build on in your next career chapter?",
+          "placeholder": "Write your answer here..."
+        },
+        {
+          "id": "background_4",
+          "type": "single_choice",
+          "question": "Which best describes your work level?",
+          "options": [
+            "Early Career",
+            "Mid Career",
+            "Senior Level",
+            "Executive Level"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "career_snapshot",
+      "display_name": "Your Career Snapshot",
+      "order": 5,
+      "required": false,
+      "questions": [
+        {
+          "id": "snapshot_1",
+          "type": "text_short",
+          "question": "What type of work have you been doing recently?",
+          "placeholder": "Add a short note (optional)"
+        },
+        {
+          "id": "snapshot_2",
+          "type": "text_short",
+          "question": "What type of work would you like to be doing?",
+          "placeholder": "Add a short note (optional)"
+        },
+        {
+          "id": "snapshot_3",
+          "type": "text_short",
+          "question": "What is a job in an entirely different field that you always thought would be interesting?",
+          "placeholder": "Add a short note (optional)"
+        },
+        {
+          "id": "snapshot_4",
+          "type": "text_short",
+          "question": "If your current industry just disappeared, what might you do instead?",
+          "placeholder": "Add a short note (optional)"
+        },
+        {
+          "id": "snapshot_5",
+          "type": "text_short",
+          "question": "What parts of your past work have felt most energizing or satisfying — even if only for a moment?",
+          "placeholder": "Add a short note (optional)"
+        },
+        {
+          "id": "snapshot_6",
+          "type": "text_short",
+          "question": "What kind of problems do you naturally enjoy solving — even outside of work?",
+          "placeholder": "Add a short note (optional)"
+        },
+        {
+          "id": "snapshot_7",
+          "type": "text_short",
+          "question": "If you could shadow anyone for a month (in any job, at any level), who would it be and why?",
+          "placeholder": "Add a short note (optional)"
+        },
+        {
+          "id": "snapshot_8",
+          "type": "text_short",
+          "question": "If money were not a concern for 2 years, how would you spend your time professionally?",
+          "placeholder": "Add a short note (optional)"
+        },
+        {
+          "id": "snapshot_9",
+          "type": "text_short",
+          "question": "What are 2–3 things you absolutely do not want in your next chapter?",
+          "placeholder": "Add a short note (optional)"
+        },
+        {
+          "id": "snapshot_10",
+          "type": "text_short",
+          "question": "What feels most non-negotiable to you right now — income, flexibility, location, meaning, stability, something else?",
+          "placeholder": "Add a short note (optional)"
+        },
+        {
+          "id": "snapshot_11",
+          "type": "text_short",
+          "question": "How would you describe the kind of person you're becoming — or want to become — through your next role?",
+          "placeholder": "Add a short note (optional)"
+        },
+        {
+          "id": "snapshot_12",
+          "type": "text_short",
+          "question": "When do you feel most confident in a work setting?",
+          "placeholder": "Add a short note (optional)"
+        },
+        {
+          "id": "snapshot_13",
+          "type": "text_short",
+          "question": "What impact would you be proud to say you contributed to over the next 5 years — even in a small way?",
+          "placeholder": "Add a short note (optional)"
+        },
+        {
+          "id": "snapshot_14",
+          "type": "text_short",
+          "question": "What do you want your work to make possible for your life — beyond the job itself?",
+          "placeholder": "Add a short note (optional)"
+        }
+      ]
+    }
+  ]
+}

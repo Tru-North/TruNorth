@@ -1,141 +1,206 @@
 import firebase_admin
-from app.api.schemas.user import UserCreate, UserResponse, UserUpdate
-from app.models.user import get_connection
-from app.utils.firebase_util import auth, pyre_auth, verify_firebase_token
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter, Depends, HTTPException, Request, Security
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi import Request, HTTPException
-from app.api.schemas.user import ForgotPasswordRequest, VerifyCodeRequest, ResetPasswordRequest
+from sqlalchemy.orm import Session
+
+from app.core.database import SessionLocal
+from app.models.user import User
+from app.api.schemas.user import (
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+    ForgotPasswordRequest,
+    VerifyCodeRequest,
+    ResetPasswordRequest,
+)
+from app.utils.firebase_util import auth, pyre_auth, verify_firebase_token
 from app.services.password_reset_service import initiate_reset, check_code, reset_password
 
-# Create FastAPI router for user routes
-router = APIRouter()
 
-# OAuth2 scheme for Swagger UI authentication flow
+# ---------------------- SETUP ----------------------
+router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
+
+def get_db():
+    """Dependency that provides a database session."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 def firebase_token_dependency(token: str = Security(oauth2_scheme)):
-    """
-    Dependency to verify Firebase ID token passed in Authorization header.
-    Raises 401 if token invalid or expired.
-    """
+    """Dependency to verify Firebase ID token."""
     decoded_token = verify_firebase_token(token)
     if not decoded_token:
         raise HTTPException(status_code=401, detail="Invalid or expired Firebase token")
     return decoded_token
 
 
+# ---------------------- AUTH ----------------------
+
 @router.post("/register", response_model=dict, tags=["Auth"])
-def register(user: UserCreate):
+def register(user: UserCreate, db: Session = Depends(get_db)):
     """
     Registers a new user:
     1. Creates user in Firebase Authentication.
-    2. Stores user's profile (except password) and firebase_uid in PostgreSQL.
+    2. Stores user's profile in PostgreSQL.
     """
     try:
-        user_fb = pyre_auth.create_user_with_email_and_password(user.Email, user.Password)
-        fb_user_token = pyre_auth.refresh(user_fb['refreshToken'])
-        fb_user_info = pyre_auth.get_account_info(fb_user_token['idToken'])
-        firebase_uid = fb_user_info['users'][0]['localId']
+        user_fb = pyre_auth.create_user_with_email_and_password(user.email, user.password)
+        fb_user_token = pyre_auth.refresh(user_fb["refreshToken"])
+        fb_user_info = pyre_auth.get_account_info(fb_user_token["idToken"])
+        firebase_uid = fb_user_info["users"][0]["localId"]
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Firebase registration failed: {str(e)}")
 
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        query = 'INSERT INTO users (FirstName, LastName, Email, Password, firebase_uid) VALUES (%s, %s, %s, %s, %s) RETURNING id;'
-        cursor.execute(query, (user.FirstName, user.LastName, user.Email, user.Password, firebase_uid))
-        user_id = cursor.fetchone()[0]
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return {"id": user_id, "firebase_uid": firebase_uid, "message": "Registration successful!"}
+        new_user = User(
+            firstname=user.firstname,
+            lastname=user.lastname,
+            email=user.email,
+            password=user.password,
+            firebase_uid=firebase_uid,
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return {"id": new_user.id, "firebase_uid": firebase_uid, "message": "Registration successful!"}
     except Exception as e:
-        return {"error": f"Database error: {str(e)}"}
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.post("/register-google", tags=["Auth"])
-def register_google(request: Request, user: dict):
+async def register_google(request: Request, db: Session = Depends(get_db)):
     """
-    Registers a Google OAuth user securely.
-    - Verifies Firebase ID token from headers.
-    - Inserts new user only if email doesn't already exist.
+    Handles both Google Sign-Up and Login:
+    1. Verifies Firebase ID token from Authorization header.
+    2. If user exists -> logs them in.
+    3. If user doesn’t exist -> registers new user.
+    Returns the same structure as /login for consistency.
     """
     try:
-        # ✅ Verify Firebase token
+        # 🔹 Step 1: Extract and verify Firebase ID token
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="Missing or invalid token")
+
         id_token = auth_header.split(" ")[1]
         decoded = verify_firebase_token(id_token)
         if not decoded:
             raise HTTPException(status_code=401, detail="Invalid Firebase token")
 
-        # ✅ Connect to DB
-        conn = get_connection()
-        cursor = conn.cursor()
+        firebase_uid = decoded.get("uid")
+        email = decoded.get("email", "")
+        name = decoded.get("name", "")
+        firstname, lastname = (name.split(" ", 1) + [""])[:2] if name else ("", "")
 
-        # Check if user already exists
-        cursor.execute("SELECT id, firebase_uid FROM users WHERE Email = %s;", (user["Email"],))
-        existing = cursor.fetchone()
+        # 🔹 Step 2: Parse body data for fallback fields
+        body = await request.json()
+        firstname = body.get("firstname") or firstname
+        lastname = body.get("lastname") or lastname
+        email = body.get("email") or email
+        firebase_uid = body.get("firebase_uid") or firebase_uid
 
-        if existing:
-            cursor.close()
-            conn.close()
-            return {
-                "message": "User already exists",
-                "firebase_uid": existing[1],
-                "status": "existing_user"
-            }
+        if not email:
+            raise HTTPException(status_code=400, detail="Missing email in request")
 
-        # Insert new Google user
-        cursor.execute(
-            """
-            INSERT INTO users (FirstName, LastName, Email, Password, firebase_uid)
-            VALUES (%s, %s, %s, %s, %s)
-            RETURNING id;
-            """,
-            (
-                user.get("FirstName", ""),
-                user.get("LastName", ""),
-                user["Email"],
-                "",  # No password for Google users
-                user["firebase_uid"],
-            ),
-        )
-        user_id = cursor.fetchone()[0]
-        conn.commit()
-        cursor.close()
-        conn.close()
+        # 🔹 Step 3: Find or create user
+        user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+        if not user:
+            user = db.query(User).filter(User.email == email).first()
 
-        return {"id": user_id, "message": "Google registration successful", "status": "new_user"}
+        if user:
+            # ✅ Existing user — ensure data is up-to-date
+            updated = False
+            if not user.firebase_uid:
+                user.firebase_uid = firebase_uid
+                updated = True
+            if firstname and user.firstname != firstname:
+                user.firstname = firstname
+                updated = True
+            if lastname and user.lastname != lastname:
+                user.lastname = lastname
+                updated = True
+            if updated:
+                db.commit()
+                db.refresh(user)
+            status = "existing_user"
+        else:
+            # 🆕 New user — create record
+            user = User(
+                firstname=firstname,
+                lastname=lastname,
+                email=email,
+                password="",  # no password for Google auth
+                firebase_uid=firebase_uid,
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            status = "new_user"
 
-    except HTTPException as e:
-        raise e
+        # 🔹 Step 4: Return same structure as /login
+        return {
+            "status": status,
+            "access_token": id_token,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,
+                "firstname": user.firstname,
+                "lastname": user.lastname,
+                "email": user.email,
+                "firebase_uid": user.firebase_uid,
+            },
+        }
+
+    except HTTPException:
+        raise
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"Error registering Google user: {str(e)}")
 
 @router.post("/login", tags=["Auth"])
-def login(form_data: OAuth2PasswordRequestForm = Depends()):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """
     Authenticates user via Firebase Auth using OAuth2PasswordRequestForm.
-    Returns Firebase ID token as OAuth2 access token for Swagger UI.
+    Returns Firebase ID token as OAuth2 access token.
     """
     email = form_data.username
     password = form_data.password
     try:
-        user = pyre_auth.sign_in_with_email_and_password(email, password)
-        id_token = user["idToken"]
-        return {"access_token": id_token, "token_type": "bearer"}
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid email or password: {str(e)}")
+        # 🔹 Step 1: Authenticate via Firebase
+        firebase_user = pyre_auth.sign_in_with_email_and_password(email, password)
+        id_token = firebase_user["idToken"]
+        firebase_uid = firebase_user["localId"]
 
+        # 🔹 Step 2: Lookup corresponding DB user using firebase_uid
+        user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found in database.")
+
+        # 🔹 Step 3: Return combined token + DB user info
+        return {
+            "access_token": id_token,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,  # from Postgres
+                "firstname": user.firstname,
+                "lastname": user.lastname,
+                "email": user.email,
+                "firebase_uid": user.firebase_uid,
+            },
+        }
+
+    except Exception as e:
+        print(f"❌ Login error: {str(e)}")
+        raise HTTPException(status_code=401, detail=f"Invalid email or password: {str(e)}")
 
 @router.post("/logout", tags=["Auth"])
 def logout(user=Depends(firebase_token_dependency)):
-    """
-    Logs out a user by revoking Firebase refresh tokens,
-    effectively invalidating existing tokens client-side.
-    """
+    """Logs out a user by revoking Firebase refresh tokens."""
     try:
         uid = user["uid"]
         auth.revoke_refresh_tokens(uid)
@@ -144,164 +209,107 @@ def logout(user=Depends(firebase_token_dependency)):
         raise HTTPException(status_code=400, detail=f"Logout failed: {str(e)}")
 
 
+# ---------------------- USERS ----------------------
+
 @router.get("/users/{user_id}", response_model=UserResponse, tags=["Users"])
-def get_user(user_id: int, user=Depends(firebase_token_dependency)):
-    """
-    Retrieves a single user from PostgreSQL by user_id.
-    The user should be logged in to use this.
-    """
-    conn = get_connection()
-    try:
-        cursor = conn.cursor()
-        query = 'SELECT id, firebase_uid, FirstName, LastName, Email, Password FROM users WHERE id = %s;'
-        cursor.execute(query, (user_id,))
-        user_row = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        if not user_row:
-            raise HTTPException(status_code=404, detail="User not found")
-        return {
-            "id": user_row[0],
-            "firebase_uid": user_row[1],
-            "FirstName": user_row[2],
-            "LastName": user_row[3],
-            "Email": user_row[4],
-            "Password": user_row[5]
-        }
-    except Exception as e:
-        conn.close()
-        raise HTTPException(status_code=500, detail=f"Error retrieving user: {str(e)}")
+def get_user(user_id: int, user=Depends(firebase_token_dependency), db: Session = Depends(get_db)):
+    """Retrieve a single user by ID."""
+    db_user = db.query(User).filter(User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "id": db_user.id,
+        "firebase_uid": db_user.firebase_uid,
+        "firstname": db_user.firstname,
+        "lastname": db_user.lastname,
+        "email": db_user.email,
+    }
 
 
 @router.get("/users", response_model=list[UserResponse], tags=["Users"])
-def get_all_users(user=Depends(firebase_token_dependency)):
-    """
-    Retrieves all users from PostgreSQL.
-    The user should be logged in to use this.
-    """
-    conn = get_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute('SELECT id, firebase_uid, FirstName, LastName, Email FROM users;')
-        users = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return [
-            {
-                "id": row[0],
-                "firebase_uid": row[1],
-                "FirstName": row[2],
-                "LastName": row[3],
-                "Email": row[4]
-            } for row in users
-        ]
-    except Exception as e:
-        conn.close()
-        raise HTTPException(status_code=500, detail=f"Error retrieving users: {str(e)}")
+def get_all_users(user=Depends(firebase_token_dependency), db: Session = Depends(get_db)):
+    """Retrieve all users."""
+    users = db.query(User).all()
+    return [
+        {
+            "id": u.id,
+            "firebase_uid": u.firebase_uid,
+            "firstname": u.firstname,
+            "lastname": u.lastname,
+            "email": u.email,
+        }
+        for u in users
+    ]
 
 
 @router.put("/users/{user_id}", response_model=dict, tags=["Users"])
-def update_user(user_id: int, update: UserUpdate, user=Depends(firebase_token_dependency)):
+def update_user(user_id: int, update: UserUpdate, user=Depends(firebase_token_dependency), db: Session = Depends(get_db)):
     """
     Updates user profile:
     - Only the authenticated user can update their own data.
-    - Partial fields allowed, missing fields keep existing values.
-    - Supports updating Firebase password and user profile in PostgreSQL.
+    - Partial updates allowed.
     """
     firebase_uid = user["uid"]
-    conn = get_connection()
+    db_user = db.query(User).filter(User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if db_user.firebase_uid != firebase_uid:
+        raise HTTPException(status_code=403, detail="Not authorized to update this user")
+
+    # Update fields
+    db_user.firstname = update.firstname or db_user.firstname
+    db_user.lastname = update.lastname or db_user.lastname
+    if update.password:
+        db_user.password = update.password
+
+    # Update Firebase user
     try:
-        cursor = conn.cursor()
-        cursor.execute('SELECT firebase_uid, FirstName, LastName FROM users WHERE id = %s;', (user_id,))
-        existing = cursor.fetchone()
-        if not existing:
-            cursor.close()
-            conn.close()
-            raise HTTPException(status_code=404, detail="User not found")
-        if existing[0] != firebase_uid:
-            cursor.close()
-            conn.close()
-            raise HTTPException(status_code=403, detail="Not authorized to update this user")
-
-        # Use existing values if update values not provided
-        new_firstname = update.FirstName if update.FirstName is not None else existing[1]
-        new_lastname = update.LastName if update.LastName is not None else existing[2]
-        new_password = update.Password
-
-        # Prepare Firebase update arguments (excluding email - cannot be changed)
-        update_args = {"display_name": f"{new_firstname} {new_lastname}"}
-        if new_password:
-            update_args["password"] = new_password
-
-        # Update user in Firebase Authentication
+        update_args = {"display_name": f"{db_user.firstname} {db_user.lastname}"}
+        if update.password:
+            update_args["password"] = update.password
         auth.update_user(firebase_uid, **update_args)
-
-        # Update PostgreSQL user record (without password)
-        query = 'UPDATE users SET FirstName=%s, LastName=%s, Password=%s WHERE id=%s;'
-        cursor.execute(query, (new_firstname, new_lastname, new_password, user_id))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return {"message": "User updated successfully"}
     except firebase_admin._auth_utils.UserNotFoundError:
         raise HTTPException(status_code=404, detail="Firebase user not found")
-    except Exception as e:
-        conn.rollback()
-        conn.close()
-        raise HTTPException(status_code=500, detail=f"Error updating user: {str(e)}")
+
+    db.commit()
+    db.refresh(db_user)
+    return {"message": "User updated successfully"}
 
 
 @router.delete("/users/{user_id}", response_model=dict, tags=["Users"])
-def delete_user(user_id: int, user=Depends(firebase_token_dependency)):
-    """
-    Deletes a user from Firebase Authentication and PostgreSQL.
-    Only allowed for the authenticated user on their own record.
-    """
-    conn = get_connection()
+def delete_user(user_id: int, user=Depends(firebase_token_dependency), db: Session = Depends(get_db)):
+    """Deletes a user from Firebase and PostgreSQL."""
+    db_user = db.query(User).filter(User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if db_user.firebase_uid != user["uid"]:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this user")
+
     try:
-        cursor = conn.cursor()
-        cursor.execute('SELECT firebase_uid FROM users WHERE id = %s;', (user_id,))
-        result = cursor.fetchone()
-        if not result:
-            cursor.close()
-            conn.close()
-            raise HTTPException(status_code=404, detail="User not found")
-        firebase_uid = result[0]
-
-        # Delete from Firebase Authentication
-        auth.delete_user(firebase_uid)
-
-        # Delete from PostgreSQL
-        cursor.execute('DELETE FROM users WHERE id = %s RETURNING id;', (user_id,))
-        deleted = cursor.fetchone()
-        conn.commit()
-        cursor.close()
-        conn.close()
-        if not deleted:
-            raise HTTPException(status_code=404, detail="User not found in DB")
+        auth.delete_user(db_user.firebase_uid)
+        db.delete(db_user)
+        db.commit()
         return {"message": "User deleted successfully"}
     except firebase_admin._auth_utils.UserNotFoundError:
         raise HTTPException(status_code=404, detail="Firebase user not found")
     except Exception as e:
-        conn.rollback()
-        conn.close()
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"Error deleting user: {str(e)}")
 
-# PASSWORD RESET FLOW ENDPOINTS
+
+# ---------------------- PASSWORD RESET ----------------------
 
 @router.post("/forgot-password", tags=["Auth"])
 async def forgot_password(request: ForgotPasswordRequest):
-    """
-    Step 1: Sends a 6-digit code to the user's email (if it exists).
-    """
+    """Step 1: Sends a 6-digit code to the user's email (if it exists)."""
     return await initiate_reset(request.email)
 
 
 @router.post("/verify-code", tags=["Auth"])
 def verify_code(request: VerifyCodeRequest):
-    """
-    Step 2: Verifies the 6-digit code entered by the user.
-    """
+    """Step 2: Verifies the 6-digit code entered by the user."""
     result = check_code(request.email, request.code)
     if not result["valid"]:
         raise HTTPException(status_code=400, detail="Invalid or expired code")
@@ -310,17 +318,16 @@ def verify_code(request: VerifyCodeRequest):
 
 @router.post("/reset-password", tags=["Auth"])
 def reset_password_endpoint(request: ResetPasswordRequest):
-    """
-    Step 3: Resets the user's password if the code is valid.
-    """
+    """Step 3: Resets the user's password if the code is valid."""
     result = reset_password(request.email, request.code, request.new_password)
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["detail"])
     return {"message": result["message"]}
 
+
+# ---------------------- HEALTH ----------------------
+
 @router.get("/", tags=["Health"])
 def health_check():
-    """
-    Simple health check endpoint to indicate API is running.
-    """
+    """Simple health check endpoint."""
     return {"status": "API is running", "message": "User Management API"}

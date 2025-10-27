@@ -10,6 +10,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ForgotPassword from "./pages/ForgotPassword";
 import VerifyCode from "./pages/VerifyCode";
 import SetNewPassword from "./pages/SetNewPassword";
+import ChatIntro from "./pages/ChatIntro";
+import Questionnaire from "./pages/Questionnaire";
 
 // ✅ Placeholder pages for Settings subroutes
 import Account from "./pages/Account";
@@ -42,6 +44,25 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/chat-intro"
+          element={
+            <ProtectedRoute>
+              <ChatIntro />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/questionnaire"
+          element={
+            <ProtectedRoute>
+              <Questionnaire />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/coach"
           element={

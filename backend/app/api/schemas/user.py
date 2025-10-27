@@ -1,30 +1,44 @@
 from typing import Optional
 from pydantic import BaseModel, EmailStr
 
+# ---------------------- CREATE & UPDATE ----------------------
+
 class UserCreate(BaseModel):
-    FirstName: str
-    LastName: str
-    Email: EmailStr
-    Password: str
+    firstname: str
+    lastname: str
+    email: EmailStr
+    password: str
+
 
 class UserUpdate(BaseModel):
-    FirstName: Optional[str] = None
-    LastName: Optional[str] = None
-    Password: Optional[str] = None  
+    firstname: Optional[str] = None
+    lastname: Optional[str] = None
+    password: Optional[str] = None
+
+
+# ---------------------- RESPONSE MODEL ----------------------
 
 class UserResponse(BaseModel):
     id: int
     firebase_uid: str
-    FirstName: str
-    LastName: str
-    Email: str
+    firstname: str
+    lastname: str
+    email: str
+
+    class Config:
+        from_attributes = True  # ✅ replaces orm_mode in Pydantic v2
+
+
+# ---------------------- PASSWORD RESET ----------------------
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
+
 class VerifyCodeRequest(BaseModel):
     email: EmailStr
     code: str
+
 
 class ResetPasswordRequest(BaseModel):
     email: EmailStr

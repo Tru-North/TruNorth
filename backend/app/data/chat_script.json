@@ -1,0 +1,47 @@
+{
+  "version": "2025.10.25",
+  "checksum": "9577361f37ed069d5205be34409d5502",
+  "intro_chat": [
+    {
+      "id": "chat_1",
+      "sender": "bot",
+      "text": "👋 Hi there, and welcome to TruNorth. Thinking about a career change—or even just exploring possibilities—can feel exciting, overwhelming, or somewhere in between. What brings you here today?",
+      "response_type": "text_input"
+    },
+    {
+      "id": "chat_2",
+      "sender": "bot",
+      "text": "Thanks for sharing that. What’s making you think about a career change right now? (It could be anything—from burnout to curiosity to wanting something more aligned with your values.)",
+      "response_type": "text_input"
+    },
+    {
+      "id": "chat_3",
+      "sender": "bot",
+      "text": "Got it. That’s really helpful. Where are you in the process so far? Have you started exploring paths? Are you in school? Or are you just beginning to think about making a change?",
+      "response_type": "text_input"
+    },
+    {
+      "id": "chat_4",
+      "sender": "bot",
+      "text": "Let’s get a sense of where you’re at in the journey. Which of these feels most like you right now?",
+      "response_type": "single_choice",
+      "options": [
+        "I’m just curious",
+        "I’m starting to explore ideas",
+        "I’ve been working on this for a while",
+        "I know what I want",
+        "I feel stuck and need some direction"
+      ]
+    },
+    {
+      "id": "chat_5",
+      "sender": "bot",
+      "text": "Thanks for that—you’re off to a great start. To help you get clearer on what matters most in your work life, let’s start with a short questionnaire about your work values. It only takes a few minutes and will guide everything we do next. Ready to dive in?",
+      "response_type": "single_choice",
+      "options": [
+        "Yes, ready!",
+        "Maybe later"
+      ]
+    }
+  ]
+}

@@ -1,7 +1,11 @@
-from app.api.routes.user_routes import router as user_router
-from app.models.user import setup_database
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+# ✅ Import your routers
+from app.api.routes.user_routes import router as user_router
+from app.api.routes.questionnaire_routes import router as questionnaire_router  # ← add this line
+
+from app.core.database import setup_database
 
 app = FastAPI(
     title="TruNorth",
@@ -22,8 +26,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routes
+# ✅ Include all routes
 app.include_router(user_router)
+app.include_router(questionnaire_router)  # ← add this line
 
 @app.on_event("startup")
 def startup_event():

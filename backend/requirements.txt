@@ -5,7 +5,6 @@ wheel
 # --- Core Backend Dependencies ---
 fastapi==0.111.0
 uvicorn[standard]==0.30.3
-psycopg2-binary==2.9.9
 python-dotenv==1.0.1
 firebase-admin==6.3.0
 pydantic[email]==2.8.2
@@ -15,6 +14,11 @@ bcrypt==4.0.1        # 👈 added for passlib compatibility
 passlib[bcrypt]==1.7.4
 fastapi-mail==1.4.1
 sendgrid==6.11.0
+
+# --- Database & ORM Dependencies ---
+psycopg2-binary==2.9.9      # PostgreSQL driver
+sqlalchemy==2.0.25          # ORM layer for models
+alembic==1.12.1             # DB migrations for SQLAlchemy
 
 # --- Developer Tools (optional but safe) ---
 ruff==0.6.8
