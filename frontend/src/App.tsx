@@ -5,7 +5,7 @@ import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
 import Journey from "./pages/Journey";
 import AICoach from "./pages/AICoach";
-import AboutYou from "./pages/aboutYou"; // ✅ updated import
+import AboutYou from "./pages/AboutYou"; // ✅ updated import
 import ProtectedRoute from "./components/ProtectedRoute";
 import ForgotPassword from "./pages/ForgotPassword";
 import VerifyCode from "./pages/VerifyCode";
