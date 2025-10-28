@@ -179,15 +179,19 @@
   top: 485px;
 }
 
-/* === PROGRESS BAR stays unchanged === */
+/* === PROGRESS BAR (centered alignment) === */
 .jm-progress {
-  width: 350px;
-  margin: 8px auto 14px auto;
+  width: 100%;                 /* scales neatly under 390px frame */
+  max-width: 340px;           /* consistent across devices */
+  margin: 0 auto 14px auto;   /* centers horizontally */
   display: flex;
   flex-direction: column;
   gap: 8px;
+  align-items: center;        /* centers content like label + % */
 }
+
 .jm-progress .row {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -196,13 +200,15 @@
   color: #1e1e1e;
   font-weight: 500;
 }
+
 .jm-progress .bar {
-  height: 8px;
   width: 100%;
+  height: 8px;
   background: var(--gray-light);
   border-radius: 100px;
   overflow: hidden;
 }
+
 .jm-progress .fill {
   height: 8px;
   background: var(--accent);
