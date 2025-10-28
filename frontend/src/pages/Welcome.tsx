@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useScreenSize } from '../hooks/useScreenSize'
 import '../styles/global.css'
 import '../styles/welcome.css'
-import logo from '../assets/onboarding/logo.svg'
+import logo from '../assets/trunorth/trunorth_icon.svg'
 
 const Welcome: React.FC = () => {
   const navigate = useNavigate()

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/global.css";
 import "../styles/auth.css";
-import googleIcon from "../assets/google_logo.svg";
+import googleIcon from "../assets/login_and_registration/google_logo.svg";
 import { registerUser, loginUser } from "../utils/api";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../utils/firebaseClient";

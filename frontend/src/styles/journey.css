@@ -1,0 +1,173 @@
+/* === Header stays same === */
+.jm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+  padding: 0 16px;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+  position: relative;
+  z-index: 10;
+}
+
+/* === FIXED HEIGHT JOURNEY CONTAINER === */
+.jm-canvas {
+  position: relative;
+  width: 100%;
+  max-width: 390px;
+  height: 580px;              /* fixed height between header & progress bar */
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin: 0 auto;
+  z-index: 1;
+}
+
+/* === SINGLE CURVE LINE === */
+.jm-line {
+  position: absolute;
+  top: 0;
+  left: 50px;
+  width: 270px;
+  height: 580px;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+  opacity: 1;
+}
+
+/* === NODES === */
+.jm-node {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+/* Icon button (56×56) */
+.jm-node-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.jm-node-icon { 
+    width: 56px; 
+    height: 56px; 
+    display: block; 
+}
+
+/* Label under icon */
+.jm-node-label {
+  margin-top: 6px;
+  font-family: Outfit, sans-serif;
+  font-size: 14px;
+  font-weight: 600;         /* make all titles bold */
+  color: #000000;           /* strong black text */
+}
+
+/* Locked state — titles stay black, icons remain fully visible */
+.jm-node-label.locked {
+  color: #000000;           /* keep text black */
+  opacity: 1;               /* no fading */
+}
+
+/* Icon button — fully visible locks */
+.jm-node-btn:disabled {
+  cursor: not-allowed;
+  opacity: 1;               /* make lock icons fully opaque */
+  filter: grayscale(100%);  /* optional: keep them gray-toned but solid */
+}
+
+/* === Pop-up bubble === */
+.jm-bubble {
+  position: absolute;
+  top: -4px;
+  padding: 8px 14px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid var(--accent);
+  font-family: Outfit, sans-serif;
+  font-size: 14px;
+  color: #1e1e1e;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+  white-space: nowrap;
+  z-index: 3;
+}
+.jm-bubble.left  { 
+    right: 72px; 
+}
+
+.jm-bubble.right { 
+    left: 72px; 
+}
+
+.jm-bubble .accent { 
+    color: var(--accent); 
+    font-weight: 600; 
+}
+
+/* === FIXED POSITIONING MATCHED TO FIGMA === */
+.pos-discovery {
+  left: 25px;
+  top: 40px;
+}
+
+.pos-coaching {
+  left: 225px;
+  top: 140px;
+}
+
+.pos-matches {
+  left: 205px;
+  top: 280px;
+}
+
+.pos-action {
+  left: 18px;
+  top: 360px;
+}
+
+.pos-launch {
+  left: 220px;
+  top: 485px;
+}
+
+/* === PROGRESS BAR stays unchanged === */
+.jm-progress {
+  width: 350px;
+  margin: 8px auto 14px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.jm-progress .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: Outfit, sans-serif;
+  font-size: 14px;
+  color: #1e1e1e;
+  font-weight: 500;
+}
+.jm-progress .bar {
+  height: 8px;
+  width: 100%;
+  background: var(--gray-light);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.jm-progress .fill {
+  height: 8px;
+  background: var(--accent);
+  border-radius: 100px;
+  width: 0%;
+}

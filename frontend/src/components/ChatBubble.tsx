@@ -1,5 +1,5 @@
 import React from "react";
-import botLogo from "../assets/onboarding/logo.svg"; // 👈 your bot icon
+import botLogo from "../assets/trunorth/trunorth_icon.svg";
 import "../styles/global.css";
 
 interface ChatBubbleProps {

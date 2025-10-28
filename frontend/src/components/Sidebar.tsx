@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/sidebar.css";
 import { FaSearch, FaUserCircle } from "react-icons/fa";
-import starIcon from "../assets/onboarding/star_icon.svg";
-import trunorthIcon from "../assets/onboarding/trunorth_icon.svg";
+import starIcon from "../assets/side_navbar/star_icon.svg";
+import trunorthIcon from "../assets/trunorth/trunorth_icon.svg";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 

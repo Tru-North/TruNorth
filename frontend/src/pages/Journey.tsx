@@ -1,30 +1,56 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../components/BottomNav";
 import Sidebar from "../components/Sidebar";
 import { FiMenu } from "react-icons/fi";
 import "../styles/global.css";
+import "../styles/journey.css";
+
+// Assets
+import IconPast from "../assets/journey/journey_active_past_milestone_icon.svg";
+import IconCurrent from "../assets/journey/journey_current_milestone_icon.svg";
+import IconFuture from "../assets/journey/journey_inactive_future_milestone_icon.svg";
+import JourneyLine from "../assets/journey/journey_linking_icon.svg";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-interface Section {
-  category: string;
-  display_name: string;
-  order: number;
-}
+type Key = "discovery" | "coaching" | "matches" | "action" | "launch";
+type State = "past" | "current" | "future";
+
+const LABEL: Record<Key, string> = {
+  discovery: "Discovery",
+  coaching: "Coaching",
+  matches: "Job Matches",
+  action: "Take Action",
+  launch: "Ready to Launch",
+};
+
+const HELPER: Record<Key, { accent: string; rest: string }> = {
+  discovery: { accent: "Let’s", rest: " get to know you!" },
+  coaching: { accent: "Get", rest: " guided insights." },
+  matches: { accent: "Explore", rest: " career fits" },
+  action: { accent: "Turn", rest: " plans into steps" },
+  launch: { accent: "Ready", rest: " for your next move." },
+};
 
 const Journey: React.FC = () => {
   const navigate = useNavigate();
-  const [sections, setSections] = useState<Section[]>([]);
-  const [completedSections, setCompletedSections] = useState<number[]>([]);
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [firstName, setFirstName] = useState<string>(
     localStorage.getItem("first_name") || "User"
   );
 
-  const userId = localStorage.getItem("user_id");
+  const [discoveryCompleted, setDiscoveryCompleted] = useState<boolean>(
+    localStorage.getItem("discovery_completed") === "true"
+  );
+  const [questionnaireComplete, setQuestionnaireComplete] = useState<boolean>(
+    localStorage.getItem("questionnaire_complete") === "true"
+  );
 
-  // ✅ Helper function to safely extract name from any response structure
+  const userId = localStorage.getItem("user_id");
+  const token = localStorage.getItem("token");
+
   const pickFirstName = (p: any): string | undefined =>
     p?.first_name ||
     p?.firstname ||
@@ -33,288 +59,242 @@ const Journey: React.FC = () => {
     p?.user?.first_name ||
     p?.user?.firstname;
 
-  // 🟣 Fetch questionnaire sections
+  // 🟢 Load user's first name
   useEffect(() => {
-    const fetchSections = async () => {
+    const loadName = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/questionnaire/`);
-        const data = await res.json();
-        if (data?.data?.sections) {
-          console.log("✅ Sections loaded:", data.data.sections);
-          setSections(data.data.sections);
-        }
-      } catch (err) {
-        console.error("❌ Failed to load sections:", err);
-      }
-    };
-    fetchSections();
-  }, []);
-
-  // 🟢 Fetch unlocked sections from responses
-  useEffect(() => {
-    if (!userId) {
-      console.warn("⚠️ No user_id found in localStorage.");
-      return;
-    }
-
-    const fetchUnlockedSections = async () => {
-      try {
-        const qRes = await fetch(`${API_BASE_URL}/questionnaire/`);
-        const qData = await qRes.json();
-        if (!qData?.data?.sections) return;
-        setSections(qData.data.sections);
-
-        const rRes = await fetch(`${API_BASE_URL}/questionnaire/responses/${userId}`);
-        const rData = await rRes.json();
-
-        if (rData?.data && qData?.data?.sections) {
-          const completedCategories = Array.from(
-            new Set(rData.data.map((r: any) => r.category))
-          );
-
-          const completedIndexes = completedCategories
-            .map((cat: string) =>
-              qData.data.sections.findIndex((s: any) => s.category === cat)
-            )
-            .filter((i: number) => i !== -1);
-
-          setCompletedSections(completedIndexes);
-          console.log("✅ Journey unlocked sections synced:", completedIndexes);
-        }
-      } catch (err) {
-        console.error("⚠️ Failed to fetch unlocked sections:", err);
-      }
-    };
-
-    fetchUnlockedSections();
-  }, [userId]);
-
-  // 🧠 Fetch user's first name (with logging + fallback)
-  useEffect(() => {
-    const loadFirstName = async () => {
-      try {
-        const uid = localStorage.getItem("user_id");
-        const token = localStorage.getItem("token");
-
-        console.log("🔍 Fetching user name...");
-        console.log("🧾 user_id:", uid);
-        console.log("🔐 token present:", token ? "✅ Yes" : "❌ No");
-
-        if (!uid) {
-          console.warn("⚠️ No user_id found, skipping fetch.");
-          return;
-        }
-
-        // Show cached name immediately
-        const stored = localStorage.getItem("first_name");
-        if (stored) {
-          console.log("💾 Using cached first name:", stored);
-          setFirstName(stored);
-        }
+        if (!userId) return;
+        const cached = localStorage.getItem("first_name");
+        if (cached) setFirstName(cached);
 
         const headers: Record<string, string> = {};
-        if (token) headers["Authorization"] = `Bearer ${token}`;
+        if (token) headers.Authorization = `Bearer ${token}`;
 
-        // 🧭 Try primary endpoint
-        let res = await fetch(`${API_BASE_URL}/users/${uid}`, { headers });
-        console.log("📡 Response status from /users/:id:", res.status);
-
-        // 🧩 Try fallback if 404
-        if (res.status === 404) {
-          console.log("🔁 Trying fallback /user/:id endpoint...");
-          res = await fetch(`${API_BASE_URL}/user/${uid}`, { headers });
-          console.log("📡 Fallback response:", res.status);
-        }
-
-        // 🧱 If still unauthorized, log and skip
-        if (!res.ok) {
-          console.warn(`🚫 Failed to fetch name (status ${res.status})`);
-          return;
-        }
-
-        const data = await res.json();
-        console.log("🧾 Raw user data response:", data);
-
+        let r = await fetch(`${API_BASE_URL}/users/${userId}`, { headers });
+        if (r.status === 404)
+          r = await fetch(`${API_BASE_URL}/user/${userId}`, { headers });
+        if (!r.ok) return;
+        const data = await r.json();
         const name = pickFirstName(data);
-        console.log("✅ Extracted first name:", name);
-
-        if (name && typeof name === "string") {
+        if (name) {
           setFirstName(name);
           localStorage.setItem("first_name", name);
-        } else {
-          console.warn("⚠️ No valid name found in response; keeping default.");
         }
-      } catch (e) {
-        console.error("❌ Error loading user name:", e);
+      } catch {
+        /* ignore */
       }
     };
+    loadName();
+  }, [API_BASE_URL, token, userId]);
 
-    loadFirstName();
-  }, []);
+  // 🟣 Load questionnaire completion status
+  useEffect(() => {
+    const loadProgress = async () => {
+      try {
+        if (!userId) return;
 
-  const handleStartQuestionnaire = () => navigate("/questionnaire");
-  const handleChatIntro = () => navigate("/chat-intro");
+        const headers: Record<string, string> = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
 
-  const handleSectionClick = (index: number, category: string) => {
-    const isLocked = index > 0 && !completedSections.includes(index - 1);
-    if (!isLocked) navigate(`/questionnaire?section=${index}&category=${category}`);
+        let complete: boolean | null = null;
+        try {
+          const r = await fetch(`${API_BASE_URL}/questionnaire/completion/${userId}`, { headers });
+          if (r.ok) {
+            const d = await r.json();
+            complete =
+              d?.data?.complete === true ||
+              d?.complete === true ||
+              d?.data?.required_complete === true;
+          }
+        } catch {}
+
+        if (complete === null) {
+          try {
+            const [sR, rR] = await Promise.all([
+              fetch(`${API_BASE_URL}/questionnaire/`, { headers }),
+              fetch(`${API_BASE_URL}/questionnaire/responses/${userId}`, { headers }),
+            ]);
+            if (sR.ok && rR.ok) {
+              const s = await sR.json();
+              const r = await rR.json();
+              const required = (s?.data?.sections || []).filter((x: any) => x?.required !== false);
+              const answered = new Set((r?.data || []).map((x: any) => x?.category));
+              complete = required.every((sec: any) => answered.has(sec.category));
+            }
+          } catch {}
+        }
+
+        const final = complete ?? localStorage.getItem("questionnaire_complete") === "true";
+        setQuestionnaireComplete(final);
+        if (final) localStorage.setItem("questionnaire_complete", "true");
+
+        setDiscoveryCompleted(localStorage.getItem("discovery_completed") === "true");
+      } catch {
+        /* ignore */
+      }
+    };
+    loadProgress();
+  }, [API_BASE_URL, token, userId]);
+
+  // 🧩 Determine section states
+  const states: Record<Key, State> = useMemo(() => {
+    const s: Record<Key, State> = {
+      discovery: "future",
+      coaching: "future",
+      matches: "future",
+      action: "future",
+      launch: "future",
+    };
+
+    if (questionnaireComplete) {
+      s.discovery = "past";
+      s.coaching = "current";
+    } else if (discoveryCompleted) {
+      s.discovery = "current";
+    } else {
+      s.discovery = "current"; // first visit
+    }
+
+    return s;
+  }, [discoveryCompleted, questionnaireComplete]);
+
+  const iconFor = (st: State) =>
+    st === "past" ? IconPast : st === "current" ? IconCurrent : IconFuture;
+
+  // 🟢 Progress calculation
+  const progressPct = useMemo(() => {
+    if (questionnaireComplete) return 40;
+    if (discoveryCompleted) return 20;
+    return 0;
+  }, [discoveryCompleted, questionnaireComplete]);
+
+  // 🧭 Navigation logic
+  const go = async (k: Key) => {
+    switch (k) {
+      case "discovery": {
+        try {
+          const headers: Record<string, string> = {};
+          if (token) headers.Authorization = `Bearer ${token}`;
+
+          const resp = await fetch(`${API_BASE_URL}/questionnaire/chat_responses/${userId}`, { 
+            headers 
+          });
+
+          if (resp.ok) {
+            const data = await resp.json();
+            const responses = data?.data || data;
+
+            const introDone = responses.some(
+              (r: any) =>
+                r.chat_id === "chat_5" ||
+                r.response?.includes("Yes, ready!") ||
+                r.response?.includes("Maybe later")
+            );
+
+            if (introDone) {
+              localStorage.setItem("chat_intro_done", "true");
+              localStorage.setItem("discovery_completed", "true");
+              navigate("/questionnaire");
+              return;
+            }
+          }
+
+          navigate("/chat-intro");
+        } catch (err) {
+          console.error("Error checking chat intro:", err);
+          navigate("/chat-intro");
+        }
+        return;
+      }
+
+      case "coaching":
+        if (questionnaireComplete) navigate("/coach");
+        return;
+
+      case "matches":
+        if (questionnaireComplete) navigate("/matches");
+        return;
+
+      case "action":
+        if (questionnaireComplete) navigate("/action");
+        return;
+
+      case "launch":
+        if (questionnaireComplete) navigate("/launch");
+        return;
+
+      default:
+        return;
+    }
   };
 
-  return (
-    <div className="mobile-frame" 
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-start",
-        alignItems: "stretch",
-        background: "#fff",
-      }}>
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          height: "70px",
-          background: "#fff",
-          padding: "0 16px",
-          flexShrink: 0,
-          borderBottom: "1px solid #eee",
-        }}
-      >
-        <div style={{ textAlign: "left" }}>
-          <h3
-            style={{
-              fontSize: "18px",
-              fontWeight: 700,
-              color: "#000",
-              margin: 0,
-              fontFamily: "Outfit, sans-serif",
-            }}
-          >
-            Welcome {firstName}
-          </h3>
-          <p
-            style={{
-              fontSize: "13px",
-              color: "#666",
-              margin: "2px 0 0",
-            }}
-          >
-            Your journey to a fulfilling career awaits.
-          </p>
+  // 🧱 Milestone node component
+  const Node: React.FC<{
+    k: Key;
+    className: string;
+    bubbleSide: "left" | "right";
+  }> = ({ k, className, bubbleSide }) => {
+    const st = states[k];
+    const locked = st === "future";
+    const showBubble = st === "current";
+    const Icon = iconFor(st);
+
+    return (
+      <div className={`jm-node ${className}`}>
+        <button
+          className={`jm-node-btn ${st}`}
+          onClick={() => go(k)}
+          disabled={locked}
+          aria-label={LABEL[k]}
+        >
+          <img src={Icon} className="jm-node-icon" alt="" />
+        </button>
+        <div className={`jm-node-label ${locked ? "locked" : ""}`}>
+          {LABEL[k]}
         </div>
 
-        <FiMenu
-          onClick={() => setIsSidebarOpen(true)}
-          style={{
-            fontSize: "22px",
-            cursor: "pointer",
-            color: "#000",
-          }}
-        />
+        {showBubble && (
+          <button className={`jm-bubble ${bubbleSide}`} onClick={() => go(k)}>
+            <span className="accent">{HELPER[k].accent}</span>
+            {HELPER[k].rest}
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  // 🧩 Render layout
+  return (
+    <div className="mobile-frame">
+      {/* Header */}
+      <div className="jm-header">
+        <div>
+          <h3 className="jm-title">Welcome {firstName}</h3>
+          <p className="jm-subtitle">Your journey to a fulfilling career awaits.</p>
+        </div>
+        <FiMenu className="jm-menu" onClick={() => setIsSidebarOpen(true)} />
       </div>
 
-      {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      {/* Body */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
-          padding: "1rem",
-          overflowY: "auto",
-        }}
-      >
-        {/* Actions */}
-        <div
-          style={{
-            marginTop: "1.2rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "1rem",
-            alignItems: "center",
-          }}
-        >
-          <button
-            onClick={handleStartQuestionnaire}
-            style={{
-              backgroundColor: "#a594f9",
-              color: "#fff",
-              border: "none",
-              borderRadius: "14px",
-              padding: "12px 26px",
-              fontSize: "1rem",
-              fontWeight: 600,
-              cursor: "pointer",
-              width: "80%",
-              maxWidth: "280px",
-              boxShadow: "0 3px 8px rgba(165, 148, 249, 0.3)",
-            }}
-          >
-            🧭 Start Questionnaire
-          </button>
+      {/* Journey Canvas */}
+      <div className="jm-canvas">
+        <img src={JourneyLine} className="jm-line" alt="journey line" />
+        <Node k="discovery" className="pos-discovery" bubbleSide="right" />
+        <Node k="coaching" className="pos-coaching" bubbleSide="left" />
+        <Node k="matches" className="pos-matches" bubbleSide="left" />
+        <Node k="action" className="pos-action" bubbleSide="right" />
+        <Node k="launch" className="pos-launch" bubbleSide="left" />
+      </div>
 
-          <button
-            onClick={handleChatIntro}
-            style={{
-              backgroundColor: "#fff",
-              color: "#a594f9",
-              border: "2px solid #a594f9",
-              borderRadius: "14px",
-              padding: "12px 26px",
-              fontSize: "1rem",
-              fontWeight: 600,
-              cursor: "pointer",
-              width: "80%",
-              maxWidth: "280px",
-              boxShadow: "0 3px 8px rgba(0, 0, 0, 0.05)",
-            }}
-          >
-            💬 Meet Ruby (Static Chat Bot)
-          </button>
+      {/* Progress Footer */}
+      <div className="jm-progress">
+        <div className="row">
+          <span>Journey Progress</span>
+          <span>{progressPct}%</span>
         </div>
-
-        {/* Section grid */}
-        <div
-          style={{
-            marginTop: "2rem",
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: "0.8rem",
-            width: "90%",
-            maxWidth: "360px",
-          }}
-        >
-          {sections.map((s, i) => {
-            const isLocked = !completedSections.includes(i);
-            return (
-              <button
-                key={s.category}
-                onClick={() => handleSectionClick(i, s.category)}
-                disabled={isLocked}
-                style={{
-                  padding: "0.8rem",
-                  borderRadius: "12px",
-                  border: "1.5px solid #e3e3e3",
-                  background: isLocked ? "#eee" : "#f8f8f8",
-                  fontSize: "0.9rem",
-                  fontWeight: 600,
-                  color: isLocked ? "#777" : "#333",
-                  textAlign: "center",
-                  cursor: isLocked ? "not-allowed" : "pointer",
-                  opacity: isLocked ? 0.6 : 1,
-                }}
-              >
-                {isLocked ? "🔒 " : "✅ "}
-                {s.display_name}
-              </button>
-            );
-          })}
+        <div className="bar">
+          <div className="fill" style={{ width: `${progressPct}%` }} />
         </div>
       </div>
 

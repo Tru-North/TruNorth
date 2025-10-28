@@ -4,12 +4,12 @@ import "../styles/bottomnav.css";
 import { FaLock } from "react-icons/fa";
 
 // 🔹 Import all SVG assets
-import journeyActive from "../assets/onboarding/journey_icon_active.svg";
-import journeyInactive from "../assets/onboarding/journey_icon_inactive.svg";
-import coachIcon from "../assets/onboarding/trunorth_icon.svg";
-import youActive from "../assets/onboarding/user_icon_active.svg";
-import youInactive from "../assets/onboarding/user_icon_inactive.svg";
-import spotlight from "../assets/onboarding/spotlight_icon.svg";
+import journeyActive from "../assets/bottom_navbar/journey_icon_active.svg";
+import journeyInactive from "../assets/bottom_navbar/journey_icon_inactive.svg";
+import coachIcon from "../assets/trunorth/trunorth_icon.svg";
+import youActive from "../assets/bottom_navbar/user_icon_active.svg";
+import youInactive from "../assets/bottom_navbar/user_icon_inactive.svg";
+import spotlight from "../assets/bottom_navbar/spotlight_icon.svg";
 
 const BottomNav: React.FC = () => {
   const navigate = useNavigate();

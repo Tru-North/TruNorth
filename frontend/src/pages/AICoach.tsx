@@ -67,7 +67,7 @@ const AICoach: React.FC = () => {
               margin: "2px 0 0",
             }}
           >
-            Setting up your profile
+            Chat with you personlized Career Coach
           </p>
         </div>
 

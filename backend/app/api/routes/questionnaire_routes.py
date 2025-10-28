@@ -136,7 +136,6 @@ async def submit_questionnaire_route(payload: UserProgressUpdate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to submit questionnaire: {e}")
 
-
 # ---------- 8️⃣ Get User Output JSON ----------
 @router.get("/output/{user_id}")
 async def get_user_output_route(user_id: int):
@@ -153,7 +152,7 @@ async def get_user_output_route(user_id: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch output: {e}")
 
-# ✅ ---------- NEW: 8️⃣ Progress Summary ----------
+# ✅ ---------- NEW: 9️⃣ Progress Summary ----------
 @router.get("/progress-summary/{user_id}")
 async def get_progress_summary_route(user_id: int):
     """
@@ -165,7 +164,7 @@ async def get_progress_summary_route(user_id: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch progress summary: {e}")
 
-# ---------- 9️⃣ Get Chat Script ----------
+# ---------- 🔟 Get Chat Script ----------
 @router.get("/chat")
 async def get_chat_script():
     """
@@ -183,3 +182,44 @@ async def get_chat_script():
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load chat script: {e}")
+
+# ✅ ---------- 1️⃣1️⃣ Get Chat Responses (for Journey Check) ----------
+@router.get("/chat_responses/{user_id}")
+async def get_chat_responses_route(user_id: int):
+    """
+    Fetch all chat responses for a user.
+    Used by Journey screen to verify if Discovery (chat intro) is completed.
+    """
+    from app.core.database import SessionLocal
+    from app.models.questionnaire import ChatResponse  # adjust if stored elsewhere
+
+    db = SessionLocal()
+    try:
+        responses = (
+            db.query(ChatResponse)
+            .filter(ChatResponse.user_id == user_id)
+            .order_by(ChatResponse.timestamp.asc())
+            .all()
+        )
+
+        # Return a consistent format
+        if not responses:
+            return {"message": "No chat responses found", "data": []}
+
+        result = [
+            {
+                "id": r.id,
+                "user_id": r.user_id,
+                "chat_id": r.chat_id,
+                "response": r.response,
+                "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+            }
+            for r in responses
+        ]
+
+        return {"message": "Chat responses fetched successfully", "data": result}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch chat responses: {e}")
+    finally:
+        db.close()

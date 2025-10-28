@@ -1,6 +1,6 @@
 import React from 'react'
 import replyBubbles from '../assets/onboarding/reply_bubbles.svg'
-import logo from '../assets/onboarding/logo.svg'
+import logo from '../assets/trunorth/trunorth_icon.svg'
 
 interface Props {
   onNext: () => void
