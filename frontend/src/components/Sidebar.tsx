@@ -89,7 +89,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   // 🧭 Handlers
   const handleCoachClick = () => {
-    if (!isQuestionnaireComplete) return; // just no action
+    if (!isQuestionnaireComplete) return;
     onClose();
     navigate("/coach");
   };
@@ -100,6 +100,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       onClose();
       navigate(`/questionnaire?section=${index}&category=${category}`);
     }
+  };
+
+  // 🧍 Handle About You click
+  const handleProfileClick = () => {
+    onClose();
+    navigate("/aboutyou");
   };
 
   return (
@@ -145,22 +151,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <img src={starIcon} className="star-icon" />
             <h4>Questionnaire</h4>
           </div>
-            <ul>
+          <ul>
             {sections.map((section, i) => {
-                const isLocked = !completedSections.includes(i);
-                return (
-                    <li
-                    key={section.category}
-                    onClick={() =>
-                        !isLocked && handleQuestionnaireClick(i, section.category)
-                    }
-                    className={`sidebar-item ${isLocked ? "locked" : "unlocked"}`}
-                    >
-                    {section.display_name}
-                    </li>
-                );
+              const isLocked = !completedSections.includes(i);
+              return (
+                <li
+                  key={section.category}
+                  onClick={() =>
+                    !isLocked && handleQuestionnaireClick(i, section.category)
+                  }
+                  className={`sidebar-item ${isLocked ? "locked" : "unlocked"}`}
+                >
+                  {section.display_name}
+                </li>
+              );
             })}
-            </ul>
+          </ul>
         </div>
 
         <div className="divider" />
@@ -180,10 +186,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Footer */}
         <div className="sidebar-footer">
-          <div className="footer-left">
+          <div className="footer-left" onClick={handleProfileClick} style={{ cursor: "pointer" }}>
             <FaUserCircle className="profile-icon" />
             <div className="footer-user-info">
-              <p className="footer-name">{firstName}</p>
+              <p className="footer-name" style={{ color: "#9d8bf9", fontWeight: 700 }}>
+                {firstName}
+              </p>
               <p className="footer-plan">Free</p>
             </div>
           </div>

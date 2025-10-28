@@ -1,14 +1,51 @@
-/* === Header stays same === */
+/* === Header (Updated to match Figma) === */
 .jm-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 70px;
-  padding: 0 16px;
-  border-bottom: 1px solid #eee;
   background: #fff;
   position: relative;
   z-index: 10;
+  box-shadow: none;
+  border-bottom: none;
+  width: 100%;
+  max-width: 390px;
+  margin: 0 auto;
+  padding: 18px 20px 14px 20px;
+}
+
+/* Force extra spacing between text & icon */
+.jm-header > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 8px; /* moves text a little left */
+}
+
+.jm-menu {
+  font-size: 24px;
+  cursor: pointer;
+  color: #1e1e1e;
+  margin-left: 30px; /* forces hamburger farther right */
+  flex-shrink: 0;
+}
+
+.jm-title {
+  font-family: Outfit, sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: #1e1e1e;
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+
+.jm-subtitle {
+  font-family: Outfit, sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: #555; /* softer gray tone */
+  margin-top: 3px;
 }
 
 /* === FIXED HEIGHT JOURNEY CONTAINER === */
@@ -24,6 +61,7 @@
   align-items: flex-start;
   margin: 0 auto;
   z-index: 1;
+  margin-top: -7px;
 }
 
 /* === SINGLE CURVE LINE === */
@@ -60,9 +98,9 @@
 }
 
 .jm-node-icon { 
-    width: 56px; 
-    height: 56px; 
-    display: block; 
+  width: 56px; 
+  height: 56px; 
+  display: block; 
 }
 
 /* Label under icon */
@@ -103,16 +141,16 @@
   z-index: 3;
 }
 .jm-bubble.left  { 
-    right: 72px; 
+  right: 72px; 
 }
 
 .jm-bubble.right { 
-    left: 72px; 
+  left: 72px; 
 }
 
 .jm-bubble .accent { 
-    color: var(--accent); 
-    font-weight: 600; 
+  color: var(--accent); 
+  font-weight: 600; 
 }
 
 /* === FIXED POSITIONING MATCHED TO FIGMA === */
