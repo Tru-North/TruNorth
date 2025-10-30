@@ -1,109 +1,95 @@
-/* 🧠 Header */
+/* 🟣 Header with full width and icons */
 .qn-header {
-  text-align: center;
-  padding: 1rem 0 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;                 
+  max-width: 390px;            
+  margin: 0 auto;              
+  padding: 0.8rem 1rem 0.4rem;
+  border-bottom: 1px solid #e6e6e6;  
+  background-color: #fff;
+  box-sizing: border-box;
 }
+
+.qn-header-center {
+  flex: 1;
+  text-align: center;
+}
+
 .qn-title {
   font-weight: 700;
   color: #0f1416;
 }
+
 .qn-subtitle {
   font-size: 0.9rem;
   color: #6c6c6c;
 }
 
-/* 🏷️ Tabs */
-.qn-tabs-wrapper {
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding: 0.4rem 0;
-  user-select: none;
-  width: 100%;
-}
-.qn-tabs-wrapper::-webkit-scrollbar {
-  display: none;
-}
-.qn-tabs-scroll {
-  display: flex;
-  gap: 0.6rem;
-  padding: 0.5rem 1rem;
-}
-.qn-tab {
-  background: #f3f3f3;
-  border: 1.5px solid #e6e6e6;
-  border-radius: 999px;
-  padding: 0.55rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #3a3a3a;
+.qn-icon {
+  font-size: 1.4rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  color: #111;
   flex-shrink: 0;
 }
-.qn-tab.active {
-  background: #a594f9;
-  border-color: #a594f9;
-  color: #fff;
-  box-shadow: 0 3px 6px rgba(157, 139, 249, 0.3);
+
+.qn-icon:hover {
+  color: #111;
 }
 
-/* 📊 Progress refined */
 .full-width-divider {
   width: 100%;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  padding-top: 0.8rem;
-  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  margin-top: 0.4rem;
   margin-bottom: 1.2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
+
 .qn-progress-text {
   font-size: 0.9rem;
   font-weight: 600;
   margin-bottom: 0.3rem;
 }
+
 .qn-progress-text .qn-current {
   color: #a594f9;
 }
+
 .qn-progress-text .qn-total {
   color: #7a7a7a;
   margin-left: 2px;
 }
+
 .full-width-bar {
   width: 90%;
   max-width: 350px;
   height: 6px;
   background-color: #e8e8e8;
   border-radius: 8px;
-  position: relative;
   overflow: hidden;
 }
+
 .qn-progress-fill {
   height: 100%;
   background-color: #a594f9;
-  border-radius: 8px;
   transition: width 0.4s ease;
 }
 
-/* 📄 Body */
+/* Body */
 .qn-body {
-  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 270px);
+  height: calc(100vh - 170px); /* reclaim space after tab removal */
   padding: 0 1.2rem;
-  overflow: hidden;
 }
-
-/* Scrollable area that adapts to device height */
 .qn-body-scroll {
   flex: 1;
   overflow-y: auto;
-  max-height: calc(100vh - 370px); /* dynamically adjusts to device height */
-  padding-right: 6px;
+  max-height: calc(100vh - 270px);
   scrollbar-width: thin;
   scrollbar-color: #c5c5c5 transparent;
 }
@@ -115,17 +101,14 @@
   border-radius: 8px;
 }
 
-/* 🟣 Question text */
 .qn-question {
   margin-bottom: 1rem;
   font-size: 1rem;
   font-weight: 600;
   text-align: center;
-  line-height: 1.4;
   color: #222;
 }
 
-/* 🟣 Multi-choice & single-choice buttons */
 .qn-options {
   display: flex;
   flex-direction: column;
@@ -158,42 +141,37 @@
   box-shadow: 0 2px 6px rgba(165, 148, 249, 0.25);
 }
 
-/* 🟣 Rating scale - compact vertical ovals that fit width */
+/* Rating */
 .qn-rating {
   text-align: center;
   width: 100%;
   margin-top: 1.5rem;
 }
-
 .qn-rating-buttons {
   display: grid;
-  grid-template-columns: repeat(10, 1fr); /* 10 ovals evenly across */
-  gap: 0.20rem; /* smaller gap to fit neatly */
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.2rem;
   justify-items: center;
-  width: 97%;
+  width: 100%;
   max-width: 390px;
   margin: 0 auto 0.6rem;
 }
-
 .qn-rating-buttons .qn-tab {
-  width: 16px;          /* narrower so all fit */
-  height: 45px;         /* keeps vertical oval look */
-  border-radius: 20px;  /* soft top & bottom */
+  width: 30px;
+  height: 43px;
+  border-radius: 20px;
   background: #fff;
   border: 1.6px solid #a594f9;
   color: #222;
   font-size: 0.85rem;
-  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.25s ease;
 }
-
 .qn-rating-buttons .qn-tab.active {
   background: #a594f9;
   color: #fff;
-  font-weight: 600;
   transform: scale(1.05);
   box-shadow: 0 0 6px rgba(165, 148, 249, 0.4);
 }
@@ -202,17 +180,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 95%;
+  width: 97%;
   max-width: 390px;
   margin: 0 auto;
-  font-size: 0.8rem;
+  font-size: 1.0rem;
   color: #000;
 }
 
-/* 💬 Unified Textareas (short + long) */
-.qn-textarea,
-.qn-textarea--short {
-  width: 90%;
+/* Text inputs */
+.qn-input,
+.qn-textarea {
+  width: 100%;
   background: #fdfdfd;
   border-radius: 12px;
   border: 1.5px solid #dcdcdc;
@@ -222,55 +200,37 @@
   outline: none;
   resize: none;
   line-height: 1.5;
-  text-align: left;
-  overflow-y: auto;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
-
-/* Long text area (default) */
 .qn-textarea {
   height: 300px;
 }
-
-/* Short text area */
-.qn-textarea--short {
+.qn-input {
   height: 150px;
 }
-
-/* Focus + placeholder styles */
-.qn-textarea:focus,
-.qn-textarea--short:focus {
+.qn-input:focus,
+.qn-textarea:focus {
   border-color: #a594f9;
   box-shadow: 0 0 0 3px rgba(165, 148, 249, 0.15);
 }
 
-.qn-textarea::placeholder,
-.qn-textarea--short::placeholder {
-  color: #9aa0a6;
-  opacity: 1;
-  text-align: left;
-  vertical-align: top;
-}
-
-/* 🧭 Footer */
+/* Footer */
 .qn-footer-fixed {
   position: absolute;
-  bottom: 70px; /* aligns above BottomNav */
+  bottom: 0;
   left: 0;
   width: 100%;
   display: flex;
   justify-content: space-between;
-  background: #ffffff;
-  padding: 0.8rem 1.2rem;
-  z-index: 10;
+  background: #fff;
+  padding: 1rem 1.5rem;
   border-radius: 0 0 20px 20px;
-  box-sizing: border-box;
   box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
 }
 .qn-back,
 .qn-next {
   border-radius: 10px;
-  padding: 0.5rem 1rem;
+  padding: 0.7rem 3.2rem;
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -292,207 +252,140 @@
   background: #8a75f6;
 }
 
-/* 🌟 Popup */
-.qn-popup-overlay {
+/* ✨ Exit Confirmation Modal */
+.exit-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.35);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 999;
 }
-.qn-popup {
-  background: #a594f9;
-  color: #fff;
-  border-radius: 20px;
-  padding: 1.8rem 1.4rem;
+
+.exit-modal {
+  background: #fff;
+  border: 1.5px solid #a594f9;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 85%;
+  max-width: 340px;
+  padding: 2rem 1.5rem;
   text-align: center;
-  width: 80%;
-  max-width: 320px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  animation: fadeInScale 0.3s ease;
-}
-.qn-popup h3 {
-  margin-bottom: 0.5rem;
-}
-.qn-popup p {
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-}
-.qn-popup-buttons {
-  display: flex;
-  gap: 0.6rem;
-  justify-content: center;
-}
-.continue-btn {
-  background: #fff;
-  color: #a594f9;
-  border: none;
-  border-radius: 10px;
-  padding: 0.4rem 0.8rem;
-  font-weight: 600;
-}
-.later-btn {
-  background: transparent;
-  border: 1px solid #fff;
-  color: #fff;
-  border-radius: 10px;
-  padding: 0.4rem 0.8rem;
-  font-weight: 600;
+  font-family: "Oxanium", sans-serif;
 }
 
-/* 🔮 Animation */
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* 🌈 Work Values - 2-column selectable card grid */
-.qn-options-grid {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.8rem;
-  justify-items: center;
-  width: 100%;
-  max-width: 380px;
-  margin: 0 auto;
-}
-
-.qn-options-grid .qn-tab {
-  width: 100%;
-  background: #fff;
-  border: 2px solid #dcdcdc;
-  border-radius: 12px;
-  padding: 0.8rem 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #333;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  transition: all 0.25s ease;
-  position: relative;
-}
-
-/* Hover and Active states */
-.qn-options-grid .qn-tab:hover {
-  border-color: #a594f9;
-  background: #faf8ff;
-  color: #5a47d1;
-}
-
-.qn-options-grid .qn-tab.active {
-  background: #f4f1ff;
-  border-color: #a594f9;
-  color: #5a47d1;
-  box-shadow: 0 2px 6px rgba(165, 148, 249, 0.2);
-}
-
-/* Add checkmark inside selected options */
-.qn-options-grid .qn-tab.active::before {
-  content: "✔";
-  position: absolute;
-  left: 10px;
-  font-size: 0.85rem;
-  color: #a594f9;
+.exit-title {
+  font-size: 1.2rem;
   font-weight: 700;
+  color: #111;
+  margin-bottom: 0.6rem;
 }
 
-/* 🔒 Locked tab appearance */
-.qn-tab.locked {
-  opacity: 0.4;
-  pointer-events: none;
-  cursor: not-allowed;
-  background: #eee;
-  border-color: #ddd;
-  color: #999;
-}
-
-/* ✨ Short text input (for text_short questions) */
-.qn-input {
-  width: 90%;
-  background: #fdfdfd;
-  border-radius: 12px;
-  border: 1.5px solid #dcdcdc;
-  padding: 10px 14px;
+.exit-text {
   font-size: 0.95rem;
   color: #333;
-  outline: none;
-  resize: none;
-  height: 150px;
-  line-height: 1.4;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  margin-bottom: 1.5rem;
 }
 
-/* Focus + placeholder consistency with textareas */
-.qn-input:focus {
+.exit-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.btn-keep,
+.btn-exit {
+  border-radius: 12px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1.8px solid #a594f9;
+}
+
+.btn-keep {
+  background: #a594f9;
+  color: #fff;
+}
+
+.btn-exit {
+  background: #fff;
+  color: #000;
+}
+
+.btn-keep:hover,
+.btn-exit:hover {
+  transform: scale(1.02);
+}
+
+/* 🟣 Work Values Custom Design (Perfect Grid Alignment) */
+.work-values-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem 0.75rem; /* even spacing horizontally and vertically */
+  justify-items: center;
+  margin-top: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.work-value-btn {
+  width: 95%;
+  max-width: 170px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+  background: #fff;
+  border: 1.6px solid #bfbfbf;
+  border-radius: 12px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #222;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
+}
+
+.work-value-btn:hover {
   border-color: #a594f9;
-  box-shadow: 0 0 0 3px rgba(165, 148, 249, 0.15);
 }
 
-.qn-input::placeholder {
-  color: #9aa0a6;
-  opacity: 1;
+.work-value-btn.selected {
+  background: #f2eeff;
+  border-color: #a594f9;
+  color: #5a47d1;
+  box-shadow: 0 1px 4px rgba(165, 148, 249, 0.25);
+}
+
+.check-circle {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid #999;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.check-circle.checked {
+  background: #a594f9;
+  border-color: #a594f9;
+  color: #fff;
+}
+
+.qn-hint {
+  font-size: 0.8rem;
+  color: #6b6b6b;
   font-style: italic;
-}
-
-.qn-popup {
-  background: linear-gradient(135deg, #a594f9, #d2c5ff);
-}
-
-/* 🎊 Confetti (pure CSS) */
-.confetti {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 1100; /* above overlay */
-  overflow: hidden;
-}
-
-.confetti-piece {
-  position: absolute;
-  top: -12vh;               /* start above the viewport */
-  left: var(--x, 50%);      /* custom property from inline style */
-  width: 8px;
-  height: 14px;
-  background: var(--c, #a594f9);
-  opacity: 0.95;
-  border-radius: 2px;
-  transform: rotate(0deg) translateY(0);
-  animation:
-    confetti-fall 2.6s ease-out forwards,
-    confetti-sway 2.6s ease-in-out infinite;
-  animation-delay: var(--d, 0s);
-}
-
-@keyframes confetti-fall {
-  to {
-    transform: translateY(115vh) rotate(360deg);
-    opacity: 1;
-  }
-}
-
-@keyframes confetti-sway {
-  0%   { margin-left: 0; }
-  50%  { margin-left: 14px; }
-  100% { margin-left: 0; }
-}
-
-/* Respect users who prefer reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .confetti-piece {
-    animation: confetti-fall 1.2s linear forwards;
-  }
+  text-align: center;
+  margin-top: 0.8rem;
 }

@@ -87,7 +87,7 @@ const Journey: React.FC = () => {
     loadName();
   }, [API_BASE_URL, token, userId]);
 
-  // 🟣 Load questionnaire completion status
+  // 🟣 Load questionnaire completion status (cleaned up, no /completion call)
   useEffect(() => {
     const loadProgress = async () => {
       try {
@@ -97,32 +97,21 @@ const Journey: React.FC = () => {
         if (token) headers.Authorization = `Bearer ${token}`;
 
         let complete: boolean | null = null;
+
+        // ✅ Compute completion by comparing required sections & user responses
         try {
-          const r = await fetch(`${API_BASE_URL}/questionnaire/completion/${userId}`, { headers });
-          if (r.ok) {
-            const d = await r.json();
-            complete =
-              d?.data?.complete === true ||
-              d?.complete === true ||
-              d?.data?.required_complete === true;
+          const [sR, rR] = await Promise.all([
+            fetch(`${API_BASE_URL}/questionnaire/`, { headers }),
+            fetch(`${API_BASE_URL}/questionnaire/responses/${userId}`, { headers }),
+          ]);
+          if (sR.ok && rR.ok) {
+            const s = await sR.json();
+            const r = await rR.json();
+            const required = (s?.data?.sections || []).filter((x: any) => x?.required !== false);
+            const answered = new Set((r?.data || []).map((x: any) => x?.category));
+            complete = required.every((sec: any) => answered.has(sec.category));
           }
         } catch {}
-
-        if (complete === null) {
-          try {
-            const [sR, rR] = await Promise.all([
-              fetch(`${API_BASE_URL}/questionnaire/`, { headers }),
-              fetch(`${API_BASE_URL}/questionnaire/responses/${userId}`, { headers }),
-            ]);
-            if (sR.ok && rR.ok) {
-              const s = await sR.json();
-              const r = await rR.json();
-              const required = (s?.data?.sections || []).filter((x: any) => x?.required !== false);
-              const answered = new Set((r?.data || []).map((x: any) => x?.category));
-              complete = required.every((sec: any) => answered.has(sec.category));
-            }
-          } catch {}
-        }
 
         const final = complete ?? localStorage.getItem("questionnaire_complete") === "true";
         setQuestionnaireComplete(final);
@@ -136,6 +125,7 @@ const Journey: React.FC = () => {
     loadProgress();
   }, [API_BASE_URL, token, userId]);
 
+
   // 🧩 Determine section states
   const states: Record<Key, State> = useMemo(() => {
     const s: Record<Key, State> = {
@@ -146,29 +136,47 @@ const Journey: React.FC = () => {
       launch: "future",
     };
 
-    if (questionnaireComplete) {
+    const chatIntroDone = localStorage.getItem("chat_intro_done") === "true";
+
+    if (chatIntroDone && questionnaireComplete) {
       s.discovery = "past";
       s.coaching = "current";
-    } else if (discoveryCompleted) {
-      s.discovery = "current";
     } else {
-      s.discovery = "current"; // first visit
+      s.discovery = "current";
     }
 
     return s;
-  }, [discoveryCompleted, questionnaireComplete]);
+  }, [questionnaireComplete, discoveryCompleted]);
 
   const iconFor = (st: State) =>
     st === "past" ? IconPast : st === "current" ? IconCurrent : IconFuture;
 
-  // 🟢 Progress calculation
+  // 🟢 Progress calculation (each milestone = 20%)
   const progressPct = useMemo(() => {
-    if (questionnaireComplete) return 40;
-    if (discoveryCompleted) return 20;
-    return 0;
-  }, [discoveryCompleted, questionnaireComplete]);
+    let pct = 0;
 
-  // 🧭 Navigation logic
+    const chatIntroDone = localStorage.getItem("chat_intro_done") === "true";
+    const questionnaireDone = questionnaireComplete;
+
+    // 1️⃣ Discovery
+    if (chatIntroDone && questionnaireDone) pct += 20;
+
+    // 2️⃣ Coaching
+    if (localStorage.getItem("coach_completed") === "true") pct += 20;
+
+    // 3️⃣ Job Matches
+    if (localStorage.getItem("matches_completed") === "true") pct += 20;
+
+    // 4️⃣ Take Action
+    if (localStorage.getItem("action_completed") === "true") pct += 20;
+
+    // 5️⃣ Launch
+    if (localStorage.getItem("launch_completed") === "true") pct += 20;
+
+    return pct;
+  }, [questionnaireComplete]);
+
+  // 🧭 Navigation logic (unchanged)
   const go = async (k: Key) => {
     switch (k) {
       case "discovery": {
@@ -176,9 +184,7 @@ const Journey: React.FC = () => {
           const headers: Record<string, string> = {};
           if (token) headers.Authorization = `Bearer ${token}`;
 
-          const resp = await fetch(`${API_BASE_URL}/questionnaire/chat_responses/${userId}`, { 
-            headers 
-          });
+          const resp = await fetch(`${API_BASE_URL}/questionnaire/chat_responses/${userId}`, { headers });
 
           if (resp.ok) {
             const data = await resp.json();
@@ -228,7 +234,7 @@ const Journey: React.FC = () => {
     }
   };
 
-  // 🧱 Milestone node component
+  // 🧱 Milestone Node component
   const Node: React.FC<{
     k: Key;
     className: string;
