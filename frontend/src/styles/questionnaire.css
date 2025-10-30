@@ -291,12 +291,6 @@
   margin-bottom: 1.5rem;
 }
 
-.exit-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-}
-
 .btn-keep,
 .btn-exit {
   border-radius: 12px;
@@ -388,4 +382,77 @@
   font-style: italic;
   text-align: center;
   margin-top: 0.8rem;
+}
+
+/* 🌈 Purple Exit Modal Theme (Figma accurate) */
+.exit-modal.purple-theme {
+  background: #a594f9;
+  border: none;
+  border-radius: 18px;
+  width: 85%;
+  max-width: 340px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: #fff;
+  font-family: "Oxanium", sans-serif;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.exit-icon-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.exit-title.white {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.exit-text.white {
+  color: #fdfdfd;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Buttons */
+.exit-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+}
+
+.btn-keep.outlined {
+  background: transparent;
+  border: 1.8px solid #fff;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-keep.outlined:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-exit.filled {
+  background: #fff;
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-exit.filled:hover {
+  transform: scale(1.03);
 }

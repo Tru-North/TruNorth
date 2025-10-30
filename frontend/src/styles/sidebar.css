@@ -274,3 +274,15 @@
   cursor: not-allowed;
   pointer-events: none;
 }
+
+/* 🟣 Matches section spacing fix */
+.sidebar-section ul li {
+  margin-bottom: 8px;
+}
+
+/* 🟣 Hover state for unlocked items */
+.sidebar-item.unlocked:hover {
+  color: #9d8bf9;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}

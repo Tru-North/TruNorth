@@ -348,20 +348,38 @@ const Questionnaire: React.FC = () => {
 
       {showExitModal && (
         <div className="exit-modal-overlay">
-          <div className="exit-modal">
-            <h2 className="exit-title">Leaving already?</h2>
-            <p className="exit-text">We will save your progress</p>
+          <div className="exit-modal purple-theme">
+            <div className="exit-icon-container">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="white"
+                width="32"
+                height="32"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"
+                />
+              </svg>
+            </div>
+            <h2 className="exit-title white">Leaving already?</h2>
+            <p className="exit-text white">We will save your progress</p>
             <div className="exit-buttons">
-              <button className="btn-keep" onClick={handleKeepGoing}>
+              <button className="btn-keep outlined" onClick={handleKeepGoing}>
                 Keep Going
               </button>
-              <button className="btn-exit" onClick={handleSaveAndExit}>
+              <button className="btn-exit filled" onClick={handleSaveAndExit}>
                 Save And Exit
               </button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };

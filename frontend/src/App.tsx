@@ -12,14 +12,14 @@ import VerifyCode from "./pages/VerifyCode";
 import SetNewPassword from "./pages/SetNewPassword";
 import ChatIntro from "./pages/ChatIntro";
 import Questionnaire from "./pages/Questionnaire";
-
-// ✅ Placeholder pages for AboutYou subroutes
 import Account from "./pages/Account";
 import Notifications from "./pages/Notifications";
 import Privacy from "./pages/Privacy";
 import Help from "./pages/Help";
 import Terms from "./pages/Terms";
 import Language from "./pages/Language";
+import ExploreMatches from "./pages/ExploreMatches";
+import SavedJobs from "./pages/SavedJobs";
 
 const App: React.FC = () => {
   return (
@@ -78,6 +78,25 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute>
               <AboutYou />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 💼 Matches Pages */}
+        <Route
+          path="/explorematches"
+          element={
+            <ProtectedRoute>
+              <ExploreMatches />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/savedjobs"
+          element={
+            <ProtectedRoute>
+              <SavedJobs />
             </ProtectedRoute>
           }
         />

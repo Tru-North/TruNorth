@@ -102,10 +102,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  // 🧍 Handle About You click
   const handleProfileClick = () => {
     onClose();
-    navigate("/aboutyou");
+    navigate("/aboutYou");
+  };
+
+  const handleExploreMatches = () => {
+    onClose();
+    navigate("/explorematches");
+  };
+
+  const handleSavedJobs = () => {
+    onClose();
+    navigate("/savedjobs");
   };
 
   return (
@@ -178,9 +187,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <h4>Matches</h4>
           </div>
           <ul>
-            <li className="disabled">Product Management</li>
-            <li className="disabled">Product Marketing</li>
-            <li className="disabled">Product Design</li>
+            <li className="sidebar-item unlocked" onClick={handleExploreMatches}>
+              Explore Matches
+            </li>
+            <li className="sidebar-item unlocked" onClick={handleSavedJobs}>
+              Saved Jobs
+            </li>
           </ul>
         </div>
 
@@ -189,9 +201,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <div className="footer-left" onClick={handleProfileClick} style={{ cursor: "pointer" }}>
             <FaUserCircle className="profile-icon" />
             <div className="footer-user-info">
-              <p className="footer-name" style={{ color: "#9d8bf9", fontWeight: 700 }}>
-                {firstName}
-              </p>
+              <p className="footer-name">{firstName}</p>
               <p className="footer-plan">Free</p>
             </div>
           </div>

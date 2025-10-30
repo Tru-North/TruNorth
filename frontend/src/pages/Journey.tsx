@@ -218,7 +218,7 @@ const Journey: React.FC = () => {
         return;
 
       case "matches":
-        if (questionnaireComplete) navigate("/matches");
+        if (questionnaireComplete) navigate("/savedjobs");
         return;
 
       case "action":
