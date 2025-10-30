@@ -69,9 +69,6 @@ def save_chat_response(payload: ChatResponseCreate):
 def save_questionnaire_response(payload: QuestionnaireResponseCreate):
     db: Session = SessionLocal()
     try:
-        # 🪵 Log what the backend received from the frontend
-        print(f"📥 [SERVICE] Received questionnaire payload: {payload.dict()}")
-
         existing = (
             db.query(QuestionnaireResponse)
             .filter(
@@ -82,15 +79,9 @@ def save_questionnaire_response(payload: QuestionnaireResponseCreate):
         )
 
         if existing:
-            print(
-                f"🗄️ [UPDATE] Updating existing response for user_id={payload.user_id}, question_id={payload.question_id}"
-            )
             existing.answer = payload.answer
             existing.timestamp = datetime.utcnow()
         else:
-            print(
-                f"🆕 [INSERT] Creating new response for user_id={payload.user_id}, category={payload.category}, question_id={payload.question_id}"
-            )
             new_entry = QuestionnaireResponse(
                 user_id=payload.user_id,
                 category=payload.category,
@@ -100,10 +91,6 @@ def save_questionnaire_response(payload: QuestionnaireResponseCreate):
             db.add(new_entry)
 
         db.commit()
-        print(
-            f"✅ [COMMIT SUCCESS] Saved response for user_id={payload.user_id}, question_id={payload.question_id}"
-        )
-
         # 🧩 Automatically recheck and update user progress after each save
         try:
             from app.services.questionnaire_service import (
@@ -145,23 +132,11 @@ def save_questionnaire_response(payload: QuestionnaireResponseCreate):
                 )
             )
 
-            print(
-                f"🔄 [AUTO PROGRESS CHECK] user_id={payload.user_id}, "
-                f"answered_required={len(answered_qids & required_qids)}/{len(required_qids)}, "
-                f"is_completed={all_required_answered}"
-            )
-
-            if all_required_answered:
-                print(
-                    f"🎯 [ALL REQUIRED COMPLETED] User {payload.user_id} finished ALL required sections!"
-                )
-
         except Exception as progress_err:
             print(f"⚠️ [PROGRESS SYNC WARNING] {progress_err}")
 
     except Exception as e:
         db.rollback()
-        print(f"❌ [SERVICE ERROR] Failed to save questionnaire response: {e}")
         raise e
     finally:
         db.close()
@@ -199,15 +174,10 @@ def update_user_progress(payload: UserProgressUpdate):
 
         db.commit()
         db.refresh(progress)
-        print(
-            f"✅ [PROGRESS SAVED] user_id={payload.user_id}, "
-            f"tab={progress.current_tab}, completed={progress.is_completed}"
-        )
         return progress
 
     except Exception as e:
         db.rollback()
-        print(f"❌ [PROGRESS ERROR] {e}")
         raise e
     finally:
         db.close()
@@ -264,15 +234,12 @@ def mark_questionnaire_complete(user_id: int):
 
         # 🧠 Generate output JSON only when required questions are done
         if all_required_done:
-            print(f"✅ [COMPLETION] User {user_id} finished all required sections.")
             return generate_output_json(user_id)
         else:
-            print(f"ℹ️ [PARTIAL] User {user_id} still missing required answers.")
             return {"message": "Progress saved but required sections incomplete."}
 
     except Exception as e:
         db.rollback()
-        print(f"❌ [COMPLETE ERROR] {e}")
         raise e
     finally:
         db.close()

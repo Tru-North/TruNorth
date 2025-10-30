@@ -195,7 +195,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         }
 
     except Exception as e:
-        print(f"❌ Login error: {str(e)}")
         raise HTTPException(status_code=401, detail=f"Invalid email or password: {str(e)}")
 
 @router.post("/logout", tags=["Auth"])

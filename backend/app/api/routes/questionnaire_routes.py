@@ -51,11 +51,9 @@ async def save_chat_response_route(payload: ChatResponseCreate):
 @router.post("/save")
 async def save_questionnaire_response_route(payload: QuestionnaireResponseCreate):
     try:
-        print(f"📥 [SAVE] Received payload: {payload.dict()}")  # 👈 add this
         save_questionnaire_response(payload)
         return {"message": "Answer saved successfully"}
     except Exception as e:
-        print(f"❌ [SAVE ERROR] {e}")  # 👈 and this
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -63,16 +61,13 @@ async def save_questionnaire_response_route(payload: QuestionnaireResponseCreate
 @router.post("/progress")
 async def update_progress_route(payload: UserProgressUpdate):
     try:
-        print(f"📥 [PROGRESS] Payload: {payload.dict()}")  # 👈
         progress = update_user_progress(payload)
-        print(f"✅ [PROGRESS] Updated DB record for user_id={payload.user_id}")  # 👈
         return {
             "message": "Progress updated successfully",
             "current_tab": progress.current_tab,
             "is_completed": progress.is_completed,
         }
     except Exception as e:
-        print(f"❌ [PROGRESS ERROR] {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
