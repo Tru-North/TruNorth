@@ -10,6 +10,8 @@ from app.schemas.questionnaire_schemas import (
     UserProgressUpdate,
 )
 from sqlalchemy import func
+from app.services.final_data_service import save_user_final_data, can_create_for_user
+
 
 # ---------- Utility: DB Session Context ----------
 def get_db():
@@ -58,6 +60,13 @@ def save_chat_response(payload: ChatResponseCreate):
             db.add(new_entry)
 
         db.commit()
+        # 🧩 Step 6B — Auto-update final JSON if user already completed
+        try:
+            from app.services.final_data_service import save_user_final_data, can_create_for_user
+            if can_create_for_user(db, payload.user_id):
+                save_user_final_data(db, payload.user_id)
+        except Exception as auto_err:
+            print(f"⚠️ [FINAL DATA AUTO-SAVE WARNING – CHAT] {auto_err}")
     except Exception as e:
         db.rollback()
         raise e
@@ -91,6 +100,14 @@ def save_questionnaire_response(payload: QuestionnaireResponseCreate):
             db.add(new_entry)
 
         db.commit()
+        # 🧩 Step 6B — Auto-update final JSON if user already completed
+        try:
+            from app.services.final_data_service import save_user_final_data, can_create_for_user
+            if can_create_for_user(db, payload.user_id):
+                save_user_final_data(db, payload.user_id)
+        except Exception as auto_err:
+            print(f"⚠️ [FINAL DATA AUTO-SAVE WARNING – QUESTIONNAIRE] {auto_err}")
+
         # 🧩 Automatically recheck and update user progress after each save
         try:
             from app.services.questionnaire_service import (
@@ -174,6 +191,12 @@ def update_user_progress(payload: UserProgressUpdate):
 
         db.commit()
         db.refresh(progress)
+        # 🧩 Step 6A — Auto-create final JSON if questionnaire just completed
+        try:
+            if progress.is_completed:  # only trigger when marked complete
+                save_user_final_data(db, progress.user_id)
+        except Exception as e:
+            print(f"⚠️ [FINAL DATA AUTO SAVE WARNING] {e}")
         return progress
 
     except Exception as e:

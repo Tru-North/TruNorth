@@ -7,6 +7,8 @@ from app.api.routes.questionnaire_routes import router as questionnaire_router  
 
 from app.core.database import setup_database
 
+from app.api.routes import router as api_router
+
 app = FastAPI(
     title="TruNorth",
     description="AI Powered Coaching & Guidance",
@@ -30,6 +32,8 @@ app.add_middleware(
 # ✅ Include all routes
 app.include_router(user_router)
 app.include_router(questionnaire_router)  # ← add this line
+
+app.include_router(api_router)
 
 @app.on_event("startup")
 def startup_event():
