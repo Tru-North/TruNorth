@@ -1,5 +1,6 @@
 # backend/app/models/user.py
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 class User(Base):
@@ -11,3 +12,5 @@ class User(Base):
     email = Column(String(255), unique=True)
     password = Column(String(255))
     firebase_uid = Column(String(128), unique=True)
+    chat_history = relationship("ChatHistory", back_populates="user", cascade="all, delete-orphan")
+    feedbacks = relationship("MessageFeedback", back_populates="user", cascade="all, delete-orphan")

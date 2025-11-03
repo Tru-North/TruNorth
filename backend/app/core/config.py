@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
 
 load_dotenv()
 
@@ -31,3 +32,37 @@ FIREBASE_ADMIN_CRED = {
     "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_X509_CERT_URL"),
     "universe_domain": os.getenv("FIREBASE_UNIVERSE_DOMAIN"),
 }
+
+# ✅ AI Coach Settings
+class Settings(BaseSettings):
+    # Database
+    DATABASE_URL: str = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    
+    # Azure AI Configuration
+    AZURE_FOUNDRY_API_KEY: str = os.getenv("AZURE_FOUNDRY_API_KEY", "")
+    AZURE_FOUNDRY_ENDPOINT: str = os.getenv("AZURE_FOUNDRY_ENDPOINT", "")
+    AZURE_CHAT_DEPLOYMENT: str = os.getenv("AZURE_CHAT_DEPLOYMENT", "gpt-4o")
+    AZURE_EMBEDDINGS_DEPLOYMENT: str = os.getenv("AZURE_EMBEDDINGS_DEPLOYMENT", "text-embedding-3-large")
+    AZURE_TTS_DEPLOYMENT: str = os.getenv("AZURE_TTS_DEPLOYMENT", "gpt-4o-mini-tts")
+    AZURE_TTS_VOICE: str = os.getenv("AZURE_TTS_VOICE", "alloy")
+    
+    # Pinecone Configuration
+    PINECONE_API_KEY: str = os.getenv("PINECONE_API_KEY", "")
+    INDEX_NAME: str = os.getenv("INDEX_NAME", "trunorth-index")
+    
+    # AI Model Configuration
+    MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "1200"))
+    TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.7"))
+    
+    # File Paths
+    BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    LOG_DIR: str = os.path.join(BASE_DIR, "app", "data", "outputs")
+    CSV_PATH: str = os.path.join(BASE_DIR, "app", "data", "job_skills.csv")
+    
+    class Config:
+        case_sensitive = True
+
+settings = Settings()
+
+# Ensure log directory exists
+os.makedirs(settings.LOG_DIR, exist_ok=True)

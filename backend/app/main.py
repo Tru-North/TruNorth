@@ -1,12 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-# ✅ Import your routers
+# ✅ Import routers
 from app.api.routes.user_routes import router as user_router
-from app.api.routes.questionnaire_routes import router as questionnaire_router  # ← add this line
-
+from app.api.routes.questionnaire_routes import router as questionnaire_router  
+from app.api.routes.ai_coach_routes import router as ai_coach_router  # ✅ Add this
 from app.core.database import setup_database
-
 from app.api.routes import router as api_router
 
 app = FastAPI(
@@ -29,10 +28,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ Include all routes
-app.include_router(user_router)
-app.include_router(questionnaire_router)  # ← add this line
+@app.middleware("http")
+async def auto_firebase_uid_middleware(request: Request, call_next):
+    """
+    Automatically extracts and stores Firebase UID from request headers
+    If x-firebase-uid is provided, it's stored in request.state for use in routes
+    """
+    firebase_uid = request.headers.get("x-firebase-uid")
+    
+    if firebase_uid:
+        # Store in request state for access in routes
+        request.state.firebase_uid = firebase_uid
+    else:
+        request.state.firebase_uid = None
+    
+    response = await call_next(request)
+    return response
 
+#  all routes
+app.include_router(user_router)
+app.include_router(questionnaire_router)  
+app.include_router(ai_coach_router)  
 app.include_router(api_router)
 
 @app.on_event("startup")

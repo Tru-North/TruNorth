@@ -1,7 +1,7 @@
 # backend/app/core/database.py
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from app.core.config import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
 
 from typing import Generator
@@ -16,7 +16,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # ✅ Base class for all models
 Base = declarative_base()
 
-def get_db() -> Generator:
+def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
         yield db
@@ -34,5 +34,7 @@ def setup_database():
     from app.models import questionnaire
     from app.models import password_reset
     from app.models import final_data
+    from app.models.final_data import UserFinalData
+    from app.models.chat_history import ChatHistory  # added chat_history model
 
     Base.metadata.create_all(bind=engine)
