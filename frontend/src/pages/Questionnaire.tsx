@@ -43,35 +43,102 @@ const Questionnaire: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingExit, setIsSavingExit] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const userId = localStorage.getItem("user_id") || "1";
 
-  /* ---------------- Load questionnaire + saved responses ---------------- */
+  /* ---------------- Load questionnaire + saved responses + progress ---------------- */
   useEffect(() => {
     const loadAllData = async () => {
       try {
+        // 🔁 Reset before loading new questionnaire
+        setLoading(true);
+        setSections([]);
+        setResponses({});
+        setActiveQuestion(0);
+        setShowPopup(false);
+        setShowExitModal(false);
+
+        const params = new URLSearchParams(location.search);
+        const newSectionIndex = Number(params.get("section")) || 0;
+        setActiveSection(newSectionIndex);
+
+        console.log("📡 Loading questionnaire for section:", newSectionIndex);
+
+        // 1️⃣ Fetch questionnaire structure
         const qRes = await fetch(`${API_BASE_URL}/questionnaire/`);
         const qData = await qRes.json();
-        if (qData?.data?.sections) setSections(qData.data.sections);
+        const allSections: Section[] = qData?.data?.sections || [];
+        setSections(allSections);
 
+        // 2️⃣ Fetch saved responses
         const rRes = await fetch(`${API_BASE_URL}/questionnaire/responses/${userId}`);
         const rData = await rRes.json();
+        const restored: Record<string, string> = {};
         if (rData?.data) {
-          const restored: Record<string, string> = {};
           rData.data.forEach((r: any) => {
             restored[r.question_id] =
               typeof r.answer === "string" ? r.answer : JSON.stringify(r.answer);
           });
-          setResponses(restored);
+        }
+        setResponses(restored);
+
+        // 3️⃣ Fetch progress (only for journey reopen)
+        const pRes = await fetch(`${API_BASE_URL}/questionnaire/progress/${userId}`);
+        const pData = await pRes.json();
+        const isCompleted = !!pData?.is_completed;
+
+        // 🧠 Determine whether this load came from sidebar or journey
+        const cameFromSidebar = location.search.includes("section=");
+        if (cameFromSidebar) {
+          // 🟣 Sidebar navigation → always start at first question of target section
+          setActiveSection(newSectionIndex);
+          setActiveQuestion(0);
+          console.log("🔄 Loaded via sidebar navigation → starting from section:", newSectionIndex);
+        } else {
+          // 🟢 Journey reopen → resume from last unanswered
+          type FlatQ = { qid: string; sIdx: number; qIdx: number; required: boolean };
+          const flat: FlatQ[] = [];
+          allSections.forEach((s, sIdx) => {
+            s.questions.forEach((q, qIdx) => {
+              flat.push({ qid: q.id, sIdx, qIdx, required: !!s.required });
+            });
+          });
+
+          let resumeSection = 0;
+          let resumeQuestion = 0;
+          const firstUnansweredIdx = flat.findIndex(f => restored[f.qid] === undefined);
+
+          if (firstUnansweredIdx === -1) {
+            if (isCompleted) {
+              navigate("/journey");
+              return;
+            } else {
+              setShowPopup(true);
+              const last = flat[flat.length - 1];
+              resumeSection = last.sIdx;
+              resumeQuestion = last.qIdx;
+            }
+          } else {
+            const target = flat[firstUnansweredIdx];
+            resumeSection = target.sIdx;
+            resumeQuestion = target.qIdx;
+          }
+
+          setActiveSection(resumeSection);
+          setActiveQuestion(resumeQuestion);
+          console.log("🟢 Loaded via journey resume → resuming from", resumeSection, resumeQuestion);
         }
       } catch (err) {
         console.error("❌ Failed to load questionnaire data:", err);
       } finally {
         setLoading(false);
+        window.scrollTo(0, 0); // ✅ scroll to top for new section
       }
     };
+
     loadAllData();
-  }, []);
+  }, [location.search]);
 
   /* ---------------- Autosave on unload ---------------- */
   useEffect(() => {
@@ -174,24 +241,42 @@ const Questionnaire: React.FC = () => {
     setResponses((prev) => ({ ...prev, [qid]: value }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (isTransitioning) return; // prevent rapid multi-clicks
+    setIsTransitioning(true);
+
     const q = questions[activeQuestion];
     const ans = responses[q.id] || "";
 
     if (!ans && currentSection.required) {
       setErrorMsg("⚠️ Please answer this question before moving on.");
+      setIsTransitioning(false);
       return;
     } else setErrorMsg("");
 
+    // 🧭 Case 1: Move to next question in same section
     if (activeQuestion < questions.length - 1) {
       setActiveQuestion((prev) => prev + 1);
-    } else if (activeSection < sections.length - 1) {
+    }
+    // 🧭 Case 2: Move to next section (first question)
+    else if (activeSection < sections.length - 1) {
       setActiveSection((prev) => prev + 1);
       setActiveQuestion(0);
-    } else {
-      // ✅ End of questionnaire
-      saveAllResponses().then(() => setShowPopup(true));
     }
+    // 🧭 Case 3: Last question of last section — save & go to journey
+    else {
+      console.log("🚀 Last question reached — saving all responses...");
+      try {
+        await saveAllResponses();
+        console.log("✅ All responses saved — redirecting to journey...");
+        navigate("/journey");
+      } catch (err) {
+        console.error("⚠️ Save or navigation failed:", err);
+      }
+    }
+
+    // small cooldown to prevent rapid clicks
+    setTimeout(() => setIsTransitioning(false), 600);
   };
 
   const handleBack = () => {
@@ -339,8 +424,12 @@ const Questionnaire: React.FC = () => {
         <button className="qn-back" onClick={handleBack}>
           Back
         </button>
-        <button className="qn-next" onClick={handleNext} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Next"}
+        <button
+          className="qn-next"
+          onClick={handleNext}
+          disabled={isSaving || isTransitioning}
+        >
+          {isSaving ? "Saving..." : isTransitioning ? "..." : "Next"}
         </button>
       </div>
 
