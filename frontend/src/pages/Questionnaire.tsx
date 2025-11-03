@@ -4,6 +4,7 @@ import { FiX, FiMenu, FiCheck } from "react-icons/fi";
 import Sidebar from "../components/Sidebar";
 import "../styles/global.css";
 import "../styles/questionnaire.css";
+import { useRef } from "react";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -41,6 +42,7 @@ const Questionnaire: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingExit, setIsSavingExit] = useState(false);
 
   const userId = localStorage.getItem("user_id") || "1";
 
@@ -83,6 +85,46 @@ const Questionnaire: React.FC = () => {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [responses]);
+
+  const responsesRef = useRef(responses);
+  useEffect(() => {
+    responsesRef.current = responses;
+  }, [responses]);
+
+  /* ---------------- Autosave on component unmount (e.g., sidebar navigation) ---------------- */
+  useEffect(() => {
+    return () => {
+      const saved = responsesRef.current;
+      if (saved && Object.keys(saved).length > 0) {
+        console.log("🧩 Auto-saving before unmount (navigation away)...");
+
+        try {
+          const payload = Object.entries(saved).map(([qid, ans]) => ({
+            user_id: parseInt(userId, 10),
+            category: findCategoryByQuestionId(qid),
+            question_id: qid,
+            answer: ans,
+          }));
+
+          const blob = new Blob([JSON.stringify({ responses: payload })], {
+            type: "application/json",
+          });
+
+          // ✅ Uses sendBeacon so it completes even if the page unloads
+          const ok = navigator.sendBeacon(
+            `${API_BASE_URL}/questionnaire/bulk-save`,
+            blob
+          );
+
+          console.log(ok ? "✅ Beacon sent successfully" : "⚠️ Beacon failed, fallback save...");
+          if (!ok) saveAllResponses(); // fallback if beacon unsupported
+        } catch (err) {
+          console.error("⚠️ Beacon save error:", err);
+        }
+      }
+    };
+  }, []); // run only on unmount
+
 
   /* ---------------- Helper: save all responses at once ---------------- */
   const saveAllResponses = async () => {
@@ -324,19 +366,41 @@ const Questionnaire: React.FC = () => {
                 />
               </svg>
             </div>
+
             <h2 className="exit-title white">Leaving already?</h2>
-            <p className="exit-text white">We will save your progress</p>
-            <div className="exit-buttons">
-              <button className="btn-keep outlined" onClick={handleKeepGoing}>
-                Keep Going
-              </button>
-              <button className="btn-exit filled" onClick={handleSaveAndExit}>
-                Save And Exit
-              </button>
-            </div>
+
+            {isSavingExit ? (
+              <>
+                <p className="exit-text white">💾 Saving your progress...</p>
+              </>
+            ) : (
+              <>
+                <p className="exit-text white">We will save your progress</p>
+                <div className="exit-buttons">
+                  <button className="btn-keep outlined" onClick={handleKeepGoing}>
+                    Keep Going
+                  </button>
+                  <button
+                    className="btn-exit filled"
+                    onClick={async () => {
+                      setIsSavingExit(true);
+                      await saveAllResponses();
+                      setTimeout(() => {
+                        setIsSavingExit(false);
+                        setShowExitModal(false);
+                        navigate("/journey");
+                      }, 1000); // smooth UX transition
+                    }}
+                  >
+                    Save And Exit
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
+
     </div>
   );
 };
