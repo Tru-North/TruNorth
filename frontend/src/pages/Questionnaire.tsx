@@ -40,10 +40,11 @@ const Questionnaire: React.FC = () => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const userId = localStorage.getItem("user_id") || "1";
 
-  // 🟣 Load questionnaire
+  /* ---------------- Load questionnaire + saved responses ---------------- */
   useEffect(() => {
     const loadAllData = async () => {
       try {
@@ -70,6 +71,54 @@ const Questionnaire: React.FC = () => {
     loadAllData();
   }, []);
 
+  /* ---------------- Autosave on unload ---------------- */
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (Object.keys(responses).length > 0) {
+        e.preventDefault();
+        saveAllResponses(); // fire async, browser may cancel
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [responses]);
+
+  /* ---------------- Helper: save all responses at once ---------------- */
+  const saveAllResponses = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      const payload = Object.entries(responses).map(([qid, ans]) => ({
+        user_id: parseInt(userId, 10),
+        category: findCategoryByQuestionId(qid),
+        question_id: qid,
+        answer: ans,
+      }));
+
+      const res = await fetch(`${API_BASE_URL}/questionnaire/bulk-save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ responses: payload }),
+      });
+
+      if (!res.ok) throw new Error("Bulk save failed");
+      console.log("✅ All responses saved successfully");
+    } catch (err) {
+      console.error("⚠️ Bulk save error:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const findCategoryByQuestionId = (qid: string): string => {
+    for (const sec of sections) {
+      if (sec.questions.some((q) => q.id === qid)) return sec.category;
+    }
+    return "unknown";
+  };
+
+  /* ---------------- Navigation ---------------- */
   if (loading) return <p style={{ textAlign: "center" }}>Loading questionnaire...</p>;
   if (!sections.length) return <p style={{ textAlign: "center" }}>No questionnaire found.</p>;
 
@@ -83,35 +132,14 @@ const Questionnaire: React.FC = () => {
     setResponses((prev) => ({ ...prev, [qid]: value }));
   };
 
-  const saveResponse = async (qid: string, answer: string) => {
-    try {
-      await fetch(`${API_BASE_URL}/questionnaire/save`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: parseInt(userId, 10),
-          category: sections[activeSection]?.category,
-          question_id: qid,
-          answer: answer,
-        }),
-      });
-    } catch (err) {
-      console.error("⚠️ Failed to save response:", err);
-    }
-  };
-
-  const handleNext = async () => {
+  const handleNext = () => {
     const q = questions[activeQuestion];
     const ans = responses[q.id] || "";
 
     if (!ans && currentSection.required) {
       setErrorMsg("⚠️ Please answer this question before moving on.");
       return;
-    } else {
-      setErrorMsg("");
-    }
-
-    await saveResponse(q.id, ans);
+    } else setErrorMsg("");
 
     if (activeQuestion < questions.length - 1) {
       setActiveQuestion((prev) => prev + 1);
@@ -119,125 +147,61 @@ const Questionnaire: React.FC = () => {
       setActiveSection((prev) => prev + 1);
       setActiveQuestion(0);
     } else {
-      setShowPopup(true);
+      // ✅ End of questionnaire
+      saveAllResponses().then(() => setShowPopup(true));
     }
   };
 
   const handleBack = () => {
-    if (activeQuestion > 0) {
-      setActiveQuestion((prev) => prev - 1);
-    } else if (activeSection > 0) {
-      const prevSection = activeSection - 1;
-      setActiveSection(prevSection);
-      setActiveQuestion(sections[prevSection].questions.length - 1);
-    } else {
-      navigate("/journey");
-    }
+    if (activeQuestion > 0) setActiveQuestion((p) => p - 1);
+    else if (activeSection > 0) {
+      const prev = activeSection - 1;
+      setActiveSection(prev);
+      setActiveQuestion(sections[prev].questions.length - 1);
+    } else navigate("/journey");
   };
 
-  // ✨ Handle Exit
+  /* ---------------- Exit modal ---------------- */
   const handleCrossClick = () => setShowExitModal(true);
   const handleKeepGoing = () => setShowExitModal(false);
-  const handleSaveAndExit = () => {
+  const handleSaveAndExit = async () => {
+    await saveAllResponses();
     setShowExitModal(false);
     navigate("/journey");
   };
 
+  /* ---------------- Question Renderer ---------------- */
   const renderQuestion = (q: Question) => {
-    const isWorkValues =
-      q.category?.toLowerCase().includes("work_values") ||
-      q.question.toLowerCase().includes("values that best reflect");
+    const val = responses[q.id];
+    const isMulti = q.type === "multi_choice";
 
-    // 🟣 Special visual layout for work values
-    if (isWorkValues && q.type === "multi_choice") {
-      const currentValue = (() => {
-        try {
-          const val = responses[q.id];
-          return val ? JSON.parse(val) : [];
-        } catch {
-          return [];
-        }
-      })();
-
-      const handleOptionClick = (opt: string) => {
-        const prevArray = Array.isArray(currentValue) ? [...currentValue] : [];
-        const alreadySelected = prevArray.includes(opt);
-        const maxSelect = q.max_select || 5;
-        if (!alreadySelected && prevArray.length >= maxSelect) return;
-        const updated = alreadySelected
-          ? prevArray.filter((o) => o !== opt)
-          : [...prevArray, opt];
+    const handleClick = (opt: string) => {
+      if (isMulti) {
+        const prev = val ? JSON.parse(val) : [];
+        const already = prev.includes(opt);
+        const maxSelect = q.max_select || Infinity;
+        let updated = [...prev];
+        if (already) updated = prev.filter((o: string) => o !== opt);
+        else if (prev.length < maxSelect) updated.push(opt);
         handleResponse(q.id, JSON.stringify(updated));
-        saveResponse(q.id, updated);
-      };
+      } else {
+        handleResponse(q.id, opt);
+      }
+    };
 
-      return (
-        <div className="work-values-grid">
-          {q.options?.map((opt, idx) => {
-            const isSelected =
-              Array.isArray(currentValue) && currentValue.includes(opt);
-            return (
-              <button
-                key={idx}
-                onClick={() => handleOptionClick(opt)}
-                className={`work-value-btn ${isSelected ? "selected" : ""}`}
-                type="button"
-              >
-                <span className={`check-circle ${isSelected ? "checked" : ""}`}>
-                  {isSelected && <FiCheck size={14} strokeWidth={3} />}
-                </span>
-                <span>{opt}</span>
-              </button>
-            );
-          })}
-          <p className="qn-hint">You can select up to {q.max_select || 5} options.</p>
-        </div>
-      );
-    }
-
-    // 🟣 Original rendering logic (untouched)
     switch (q.type) {
       case "multi_choice":
-      case "single_choice": {
-        const isMulti = q.type === "multi_choice";
-        const currentValue = (() => {
-          try {
-            const val = responses[q.id];
-            if (isMulti && val) return JSON.parse(val);
-            return val;
-          } catch {
-            return [];
-          }
-        })();
-
-        const handleOptionClick = (opt: string) => {
-          if (isMulti) {
-            const prevArray = Array.isArray(currentValue) ? [...currentValue] : [];
-            const alreadySelected = prevArray.includes(opt);
-            const maxSelect = q.max_select || Infinity;
-            if (!alreadySelected && prevArray.length >= maxSelect) return;
-            const updated = alreadySelected
-              ? prevArray.filter((o) => o !== opt)
-              : [...prevArray, opt];
-            handleResponse(q.id, JSON.stringify(updated));
-            saveResponse(q.id, updated);
-          } else {
-            handleResponse(q.id, opt);
-            saveResponse(q.id, opt);
-          }
-        };
-
+      case "single_choice":
+        const parsed = isMulti ? (val ? JSON.parse(val) : []) : val;
         return (
           <div className="qn-options">
-            {q.options?.map((opt, idx) => {
-              const isSelected = isMulti
-                ? Array.isArray(currentValue) && currentValue.includes(opt)
-                : currentValue === opt;
+            {q.options?.map((opt, i) => {
+              const selected = isMulti ? parsed.includes(opt) : parsed === opt;
               return (
                 <button
-                  key={idx}
-                  onClick={() => handleOptionClick(opt)}
-                  className={`qn-tab ${isSelected ? "active" : ""}`}
+                  key={i}
+                  onClick={() => handleClick(opt)}
+                  className={`qn-tab ${selected ? "active" : ""}`}
                   type="button"
                 >
                   {opt}
@@ -245,11 +209,10 @@ const Questionnaire: React.FC = () => {
               );
             })}
             {isMulti && q.max_select && (
-              <p className="qn-hint">You can select up to {q.max_select} options.</p>
+              <p className="qn-hint">Select up to {q.max_select}</p>
             )}
           </div>
         );
-      }
 
       case "rating":
         return (
@@ -261,10 +224,7 @@ const Questionnaire: React.FC = () => {
               ).map((num) => (
                 <button
                   key={num}
-                  onClick={() => {
-                    handleResponse(q.id, num.toString());
-                    saveResponse(q.id, num.toString());
-                  }}
+                  onClick={() => handleResponse(q.id, num.toString())}
                   className={`qn-tab ${responses[q.id] === num.toString() ? "active" : ""}`}
                   type="button"
                 >
@@ -287,10 +247,7 @@ const Questionnaire: React.FC = () => {
           <textarea
             placeholder={q.placeholder}
             value={responses[q.id] || ""}
-            onChange={(e) => {
-              handleResponse(q.id, e.target.value);
-              saveResponse(q.id, e.target.value);
-            }}
+            onChange={(e) => handleResponse(q.id, e.target.value)}
             className={q.type === "text_long" ? "qn-textarea" : "qn-input"}
           />
         );
@@ -300,6 +257,7 @@ const Questionnaire: React.FC = () => {
     }
   };
 
+  /* ---------------- Render ---------------- */
   return (
     <div className="mobile-frame">
       <div className="qn-header">
@@ -339,8 +297,8 @@ const Questionnaire: React.FC = () => {
         <button className="qn-back" onClick={handleBack}>
           Back
         </button>
-        <button className="qn-next" onClick={handleNext}>
-          Next
+        <button className="qn-next" onClick={handleNext} disabled={isSaving}>
+          {isSaving ? "Saving..." : "Next"}
         </button>
       </div>
 
@@ -379,7 +337,6 @@ const Questionnaire: React.FC = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

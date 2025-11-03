@@ -56,6 +56,30 @@ async def save_questionnaire_response_route(payload: QuestionnaireResponseCreate
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# ---------- 🆕 3B. Bulk Save Questionnaire Responses ----------
+from typing import Dict, Any, List
+from fastapi import Body
+
+@router.post("/bulk-save")
+async def bulk_save_questionnaire_responses(
+    payload: Dict[str, List[Dict[str, Any]]] = Body(...)
+):
+    """
+    Accepts a list of questionnaire responses and saves them in bulk.
+    Example:
+    {
+        "responses": [
+            {"user_id": 1, "category": "about_me", "question_id": "about_1", "answer": "Exploring"},
+            {"user_id": 1, "category": "values", "question_id": "values_1", "answer": ["Trust", "Purpose"]}
+        ]
+    }
+    """
+    try:
+        from app.services.questionnaire_service import save_bulk_questionnaire_responses
+        save_bulk_questionnaire_responses(payload.get("responses", []))
+        return {"message": "Bulk responses saved successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to bulk save responses: {e}")
 
 # ---------- 4️⃣ Update Progress ----------
 @router.post("/progress")

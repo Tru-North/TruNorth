@@ -158,6 +158,79 @@ def save_questionnaire_response(payload: QuestionnaireResponseCreate):
     finally:
         db.close()
 
+# ---------- 🆕 Bulk Save Questionnaire Responses ----------
+def save_bulk_questionnaire_responses(responses: list):
+    """
+    Saves multiple questionnaire responses in one transaction.
+    Performs UPSERT logic: update if question exists, insert otherwise.
+    """
+    if not responses:
+        return
+
+    db: Session = SessionLocal()
+    try:
+        for item in responses:
+            user_id = item.get("user_id")
+            category = item.get("category")
+            qid = item.get("question_id")
+            answer = item.get("answer")
+
+            existing = (
+                db.query(QuestionnaireResponse)
+                .filter(
+                    QuestionnaireResponse.user_id == user_id,
+                    QuestionnaireResponse.question_id == qid,
+                )
+                .first()
+            )
+
+            if existing:
+                existing.answer = answer
+                existing.timestamp = datetime.utcnow()
+            else:
+                db.add(
+                    QuestionnaireResponse(
+                        user_id=user_id,
+                        category=category,
+                        question_id=qid,
+                        answer=answer,
+                    )
+                )
+
+        db.commit()
+
+        # Optional: update progress after all inserts
+        try:
+            first_user_id = responses[0].get("user_id")
+            from app.services.questionnaire_service import update_user_progress, load_questionnaire, get_saved_responses
+            questionnaire_data = load_questionnaire()
+            saved_responses = get_saved_responses(first_user_id)
+            answered_qids = {r["question_id"] for r in saved_responses}
+
+            required_qids = set()
+            for section in questionnaire_data.get("sections", []):
+                if section.get("required", False):
+                    for q in section.get("questions", []):
+                        required_qids.add(q.get("id"))
+
+            all_required_answered = required_qids.issubset(answered_qids)
+            update_user_progress(
+                UserProgressUpdate(
+                    user_id=first_user_id,
+                    current_tab=None,
+                    is_completed=all_required_answered,
+                )
+            )
+        except Exception as progress_err:
+            print(f"⚠️ [PROGRESS UPDATE WARNING - BULK] {progress_err}")
+
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.close()
+
+
 # ---------- 4️⃣ Update User Progress ----------
 def update_user_progress(payload: UserProgressUpdate):
     db: Session = SessionLocal()
