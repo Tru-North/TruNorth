@@ -1,6 +1,7 @@
 # --- Build Tools (required for Pyrebase/gcloud dependencies) ---
 setuptools
 wheel
+setuptools-distutils
 
 # --- Core Backend Framework ---
 fastapi==0.111.0
