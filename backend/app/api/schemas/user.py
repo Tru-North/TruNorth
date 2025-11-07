@@ -25,7 +25,7 @@ class UserResponse(BaseModel):
     firstname: str
     lastname: str
     email: str
-    created_at: datetime
+    created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
 
     class Config:

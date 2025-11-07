@@ -236,6 +236,8 @@ def get_user(user_id: int, user=Depends(firebase_token_dependency), db: Session 
         "firstname": db_user.firstname,
         "lastname": db_user.lastname,
         "email": db_user.email,
+        "created_at": getattr(db_user, "created_at", None),
+        "last_login": getattr(db_user, "last_login", None),
     }
 
 
