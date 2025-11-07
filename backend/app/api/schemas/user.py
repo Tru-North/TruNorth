@@ -1,4 +1,5 @@
 from typing import Optional
+from datetime import datetime
 from pydantic import BaseModel, EmailStr
 
 # ---------------------- CREATE & UPDATE ----------------------
@@ -24,6 +25,8 @@ class UserResponse(BaseModel):
     firstname: str
     lastname: str
     email: str
+    created_at: datetime
+    last_login: Optional[datetime] = None
 
     class Config:
         from_attributes = True  # ✅ replaces orm_mode in Pydantic v2

@@ -15,7 +15,7 @@ from app.api.schemas.user import (
 )
 from app.utils.firebase_util import auth, pyre_auth, verify_firebase_token
 from app.services.password_reset_service import initiate_reset, check_code, reset_password
-
+from app.services.user_service import get_user_by_firebase_uid, update_last_login
 
 # ---------------------- SETUP ----------------------
 router = APIRouter()
@@ -77,8 +77,8 @@ async def register_google(request: Request, db: Session = Depends(get_db)):
     """
     Handles both Google Sign-Up and Login:
     1. Verifies Firebase ID token from Authorization header.
-    2. If user exists -> logs them in.
-    3. If user doesn’t exist -> registers new user.
+    2. If user exists -> logs them in (updates last_login).
+    3. If user doesn’t exist -> registers new user (created_at auto, last_login set).
     Returns the same structure as /login for consistency.
     """
     try:
@@ -127,6 +127,9 @@ async def register_google(request: Request, db: Session = Depends(get_db)):
             if updated:
                 db.commit()
                 db.refresh(user)
+
+            # 🕒 Update last_login for returning Google user
+            update_last_login(db, user)
             status = "existing_user"
         else:
             # 🆕 New user — create record
@@ -140,6 +143,9 @@ async def register_google(request: Request, db: Session = Depends(get_db)):
             db.add(user)
             db.commit()
             db.refresh(user)
+
+            # 🕒 Also set last_login for new Google user
+            update_last_login(db, user)
             status = "new_user"
 
         # 🔹 Step 4: Return same structure as /login
@@ -153,6 +159,8 @@ async def register_google(request: Request, db: Session = Depends(get_db)):
                 "lastname": user.lastname,
                 "email": user.email,
                 "firebase_uid": user.firebase_uid,
+                "created_at": user.created_at,
+                "last_login": user.last_login,
             },
         }
 
@@ -181,16 +189,21 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         if not user:
             raise HTTPException(status_code=404, detail="User not found in database.")
 
-        # 🔹 Step 3: Return combined token + DB user info
+        # 🕒 Step 3: Update last login timestamp
+        update_last_login(db, user)
+
+        # 🔹 Step 4: Return combined token + DB user info
         return {
             "access_token": id_token,
             "token_type": "bearer",
             "user": {
-                "id": user.id,  # from Postgres
+                "id": user.id,
                 "firstname": user.firstname,
                 "lastname": user.lastname,
                 "email": user.email,
                 "firebase_uid": user.firebase_uid,
+                "created_at": user.created_at,
+                "last_login": user.last_login,
             },
         }
 
