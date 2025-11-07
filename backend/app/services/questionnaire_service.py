@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.models.questionnaire import ChatResponse, QuestionnaireResponse, UserProgress
-from app.schemas.questionnaire_schemas import (
+from app.api.schemas.questionnaire_schemas import (
     ChatResponseCreate,
     QuestionnaireResponseCreate,
     UserProgressUpdate,

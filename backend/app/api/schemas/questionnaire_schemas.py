@@ -1,35 +1,42 @@
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any, Optional
 from pydantic import BaseModel
 
 
-# ---------------------- CHAT RESPONSE ----------------------
-
+# ---------- Chatbot Schema ----------
 class ChatResponseCreate(BaseModel):
-    user_id: int
+    user_id: int                  # ✅ now Integer (matches users.id FK)
     chat_id: str
-    response: Dict[str, Any]
+    response: Any
 
 
-# ---------------------- QUESTIONNAIRE RESPONSE ----------------------
-
+# ---------- Questionnaire Schema ----------
 class QuestionnaireResponseCreate(BaseModel):
-    user_id: int
+    user_id: int                  # ✅ Integer type
     category: str
     question_id: str
-    answer: Dict[str, Any]  # can handle multiple-choice or text
+    answer: Any
 
 
-# ---------------------- USER PROGRESS ----------------------
-
+# ---------- Progress Schema ----------
 class UserProgressUpdate(BaseModel):
-    user_id: int
-    current_tab: Optional[int] = None
+    user_id: int                  # ✅ Integer type
+    current_tab: Optional[int] = 1
     is_completed: Optional[bool] = False
 
 
-# ---------------------- SUBMIT RESPONSE ----------------------
-
+# ---------- Response Schema ----------
 class QuestionnaireSubmitResponse(BaseModel):
     message: str
     completion_time: datetime
+
+
+# ---------- For returning progress ----------
+class UserProgressOut(BaseModel):
+    user_id: int
+    current_tab: int
+    is_completed: bool
+    saved_at: datetime
+
+    class Config:
+        from_attributes = True  # ✅ Pydantic v2 syntax replacing `orm_mode`

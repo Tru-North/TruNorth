@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from datetime import datetime
-from app.schemas.questionnaire_schemas import (
+from app.api.schemas.questionnaire_schemas import (
     ChatResponseCreate,
     QuestionnaireResponseCreate,
     UserProgressUpdate,
