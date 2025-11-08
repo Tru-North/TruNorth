@@ -1,0 +1,121 @@
+/* ---------------- Voice Mode UI ---------------- */
+.voice-ui-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;   /* ✅ start stacking from top */
+  height: calc(100vh - 70px);
+  padding: 2rem 1rem;
+  background: #fff;
+  text-align: center;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ---------------- Center Logo ---------------- */
+.mic-ring-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 3rem;       /* ✅ top padding */
+  margin-bottom: 1rem;    /* ✅ small gap before caption */
+}
+
+.trunorth-logo {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+}
+
+/* ---------------- Pulse Ring (Logo Wrapper) ---------------- */
+.pulse-ring {
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent; /* Case 1: Idle */
+  transition: all 0.3s ease;
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+/* 🟣 Case 3 — Ruby is processing (soft highlight, no pulse) */
+.pulse-ring.ruby-highlight {
+  background: rgba(157, 139, 249, 0.15);
+  box-shadow: 0 0 16px rgba(157, 139, 249, 0.3);
+  transform: scale(1.03);
+}
+
+/* 🔵 Case 4 — Ruby is speaking (pulsing) */
+.pulse-ring.ruby-pulse {
+  background: rgba(157, 139, 249, 0.25);
+  animation: rubyPulse 1.5s infinite ease-in-out !important;
+}
+
+/* ---------------- Text ---------------- */
+.caption-text {
+  font-size: 20px;
+  font-weight: 600;
+  color: #000;
+  margin-top: 1rem;        /* ✅ move closer to logo */
+  margin-bottom: auto;     /* ✅ push rest of content down */
+  font-family: "Outfit", sans-serif;
+  text-align: center;
+  white-space: pre-line;   /* ✅ allows commas/newlines to break cleanly */
+}
+
+.sub-caption-text {
+  font-size: 13px;
+  color: #666;
+  font-family: "Outfit", sans-serif;
+}
+
+/* ---------------- Controls ---------------- */
+.transport-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7rem;
+  margin-bottom: 2rem;
+}
+
+.control-btn {
+  background: none;           /* ✅ remove white circle */
+  border: none;               /* ✅ remove outline */
+  box-shadow: none;           /* ✅ no drop shadow */
+  cursor: pointer;
+  transition: transform 0.25s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.control-btn img {
+  width: 80px;                /* ✅ bigger SVGs */
+  height: 80px;
+  transition: transform 0.25s ease;
+}
+
+/* 🎙 Case 2 — User Talking (Mic highlighted, no pulse) */
+.mic-btn.recording {
+  border: 10px solid #9d8bf9;
+  box-shadow: 0 0 12px rgba(157, 139, 249, 0.4);
+  transform: scale(1.05);
+  animation: none !important;
+  border-radius: 50%;      /* ✅ makes it circular */
+  overflow: hidden;        /* ✅ hides square SVG corners */
+}
+
+/* ---------------- Animations ---------------- */
+@keyframes rubyPulse {
+  0%, 100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(157, 139, 249, 0.3);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 20px rgba(157, 139, 249, 0);
+  }
+}

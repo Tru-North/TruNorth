@@ -5,6 +5,7 @@
   background: #fff;
   justify-content: flex-start;
   align-items: stretch;
+  width: 100%;
 }
 
 /* Header */
@@ -69,7 +70,7 @@
 .chat-bubble {
   padding: 10px 14px;
   border-radius: 18px;
-  max-width: 80%;
+  max-width: 100%;
   word-wrap: break-word;
   color: #000;
 }
@@ -519,4 +520,148 @@
     border-left-color: #555;
     color: #aaa;
   }
+}
+
+/* --- Fix header and maintain correct navbar anchoring --- */
+.ai-coach-header {
+  z-index: 100;
+}
+
+.voice-overlay {
+  top: 70px; /* below header */
+  height: calc(100% - 70px); /* avoid covering header */
+  z-index: 50;
+}
+
+/* --- Restore correct bottom navbar alignment --- */
+.ai-coach-container {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
+
+/* ---------------- Modern Chat Input ---------------- */
+.chat-input-bar {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1.5px solid #ddd;
+  border-radius: 30px;
+  padding: 8px 14px;
+  margin: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+
+.chat-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-family: "Outfit", sans-serif;
+  color: #000;
+  background: transparent;
+  margin: 0 8px;
+}
+
+.chat-input::placeholder {
+  color: #aaa;
+}
+
+.chat-icon {
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  transition: none !important;
+}
+
+.chat-icon.mic,
+.chat-icon.voice {
+  margin-right: 8px;
+}
+
+.chat-icon.send {
+  margin-left: 8px;
+}
+
+.chat-icon.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ✅ Recording glow (soft ring) */
+.chat-icon.mic.recording {
+  filter: drop-shadow(0 0 8px rgba(157, 139, 249, 0.6));
+}
+
+/* ---------------- Recording Popup ---------------- */
+.recording-popup {
+  position: absolute;
+  bottom: 90px; /* floats just above input bar */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 85%;
+  background: #fff;
+  border: 1.5px solid #9d8bf9;
+  border-radius: 24px;
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(157, 139, 249, 0.2);
+  z-index: 10;
+  animation: fadeIn 0.25s ease;
+}
+
+.recording-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recording-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #9d8bf9;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.recording-text {
+  font-size: 14px;
+  color: #000;
+  font-weight: 500;
+  font-family: "Outfit", sans-serif;
+}
+
+.recording-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.recording-controls button {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #9d8bf9;
+  font-weight: 600;
+  cursor: pointer;
+  transition: none;
+}
+
+.recording-controls button:active {
+  transform: scale(0.95);
 }

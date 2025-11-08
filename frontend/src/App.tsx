@@ -64,7 +64,7 @@ const App: React.FC = () => {
         />
 
         <Route
-          path="/coach"
+          path="/coach/*"
           element={
             <ProtectedRoute>
               <AICoach />
