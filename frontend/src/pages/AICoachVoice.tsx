@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { FiX, FiMenu } from "react-icons/fi";
@@ -23,6 +24,42 @@ const AICoachVoice: React.FC = () => {
   const voiceRecorderRef = useRef<MediaRecorder | null>(null);
   const voiceChunksRef = useRef<BlobPart[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  /* ---------------- Initialize Firebase UID & Session ---------------- */
+  useEffect(() => {
+    const initUser = async () => {
+      try {
+        const userId = localStorage.getItem("user_id");
+        const token = localStorage.getItem("token");
+
+        if (!userId || !token) return;
+
+        // Ensure session exists
+        let sid = localStorage.getItem("session_id");
+        if (!sid) {
+          sid = crypto.randomUUID();
+          localStorage.setItem("session_id", sid);
+        }
+
+        // Fetch Firebase UID if missing
+        const firebaseUid = localStorage.getItem("firebase_uid");
+        if (!firebaseUid) {
+          const res = await fetch(`${API_BASE_URL}/users/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) throw new Error("Failed to fetch Firebase UID");
+          const data = await res.json();
+          if (data.firebase_uid) {
+            localStorage.setItem("firebase_uid", data.firebase_uid);
+            console.log("✅ Firebase UID initialized:", data.firebase_uid);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to initialize Firebase UID:", err);
+      }
+    };
+    initUser();
+  }, []);
 
   /* ---------------- Case 2: User starts speaking ---------------- */
   const startVoiceListening = async () => {
