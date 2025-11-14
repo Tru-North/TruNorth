@@ -23,6 +23,7 @@ from app.services.ai.chat_history_service import save_message
 from app.services.ai.chat_history_service import save_message
 from app.services.ai.chat_history_service import get_session_messages
 from app.services.ai.feedback_service import get_user_feedback_patterns
+from app.services import recommendation_service
 
 class AzureFoundryEmbeddings:
     """Azure Foundry Embeddings Wrapper"""
@@ -340,6 +341,42 @@ class AICoachService:
                     })
             except Exception as e:
                 print(f"⚠️  Could not load profile: {e}")
+
+            try:
+                favorite_cards = recommendation_service.get_favorite_recommendations(db, user.id, limit=3)
+                latest_cards = recommendation_service.get_latest_recommendations(db, user.id, limit=3)
+
+                favorite_ids = {card.get("id") for card in favorite_cards if card.get("id")}
+                filtered_latest = [card for card in latest_cards if card.get("id") not in favorite_ids]
+
+                rec_context_parts = []
+                if favorite_cards:
+                    fav_lines = []
+                    for card in favorite_cards:
+                        summary = card.get("why_this_fits") or ""
+                        summary = summary[:180] + ("..." if len(summary) > 180 else "")
+                        fit = card.get("fit_score")
+                        fit_text = f"{fit:.1f}%" if isinstance(fit, (int, float)) else "--"
+                        fav_lines.append(f"- {card.get('title')} (fit {fit_text}) :: {summary}")
+                    rec_context_parts.append("USER FAVORITE ROLES:\n" + "\n".join(fav_lines))
+
+                if filtered_latest:
+                    latest_lines = []
+                    for card in filtered_latest:
+                        fit = card.get("fit_score")
+                        fit_text = f"{fit:.1f}%" if isinstance(fit, (int, float)) else "--"
+                        skills = card.get("top_skills") or []
+                        skill_text = ", ".join(skills[:3]) if skills else "key strengths"
+                        latest_lines.append(f"- {card.get('title')} (fit {fit_text}) :: key skills {skill_text}")
+                    rec_context_parts.append("LATEST RECOMMENDATIONS SHOWN TO USER:\n" + "\n".join(latest_lines))
+
+                if rec_context_parts:
+                    messages.append({
+                        "role": "system",
+                        "content": "\n\n".join(rec_context_parts)
+                    })
+            except Exception as exc:
+                print(f"⚠️  Could not load recommendation context: {exc}")
         
         # Add conversation history
         if user:

@@ -1,0 +1,193 @@
+.saved-careers-page {
+  background: #fff;
+}
+
+/* ---------- Header ---------- */
+.saved-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  background: #fff;
+  position: relative;
+  flex-shrink: 0;
+  max-width: 390px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.saved-header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #000;
+  margin: 0;
+}
+
+.saved-header-icon {
+  position: absolute;
+  font-size: 22px;
+  color: #000;
+  cursor: pointer;
+}
+
+.saved-header-icon.left {
+  left: 16px;
+}
+
+.saved-header-icon.right {
+  right: 16px;
+}
+
+/* ---------- Body ---------- */
+.saved-body {
+  padding: 24px 20px; /* more space around everything */
+  background: #fff;
+  min-height: calc(100vh - 110px);
+}
+
+/* Divider under chat bubble */
+.saved-divider {
+  border: none;
+  border-top: 2px solid #9d8bf9;
+  margin: 20px 0 12px 0;
+  width: 100%;
+}
+
+/* Saved careers list styling */
+.saved-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Each item row */
+.saved-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  position: relative;
+}
+
+/* Gray line only between items */
+.saved-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+/* Text and button alignment */
+.career-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #000;
+}
+
+.saved-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.explore-btn {
+  background: #9d8bf9;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: none !important;
+}
+
+.explore-btn:hover,
+.explore-btn:focus,
+.explore-btn:active {
+  background: #9d8bf9 !important;
+  color: white !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+.delete-icon {
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* ---------- Empty & Loading ---------- */
+.saved-empty,
+.saved-loading {
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* ---------- Modal ---------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-box {
+  background: #9d8bf9;
+  color: white;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  width: 270px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.modal-box h4 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.modal-box p {
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-around;
+}
+
+.cancel-btn {
+  background: #ffffff;
+  color: #9d8bf9;
+  border: none;
+  border-radius: 12px;
+  padding: 6px 22px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-btn {
+  background: transparent;
+  color: #ef4444;
+  border: 2px solid #ef4444;
+  border-radius: 12px;
+  padding: 6px 22px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}

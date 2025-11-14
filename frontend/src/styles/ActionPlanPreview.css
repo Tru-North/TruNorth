@@ -1,0 +1,158 @@
+.action-plan-page {
+  background: #fff;
+}
+
+/* ---------- Header ---------- */
+.action-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  background: #fff;
+  position: relative;
+  flex-shrink: 0;
+  max-width: 390px;
+  margin: 0 auto;
+  width: 100%;
+  border-bottom: 1px solid #eee;
+}
+
+.action-header-icon {
+  position: absolute;
+  font-size: 22px;
+  cursor: pointer;
+  color: #000;
+}
+
+.action-header-icon.left {
+  left: 16px;
+}
+
+.action-header-icon.right {
+  right: 16px;
+}
+
+.action-header-title {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.action-header-title h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+}
+
+.action-header-title p {
+  font-size: 12px;
+  color: #444;
+  margin: 0;
+  margin-top: 2px;
+
+  max-width: 75%;     /* makes the text narrower */
+  margin-left: auto;  /* centers it */
+  margin-right: auto; /* centers it */
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* ---------- Body ---------- */
+.action-body {
+  padding: 15px;
+  overflow-y: auto;
+  padding-bottom: 40px;
+}
+
+/* ---------- Card ---------- */
+.action-card {
+  background: #f5f1ff;
+  border-radius: 16px;
+  padding: 24px 26px;      /* wider */
+  margin-top: 18px;
+  width: 100%;
+  max-width: 395px;        /* wider card just like design */
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+/* Title centered */
+.action-card h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #000;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+/* Bullet list */
+.action-list {
+  list-style: none;        /* remove default bullets */
+  padding-left: 0;
+  margin: 0 0 18px 0;
+}
+
+.action-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  color: #000;
+  line-height: 1.45;
+}
+
+/* Perfect round purple dot */
+.action-list li::before {
+  content: "";
+  display: inline-block;
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;      /* makes it a circle */
+  background: #8f7cfb;
+  margin-top: 6px;         /* aligns with first line of text */
+}
+
+/* ---------- Text ---------- */
+.action-description {
+  font-size: 12.5px;
+  color: #444;
+  margin-bottom: 18px;
+  line-height: 1.5;
+  font-weight: 750;
+}
+
+/* ---------- Buttons ---------- */
+.ready-btn {
+  background: #9d8bf9;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 18px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: block;
+  margin: 0 auto 10px auto;
+}
+
+.explore-btn-alt {
+  background: #ffffff;
+  color: #000;
+  border: 1.8px solid #9d8bf9;
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+  transition: all 0.2s ease;
+}
+

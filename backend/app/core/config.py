@@ -4,11 +4,29 @@ from pydantic_settings import BaseSettings
 
 load_dotenv()
 
+# def _env_bool(name: str, default: bool = False) -> bool:
+#     value = os.getenv(name)
+#     if value is None:
+#         return default
+#     return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
+
+FEATURE_ONET = os.getenv("FEATURE_ONET", "true").lower() == "true"
+FEATURE_ADZUNA = os.getenv("FEATURE_ADZUNA", "true").lower() == "true"
+# FEATURE_BLS = os.getenv("FEATURE_BLS", "true").lower() == "true"
+
+ONET_USER = os.getenv("ONET_USER", "")
+ONET_API_KEY = os.getenv("ONET_API_KEY", "")
+# BLS_API_KEY = os.getenv("BLS_API_KEY", "")
+ADZUNA_APP_ID = os.getenv("ADZUNA_APP_ID", "")
+ADZUNA_APP_KEY = os.getenv("ADZUNA_APP_KEY", "")
+ADZUNA_COUNTRY = os.getenv("ADZUNA_COUNTRY", "US")
 
 firebase_config = {
     "apiKey": os.getenv("FIREBASE_API_KEY"),

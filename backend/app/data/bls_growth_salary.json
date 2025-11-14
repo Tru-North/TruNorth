@@ -1,0 +1,255 @@
+{
+  "11": {
+    "salary": {
+      "min": 65000,
+      "max": 195000,
+      "median": 102750,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 3.3,
+    "growth_period": "2022-2032"
+  },
+  "13": {
+    "salary": {
+      "min": 52000,
+      "max": 145000,
+      "median": 81840,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 7.5,
+    "growth_period": "2022-2032"
+  },
+  "15": {
+    "salary": {
+      "min": 70000,
+      "max": 155000,
+      "median": 104420,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 13.2,
+    "growth_period": "2022-2032"
+  },
+  "17": {
+    "salary": {
+      "min": 62000,
+      "max": 140000,
+      "median": 98560,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 5.3,
+    "growth_period": "2022-2032"
+  },
+  "19": {
+    "salary": {
+      "min": 54000,
+      "max": 132000,
+      "median": 90100,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 6.9,
+    "growth_period": "2022-2032"
+  },
+  "21": {
+    "salary": {
+      "min": 41000,
+      "max": 86500,
+      "median": 60280,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 10.0,
+    "growth_period": "2022-2032"
+  },
+  "23": {
+    "salary": {
+      "min": 55000,
+      "max": 155000,
+      "median": 98920,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 7.6,
+    "growth_period": "2022-2032"
+  },
+  "25": {
+    "salary": {
+      "min": 43000,
+      "max": 89000,
+      "median": 62660,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 7.1,
+    "growth_period": "2022-2032"
+  },
+  "27": {
+    "salary": {
+      "min": 35500,
+      "max": 88000,
+      "median": 62780,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 2.6,
+    "growth_period": "2022-2032"
+  },
+  "29": {
+    "salary": {
+      "min": 58000,
+      "max": 128000,
+      "median": 81480,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 12.6,
+    "growth_period": "2022-2032"
+  },
+  "31": {
+    "salary": {
+      "min": 32000,
+      "max": 52000,
+      "median": 37000,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 15.4,
+    "growth_period": "2022-2032"
+  },
+  "33": {
+    "salary": {
+      "min": 42000,
+      "max": 84000,
+      "median": 62100,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 3.1,
+    "growth_period": "2022-2032"
+  },
+  "35": {
+    "salary": {
+      "min": 30000,
+      "max": 52000,
+      "median": 35600,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 11.2,
+    "growth_period": "2022-2032"
+  },
+  "37": {
+    "salary": {
+      "min": 31500,
+      "max": 54000,
+      "median": 38700,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 4.6,
+    "growth_period": "2022-2032"
+  },
+  "39": {
+    "salary": {
+      "min": 28000,
+      "max": 51000,
+      "median": 33600,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 7.0,
+    "growth_period": "2022-2032"
+  },
+  "41": {
+    "salary": {
+      "min": 36000,
+      "max": 88000,
+      "median": 59000,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 5.1,
+    "growth_period": "2022-2032"
+  },
+  "43": {
+    "salary": {
+      "min": 34000,
+      "max": 69000,
+      "median": 48640,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 2.7,
+    "growth_period": "2022-2032"
+  },
+  "45": {
+    "salary": {
+      "min": 32000,
+      "max": 68000,
+      "median": 45200,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 1.9,
+    "growth_period": "2022-2032"
+  },
+  "47": {
+    "salary": {
+      "min": 36000,
+      "max": 74000,
+      "median": 51900,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 2.2,
+    "growth_period": "2022-2032"
+  },
+  "49": {
+    "salary": {
+      "min": 40000,
+      "max": 78000,
+      "median": 57000,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 4.4,
+    "growth_period": "2022-2032"
+  },
+  "51": {
+    "salary": {
+      "min": 34000,
+      "max": 68000,
+      "median": 51820,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": -3.2,
+    "growth_period": "2022-2032"
+  },
+  "53": {
+    "salary": {
+      "min": 36000,
+      "max": 72000,
+      "median": 50040,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 4.3,
+    "growth_period": "2022-2032"
+  },
+  "55": {
+    "salary": {
+      "min": 40000,
+      "max": 90000,
+      "median": 60000,
+      "currency": "USD",
+      "period": "annual"
+    },
+    "growth_percent": 0.8,
+    "growth_period": "2022-2032"
+  }
+}

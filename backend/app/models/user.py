@@ -14,5 +14,23 @@ class User(Base):
     firebase_uid = Column(String(128), unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     last_login = Column(DateTime(timezone=True), nullable=True)
-    chat_history = relationship("ChatHistory", back_populates="user", cascade="all, delete-orphan")
-    feedbacks = relationship("MessageFeedback", back_populates="user", cascade="all, delete-orphan")
+    chat_history = relationship(
+        "ChatHistory", 
+        back_populates="user", 
+        cascade="all, delete-orphan"
+    )
+    feedbacks = relationship(
+        "MessageFeedback", 
+        back_populates="user", 
+        cascade="all, delete-orphan"
+    )
+    career_recommendations = relationship(
+        "UserCareerRecommendation",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    recommendation_actions = relationship(
+        "UserRecommendationAction",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )

@@ -19,7 +19,8 @@ import Help from "./pages/Help";
 import Terms from "./pages/Terms";
 import Language from "./pages/Language";
 import ExploreMatches from "./pages/ExploreMatches";
-import SavedJobs from "./pages/SavedJobs";
+import ActionPlanPreview from "./pages/ActionPlanPreview";
+import SavedCareers from "./pages/SavedCareers";
 
 const App: React.FC = () => {
   return (
@@ -93,12 +94,21 @@ const App: React.FC = () => {
         />
         
         <Route
-          path="/savedjobs"
+          path="/savedcareers"
           element={
             <ProtectedRoute>
-              <SavedJobs />
+              <SavedCareers />
             </ProtectedRoute>
           }
+        />
+
+        <Route 
+          path="/career/:id" 
+          element={
+            <ProtectedRoute>
+              <ActionPlanPreview />
+            </ProtectedRoute>
+          } 
         />
 
         {/* ⚙️ Sub-pages of About You */}

@@ -1,0 +1,370 @@
+/* Ensure proper positioning for nav buttons */
+.career-card-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 360px;
+  margin: 0 auto;
+}
+
+.slide-btn {
+  z-index: 5;
+}
+
+.career-card {
+  position: relative;
+  width: 320px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-family: "Inter", sans-serif;
+  overflow: hidden;
+}
+
+/* ---------- Header ---------- */
+.career-card-header {
+  background: #9d8bf9;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 16px 16px 0 0;
+}
+
+.career-card-header .header-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.bookmark-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bookmark-icon {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1); 
+  transition: transform 0.2s ease;
+}
+
+.bookmark-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+/* ---------- Body ---------- */
+.career-card-body {
+  padding: 20px 20px 10px 20px;
+}
+
+.career-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.career-info h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  color: #000;
+}
+
+.career-info p {
+  font-size: 12px;
+  color: #8E4D4D;
+  margin-top: 4px;
+}
+
+/* Growth Block Wrapper */
+.career-growth-block {
+  width: 70px;                /* FIXED WIDTH → title can be long, doesn't affect this */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Top row: arrow + % */
+.growth-top {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.growth-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.growth-value {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Bottom label */
+.growth-label {
+  font-size: 10px;
+  font-weight: 500;
+  margin-top: 2px;
+  line-height: 1.1;
+}
+
+/* ---------- Salary + Match ---------- */
+.career-salary-match {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  margin: 6px 0 4px 0;
+  position: relative;
+}
+
+/* Salary capsule (flat left, rounded right) */
+.salary-tag {
+  background: #9d8bf9;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 8px 28px 8px 20px; /* tighter on left and more even */
+  border-radius: 0 50px 50px 0; /* flat left, rounded right */
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 200px;
+  line-height: 1;
+  margin-left: -18px; /* pull bar fully left */
+}
+
+/* Connector line */
+.salary-tag::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -17.8px;
+  width: 17px;
+  height: 1.5px;
+  background: #cfcfcf; /* subtle gray connector */
+  transform: translateY(-50%);
+}
+
+/* Match circle */
+.match-circle {
+  border: 3px solid #9d8bf9;
+  border-radius: 50%;
+  width: 78px;
+  height: 78px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.match-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+}
+
+.match-label {
+  font-size: 10px;
+  color: #555;
+  line-height: 1.1;
+}
+
+/* ---------- Why this fits ---------- */
+.career-section {
+  margin-top: 6px;
+}
+
+.career-section h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #000;
+}
+
+.fit-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fit-card {
+  position: relative;
+  background: #9d8bf9;
+  color: #fff;
+  border-radius: 28px;
+  padding: 14px 36px; /* reduced internal padding */
+  font-size: 12px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.fit-card img {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+}
+
+.fit-left {
+  left: 0.5px; /* reduced from 12px */
+}
+
+.fit-right {
+  right: 0.5px; /* reduced from 12px */
+}
+
+/* ---------- Skills ---------- */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 20px;
+  font-size: 12px;
+  color: #000;
+  padding-left: 4px;
+}
+
+.skill-item {
+  position: relative;
+  list-style: none;
+  padding-left: 12px; /* space for bullet */
+  line-height: 1.4;
+}
+
+/* Move right-side bullets slightly inward */
+.skills-grid .skill-item:nth-child(even) {
+  margin-left: 12px; /* adjust as needed (8–12px range) */
+}
+
+.skill-item::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #000;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* ---------- Divider Line ---------- */
+.career-divider {
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  margin: 14px -20px 10px -20px; /* negative margins cancel card-body padding */
+  width: calc(100% + 40px); /* ensures it spans full card width */
+}
+
+/* ---------- Tips ---------- */
+.tips-list {
+  margin-top: 8px;
+  margin-left: 14px;
+  font-size: 12px;
+  color: #000;
+  list-style-type: disc;
+}
+
+.tips-list li {
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+/* ---------- Navigation Buttons ---------- */
+.slide-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 33px;
+  height: 33px;
+  cursor: pointer;
+}
+
+.slide-btn.left {
+  left: -14px;
+}
+
+.slide-btn.right {
+  right: -14px;
+}
+
+.slide-btn img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+/* ---------- Footer ---------- */
+.career-card-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px; /* reduces button spacing */
+  padding: 10px 0 18px 0; /* pulls buttons upward and centers better */
+  background: white;
+  border-radius: 0 0 16px 16px;
+}
+
+/* ---------- Buttons ---------- */
+.decline-btn {
+  border: 1.8px solid #9d8bf9;
+  background: transparent;
+  color: #9d8bf9;
+  border-radius: 24px;
+  font-size: 14px;
+  padding: 8px 26px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.explore-btn {
+  border: none;
+  background: #9d8bf9;
+  color: white;
+  border-radius: 24px;
+  font-size: 14px;
+  padding: 8px 26px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.explore-btn:hover,
+.decline-btn:hover {
+  transform: scale(1.04);
+  opacity: 0.9;
+}
+
+.career-card-footer-strip {
+  width: 100%;
+  height: 22px;                /* Adjust height to match your screenshot */
+  background: #9d8bf9;         /* Purple */
+  border-radius: 0 0 16px 16px; /* Fully rounded bottom edges */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18); /* Same shadow as screenshot */
+}

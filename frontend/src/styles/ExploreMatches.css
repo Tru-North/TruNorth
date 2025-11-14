@@ -1,0 +1,167 @@
+.explore-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+/* ---------- Header ---------- */
+.explore-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  background: #fff;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+}
+
+.explore-back {
+  position: absolute;
+  left: 16px;
+  font-size: 22px;
+  cursor: pointer;
+  color: #000;
+}
+
+.explore-header-title h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+}
+
+.explore-header-title p {
+  font-size: 10px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.explore-menu {
+  position: absolute;
+  right: 16px;
+  font-size: 22px;
+  cursor: pointer;
+  color: #000;
+}
+
+/* ---------- Body ---------- */
+.explore-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  overflow-y: auto;
+  background: transparent;
+}
+
+
+/* ---------- Card Section ---------- */
+.explore-card-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: -6px;
+  transform: scale(0.9);
+  transform-origin: top center;
+}
+
+.explore-status,
+.explore-error,
+.explore-empty p {
+  text-align: center;
+  font-size: 13px;
+}
+
+.explore-error {
+  color: red;
+}
+
+.explore-empty {
+  text-align: center;
+  color: #6b7280;
+}
+
+.explore-loadmore-container {
+  text-align: center;
+  margin-top: -50px;         /* small gap above button */
+  margin-bottom: 2px;     /* gap before bottom nav */
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 120px;
+  text-align: center;
+  color: #444;
+  width: 400px;
+}
+
+.empty-illustration {
+  width: 100px;
+  height: 100px;
+  opacity: 0.8;
+  margin-bottom: 16px;
+}
+
+.empty-state h4 {
+  font-size: 18px;            /* was 16px */
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+
+.empty-state p {
+  font-size: 14.5px;          /* was 13px */
+  color: #555;
+  margin: 0 28px 18px 28px;   /* slightly wider margins for balance */
+  line-height: 1.55;
+}
+
+.loadmore-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #9d8bf9;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(157, 139, 249, 0.3);
+}
+
+.loadmore-icon {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1);
+}
+
+.spinning {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}

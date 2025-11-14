@@ -1,0 +1,43 @@
+.chatbubble-static-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* ✅ Avatar: no border, no background, uses image as-is */
+.chatbubble-static-avatar {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chatbubble-static-avatar-img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 50%;
+  display: block;
+}
+
+/* ✅ Bubble: smooth purple gradient, soft radius */
+.chatbubble-static-bubble {
+  background: #9D8BF9;
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border-top-left-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.chatbubble-static-text {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  font-weight: 400;
+  white-space: normal;
+  font-family: "Inter", sans-serif;
+}

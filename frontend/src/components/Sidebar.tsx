@@ -112,9 +112,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     navigate("/explorematches");
   };
 
-  const handleSavedJobs = () => {
+  const handleSavedCareers = () => {
     onClose();
-    navigate("/savedjobs");
+    navigate("/savedcareers");
   };
 
   return (
@@ -190,8 +190,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <li className="sidebar-item unlocked" onClick={handleExploreMatches}>
               Explore Matches
             </li>
-            <li className="sidebar-item unlocked" onClick={handleSavedJobs}>
-              Saved Jobs
+            <li className="sidebar-item unlocked" onClick={handleSavedCareers}>
+              Saved Career Matches
             </li>
           </ul>
         </div>
