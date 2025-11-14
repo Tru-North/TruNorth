@@ -9,42 +9,64 @@ import {
   CareerDetailCard,
 } from "../types/recommendations";
 
+// =====================================
 // ✅ Base API URL
+// =====================================
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// =====================================
 // ✅ Create axios instance
+// =====================================
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
-// ✅ Helper: attach Firebase UID header (if available)
-function getAuthHeaders() {
+// =====================================
+// 🔥 Attach ALL authentication headers
+//    (token + user_id + firebase_uid)
+// =====================================
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
   const firebaseUid = localStorage.getItem("firebase_uid");
-  return firebaseUid ? { "x-firebase-uid": firebaseUid } : {};
-}
+  const userId = localStorage.getItem("user_id");
 
-// ✅ Helper: include user_id when no Firebase authentication
+  // JWT token (local DB login)
+  if (token) {
+    config.headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  // Firebase login (AI Coach)
+  if (firebaseUid) {
+    config.headers["x-firebase-uid"] = firebaseUid;
+  }
+
+  // Local user_id (normal login)
+  if (userId) {
+    config.headers["X-User-ID"] = userId;
+  }
+
+  return config;
+});
+
+// Helper used only for POST bodies
 function getUserIdPayload<T extends object>(payload: T = {} as T) {
   const user_id = localStorage.getItem("user_id");
   return { user_id: user_id ? Number(user_id) : undefined, ...payload };
 }
 
-// ===============================
+// =====================================
 // 🔹 Recommendation API Endpoints
-// ===============================
+// =====================================
 
 // 1️⃣ Generate new batch of recommendations
 export async function generateRecommendations(
   payload: GenerateRecommendationsRequest
 ): Promise<GenerateRecommendationsResponse> {
-  console.log("📨 POST /recommendations/generate", getUserIdPayload(payload));
+  console.log("📨 POST /recommendations/generate → BODY", getUserIdPayload(payload));
   const response = await api.post(
     "/recommendations/generate",
-    getUserIdPayload(payload),
-    { headers: getAuthHeaders() }
+    getUserIdPayload(payload)
   );
   return response.data;
 }
@@ -52,71 +74,70 @@ export async function generateRecommendations(
 // 2️⃣ Fetch latest (cached) recommendations
 export async function getLatestRecommendations(): Promise<GenerateRecommendationsResponse> {
   const user_id = localStorage.getItem("user_id");
-  console.log("📨 GET /recommendations/latest", { user_id });
+  console.log("📨 GET /recommendations/latest → PARAMS", { user_id });
+
   const response = await api.get("/recommendations/latest", {
-    headers: getAuthHeaders(),
     params: { user_id },
   });
   return response.data;
 }
 
-// 3️⃣ Save (favorite) a recommendation
+// 3️⃣ Save (favorite)
 export async function saveRecommendation(
   payload: FavoriteRequest
 ): Promise<{ status: string }> {
-  console.log("📨 POST /recommendations/save", getUserIdPayload(payload));
+  console.log("📨 POST /recommendations/save → BODY", getUserIdPayload(payload));
   const response = await api.post(
     "/recommendations/save",
-    getUserIdPayload(payload),
-    { headers: getAuthHeaders() }
+    getUserIdPayload(payload)
   );
   return response.data;
 }
 
-// 4️⃣ Dismiss (remove) a recommendation
+// 4️⃣ Dismiss
 export async function dismissRecommendation(
   payload: DismissRequest
 ): Promise<{ status: string }> {
-  console.log("📨 POST /recommendations/dismiss", getUserIdPayload(payload));
+  console.log("📨 POST /recommendations/dismiss → BODY", getUserIdPayload(payload));
   const response = await api.post(
     "/recommendations/dismiss",
-    getUserIdPayload(payload),
-    { headers: getAuthHeaders() }
+    getUserIdPayload(payload)
   );
   return response.data;
 }
 
-// 5️⃣ Fetch saved (favorited) recommendations
+// 5️⃣ Fetch favorites
 export async function getFavoriteRecommendations(): Promise<GenerateRecommendationsResponse> {
   const user_id = localStorage.getItem("user_id");
-  console.log("📨 GET /recommendations/favorites", { user_id });
+  console.log("📨 GET /recommendations/favorites → PARAMS", { user_id });
+
   const response = await api.get("/recommendations/favorites", {
-    headers: getAuthHeaders(),
     params: { user_id },
   });
   return response.data;
 }
 
-// 6️⃣ Fetch dismissed recommendations
+// 6️⃣ Fetch dismissed
 export async function getDismissedRecommendations(): Promise<GenerateRecommendationsResponse> {
   const user_id = localStorage.getItem("user_id");
-  console.log("📨 GET /recommendations/dismiss", { user_id });
+  console.log("📨 GET /recommendations/dismiss → PARAMS", { user_id });
+
   const response = await api.get("/recommendations/dismiss", {
-    headers: getAuthHeaders(),
     params: { user_id },
   });
   return response.data;
 }
 
-// 7️⃣ Fetch detailed info for one career (Explore button)
+// 7️⃣ Detailed career info
 export async function getCareerDetail(
   careerId: number
 ): Promise<CareerDetailCard> {
   const user_id = localStorage.getItem("user_id");
-  console.log("📨 GET /recommendations/explore", { careerId, user_id });
+  console.log("📨 GET /recommendations/explore/:id → PARAMS", { careerId, user_id });
+
   const response = await api.get(`/recommendations/explore/${careerId}`, {
-    headers: getAuthHeaders(),
     params: { user_id },
   });
+
   return response.data;
 }
