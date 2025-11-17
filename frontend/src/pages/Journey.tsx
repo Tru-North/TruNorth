@@ -20,7 +20,7 @@ type State = "past" | "current" | "future";
 const LABEL: Record<Key, string> = {
   discovery: "Discovery",
   coaching: "Coaching",
-  matches: "Job Matches",
+  matches: "Career Matches",
   action: "Take Action",
   launch: "Ready to Launch",
 };
@@ -107,7 +107,11 @@ const Journey: React.FC = () => {
           if (sR.ok && rR.ok) {
             const s = await sR.json();
             const r = await rR.json();
-            const required = (s?.data?.sections || []).filter((x: any) => x?.required !== false);
+            const allSections = s?.data?.sections || [];
+
+            // Ignore the LAST section completely
+            const required = allSections.slice(0, -1).filter((x: any) => x?.required !== false);
+
             const answered = new Set((r?.data || []).map((x: any) => x?.category));
             complete = required.every((sec: any) => answered.has(sec.category));
           }
@@ -164,7 +168,7 @@ const Journey: React.FC = () => {
     // 2️⃣ Coaching
     if (localStorage.getItem("coach_completed") === "true") pct += 20;
 
-    // 3️⃣ Job Matches
+    // 3️⃣ Career Matches
     if (localStorage.getItem("matches_completed") === "true") pct += 20;
 
     // 4️⃣ Take Action
@@ -218,9 +222,9 @@ const Journey: React.FC = () => {
         return;
 
       case "matches":
-        if (questionnaireComplete) navigate("/savedjobs");
+        if (questionnaireComplete) navigate("/explorematches");
         return;
-
+      
       case "action":
         if (questionnaireComplete) navigate("/action");
         return;
