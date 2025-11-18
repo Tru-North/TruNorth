@@ -6,6 +6,7 @@ import { FiX, FiMenu } from "react-icons/fi";
 import "../styles/global.css";
 import "../styles/aicoach.css";
 import ChatBubbleCoach from "../components/ChatBubbleCoach";
+import UnlockBubble from "../components/UnlockBubble";
 
 import RewindIcon from "../assets/ai_coach/10sec_rewind_icon.svg";
 import ForwardIcon from "../assets/ai_coach/10sec_forward_icon.svg";
@@ -61,6 +62,23 @@ const AICoachChat: React.FC = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
 
+  const [showUnlockBubble, setShowUnlockBubble] = useState(false);
+
+  useEffect(() => {
+    console.log("🟠 showUnlockBubble changed:", showUnlockBubble);
+  }, [showUnlockBubble]);
+
+  // 🔥 Auto-scroll when the unlock bubble becomes visible
+  useEffect(() => {
+    if (showUnlockBubble) {
+      console.log("📌 Auto-scrolling because unlock bubble became visible");
+      setTimeout(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 50);
+    }
+  }, [showUnlockBubble]);
+
+
   /* -------------------- Firebase & session init -------------------- */
   useEffect(() => {
     const initUser = async () => {
@@ -115,7 +133,19 @@ const AICoachChat: React.FC = () => {
       socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          // 🔥 Detect unlock trigger (backend sends unlock_prompt = true)
+          // 🔥 Detect unlock trigger from backend
+          if (data.trigger_explore_unlock === true) {
+            console.log("🔥 BACKEND TRIGGERED UNLOCK — setting showUnlockBubble = true");
+            setShowUnlockBubble(true);
+          } else {
+            console.log("⚪ No unlock trigger in this chunk:", data);
+          }
+
           if (data.answer) {
+            if (!data.trigger_explore_unlock) {
+              setShowUnlockBubble(false);
+            }
             setMessages((prev) => {
               const updated = [...prev];
               const last = updated[updated.length - 1];
@@ -186,6 +216,7 @@ const AICoachChat: React.FC = () => {
   /* -------------------- Send message -------------------- */
   const handleSendMessage = async () => {
     if (!inputValue.trim() || !firebaseUid || !sessionId) return;
+    setShowUnlockBubble(false);
     const text = inputValue.trim();
     setInputValue("");
     setMessages((prev) => [...prev, { role: "user", content: text }]);
@@ -433,6 +464,8 @@ const AICoachChat: React.FC = () => {
 
       {/* Chat body */}
       <div className="chat-body">
+
+        {/* Existing messages */}
         {messages.map((msg, i) => (
           <ChatBubbleCoach
             key={i}
@@ -443,8 +476,31 @@ const AICoachChat: React.FC = () => {
             onPlayTTS={(bubbleRef) => playTTS(msg.content, i, bubbleRef)}
           />
         ))}
+
+        {/* Unlock bubble appears after AI message */}
+        {showUnlockBubble && (
+          <>
+          {console.log("🟣 RENDERING UNLOCK BUBBLE — showUnlockBubble = TRUE")}
+          <UnlockBubble
+            onYes={() => {
+              console.log("🟢 USER CLICKED YES on unlock bubble");
+              setShowUnlockBubble(false);
+              console.log("🔵 Hiding bubble after YES (setShowUnlockBubble = false)");
+              navigate("/explorematches");
+            }}
+            onNotNow={() => {
+              console.log("🟡 USER CLICKED NOT NOW on unlock bubble");
+
+               // Hide bubble
+              setShowUnlockBubble(false);
+              console.log("🔵 Hiding bubble after NOT NOW (setShowUnlockBubble = false)");
+            }}
+          />
+        </>
+        )}
         <div ref={chatEndRef} />
       </div>
+
 
       {/* Playback bar (anchored) */}
         {showPlaybackBar && popupCoords && (

@@ -20,34 +20,60 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+
   const userId = localStorage.getItem("user_id");
   const firstName = localStorage.getItem("first_name") || "User";
+  const token = localStorage.getItem("token");
 
   const [sections, setSections] = useState<Section[]>([]);
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [isQuestionnaireComplete, setIsQuestionnaireComplete] =
     useState<boolean>(false);
 
-  // 🟣 Fetch questionnaire sections
+  const [matchesUnlocked, setMatchesUnlocked] = useState<boolean>(false);
+
+  // --------------------------------------------------
+  //  LOGS ON LOAD
+  // --------------------------------------------------
+  useEffect(() => {
+    console.log("🔵 Sidebar mounted");
+    console.log("🔍 Stored userId =", userId);
+    console.log(
+      "🔍 LocalStorage.unlock =",
+      localStorage.getItem("career_unlock_confirmed")
+    );
+  }, []);
+
+  // --------------------------------------------------
+  //  Fetch questionnaire sections
+  // --------------------------------------------------
   useEffect(() => {
     const fetchSections = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/questionnaire/`);
         const data = await res.json();
-        if (data?.data?.sections) setSections(data.data.sections);
+        if (data?.data?.sections) {
+          setSections(data.data.sections);
+        }
       } catch (err) {
         console.error("❌ Failed to load sections:", err);
       }
     };
+
     fetchSections();
   }, []);
 
-  // 🟢 Fetch user progress (responses)
+  // --------------------------------------------------
+  //  Fetch user questionnaire progress
+  // --------------------------------------------------
   useEffect(() => {
     if (!userId) return;
+
     const fetchProgress = async () => {
       try {
-        const rRes = await fetch(`${API_BASE_URL}/questionnaire/responses/${userId}`);
+        const rRes = await fetch(
+          `${API_BASE_URL}/questionnaire/responses/${userId}`
+        );
         const rData = await rRes.json();
 
         if (rData?.data && Array.isArray(rData.data)) {
@@ -67,15 +93,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         console.error("⚠️ Failed to fetch user progress:", err);
       }
     };
+
     fetchProgress();
   }, [userId, sections]);
 
-  // 🧠 Fetch full questionnaire completion status (same as BottomNav)
+  // --------------------------------------------------
+  //  Fetch questionnaire completed flag
+  // --------------------------------------------------
   useEffect(() => {
     const fetchCompletion = async () => {
       try {
         if (!userId) return;
-        const response = await fetch(`${API_BASE_URL}/questionnaire/progress/${userId}`);
+
+        const response = await fetch(
+          `${API_BASE_URL}/questionnaire/progress/${userId}`
+        );
         if (response.ok) {
           const data = await response.json();
           setIsQuestionnaireComplete(data?.is_completed === true);
@@ -84,10 +116,49 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         console.error("❌ Failed to fetch completion:", err);
       }
     };
+
     fetchCompletion();
   }, [userId]);
 
-  // 🧭 Handlers
+  // --------------------------------------------------
+  //  FETCH DB CAREER UNLOCK FLAG (IMPORTANT)
+  // --------------------------------------------------
+  useEffect(() => {
+    const fetchUnlock = async () => {
+      if (!userId) return;
+
+      try {
+        console.log("🔵 Sidebar: Fetching unlock flag…");
+
+        const headers: Record<string, string> = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const res = await fetch(`${API_BASE_URL}/users/${userId}`, { headers });
+        const data = await res.json();
+
+        console.log("🟣 Sidebar backend user:", data);
+
+        const unlock = data?.is_career_unlock_confirmed === true;
+
+        console.log("🟢 Sidebar unlock =", unlock);
+
+        if (unlock) {
+          setMatchesUnlocked(true);
+          localStorage.setItem("career_unlock_confirmed", "true");
+        } else {
+          setMatchesUnlocked(false);
+        }
+      } catch (err) {
+        console.error("❌ Sidebar unlock fetch failed:", err);
+      }
+    };
+
+    fetchUnlock();
+  }, [userId, token]);
+
+  // --------------------------------------------------
+  // Navigation
+  // --------------------------------------------------
   const handleCoachClick = () => {
     if (!isQuestionnaireComplete) return;
     onClose();
@@ -108,15 +179,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   };
 
   const handleExploreMatches = () => {
+    if (!matchesUnlocked) return;
     onClose();
     navigate("/explorematches");
   };
 
   const handleSavedCareers = () => {
+    if (!matchesUnlocked) return;
     onClose();
     navigate("/savedcareers");
   };
 
+  // --------------------------------------------------
+  // RENDER
+  // --------------------------------------------------
   return (
     <div className={`sidebar-wrapper ${isOpen ? "open" : ""}`}>
       <div className="sidebar-overlay" onClick={onClose}></div>
@@ -145,7 +221,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <h4>Coach</h4>
           </div>
           <p
-            className={`section-subtext ${!isQuestionnaireComplete ? "locked" : "clickable"}`}
+            className={`section-subtext ${
+              !isQuestionnaireComplete ? "locked" : "clickable"
+            }`}
             onClick={handleCoachClick}
           >
             Your ongoing conversation with Ruby
@@ -169,7 +247,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   onClick={() =>
                     !isLocked && handleQuestionnaireClick(i, section.category)
                   }
-                  className={`sidebar-item ${isLocked ? "locked" : "unlocked"}`}
+                  className={`sidebar-item ${
+                    isLocked ? "locked" : "unlocked"
+                  }`}
                 >
                   {section.display_name}
                 </li>
@@ -187,10 +267,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <h4>Matches</h4>
           </div>
           <ul>
-            <li className="sidebar-item unlocked" onClick={handleExploreMatches}>
+            <li
+              className={`sidebar-item ${
+                matchesUnlocked ? "unlocked" : "locked"
+              }`}
+              onClick={handleExploreMatches}
+            >
               Explore Matches
             </li>
-            <li className="sidebar-item unlocked" onClick={handleSavedCareers}>
+
+            <li
+              className={`sidebar-item ${
+                matchesUnlocked ? "unlocked" : "locked"
+              }`}
+              onClick={handleSavedCareers}
+            >
               Saved Career Matches
             </li>
           </ul>
@@ -198,7 +289,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Footer */}
         <div className="sidebar-footer">
-          <div className="footer-left" onClick={handleProfileClick} style={{ cursor: "pointer" }}>
+          <div
+            className="footer-left"
+            onClick={handleProfileClick}
+            style={{ cursor: "pointer" }}
+          >
             <FaUserCircle className="profile-icon" />
             <div className="footer-user-info">
               <p className="footer-name">{firstName}</p>

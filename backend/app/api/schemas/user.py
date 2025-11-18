@@ -27,6 +27,7 @@ class UserResponse(BaseModel):
     email: str
     created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
+    is_career_unlock_confirmed: bool | None = False
 
     class Config:
         from_attributes = True  # ✅ replaces orm_mode in Pydantic v2

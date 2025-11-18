@@ -443,10 +443,20 @@ async def websocket_coach(websocket: WebSocket):
                     db=db
                 )
                 
+                # 🔥 PATCH: Convert backend flag → frontend flag
+                if result.get("trigger_explore_unlock") is True:
+                    result["unlock_prompt"] = True
+                else:
+                    result["unlock_prompt"] = False
+
+                # Optional: remove backend-internal field
+                # result.pop("trigger_explore_unlock", None)
+
                 await manager.send_personal_message(
                     json.dumps(result),
                     websocket
                 )
+
             except Exception as e:
                 await manager.send_personal_message(
                     json.dumps({"error": str(e), "session_id": session_id}),

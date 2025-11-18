@@ -238,6 +238,7 @@ def get_user(user_id: int, user=Depends(firebase_token_dependency), db: Session 
         "email": db_user.email,
         "created_at": getattr(db_user, "created_at", None),
         "last_login": getattr(db_user, "last_login", None),
+        "is_career_unlock_confirmed": db_user.is_career_unlock_confirmed,
     }
 
 
@@ -345,3 +346,34 @@ def reset_password_endpoint(request: ResetPasswordRequest):
 def health_check():
     """Simple health check endpoint."""
     return {"status": "API is running", "message": "User Management API"}
+
+# ---------------------- TEST: UNLOCK STATUS ----------------------
+
+# from app.services.user_service import get_unlock_status, set_unlock_status
+
+# @router.get("/test/unlock-status/{user_id}", tags=["Test"])
+# def test_unlock_status(user_id: int, db: Session = Depends(get_db)):
+#     """
+#     Temporary test route to verify the unlock status logic works correctly.
+#     DO NOT use in production.
+#     """
+#     before = get_unlock_status(db, user_id)
+#     set_unlock_status(db, user_id, True)
+#     after = get_unlock_status(db, user_id)
+
+#     return {
+#         "status_before": before,
+#         "status_after": after
+#     }
+
+# @router.get("/users/{user_id}/unlock-status")
+# def get_unlock_status_route(user_id: int, db: Session = Depends(get_db)):
+#     user = db.query(User).filter(User.id == user_id).first()
+
+#     if not user:
+#         return {"success": False, "unlock": False}
+
+#     return {
+#         "success": True,
+#         "unlock": bool(user.is_career_unlock_confirmed)
+#     }

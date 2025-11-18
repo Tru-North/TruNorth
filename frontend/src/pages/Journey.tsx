@@ -6,7 +6,6 @@ import { FiMenu } from "react-icons/fi";
 import "../styles/global.css";
 import "../styles/journey.css";
 
-// Assets
 import IconPast from "../assets/journey/journey_active_past_milestone_icon.svg";
 import IconCurrent from "../assets/journey/journey_current_milestone_icon.svg";
 import IconFuture from "../assets/journey/journey_inactive_future_milestone_icon.svg";
@@ -44,9 +43,13 @@ const Journey: React.FC = () => {
   const [discoveryCompleted, setDiscoveryCompleted] = useState<boolean>(
     localStorage.getItem("discovery_completed") === "true"
   );
+
   const [questionnaireComplete, setQuestionnaireComplete] = useState<boolean>(
     localStorage.getItem("questionnaire_complete") === "true"
   );
+
+  const [careerUnlockConfirmed, setCareerUnlockConfirmed] =
+    useState<boolean>(false);
 
   const userId = localStorage.getItem("user_id");
   const token = localStorage.getItem("token");
@@ -59,11 +62,14 @@ const Journey: React.FC = () => {
     p?.user?.first_name ||
     p?.user?.firstname;
 
-  // 🟢 Load user's first name
+  /** -------------------------------
+   * Load Name
+   --------------------------------*/
   useEffect(() => {
     const loadName = async () => {
       try {
         if (!userId) return;
+
         const cached = localStorage.getItem("first_name");
         if (cached) setFirstName(cached);
 
@@ -73,21 +79,24 @@ const Journey: React.FC = () => {
         let r = await fetch(`${API_BASE_URL}/users/${userId}`, { headers });
         if (r.status === 404)
           r = await fetch(`${API_BASE_URL}/user/${userId}`, { headers });
+
         if (!r.ok) return;
         const data = await r.json();
+
         const name = pickFirstName(data);
         if (name) {
           setFirstName(name);
           localStorage.setItem("first_name", name);
         }
-      } catch {
-        /* ignore */
-      }
+      } catch {}
     };
+
     loadName();
   }, [API_BASE_URL, token, userId]);
 
-  // 🟣 Load questionnaire completion status (cleaned up, no /completion call)
+  /** -------------------------------
+   * Load Questionnaire Completion
+   --------------------------------*/
   useEffect(() => {
     const loadProgress = async () => {
       try {
@@ -98,39 +107,77 @@ const Journey: React.FC = () => {
 
         let complete: boolean | null = null;
 
-        // ✅ Compute completion by comparing required sections & user responses
         try {
           const [sR, rR] = await Promise.all([
             fetch(`${API_BASE_URL}/questionnaire/`, { headers }),
-            fetch(`${API_BASE_URL}/questionnaire/responses/${userId}`, { headers }),
+            fetch(`${API_BASE_URL}/questionnaire/responses/${userId}`, {
+              headers,
+            }),
           ]);
+
           if (sR.ok && rR.ok) {
             const s = await sR.json();
             const r = await rR.json();
+
             const allSections = s?.data?.sections || [];
 
-            // Ignore the LAST section completely
-            const required = allSections.slice(0, -1).filter((x: any) => x?.required !== false);
+            const required = allSections
+              .slice(0, -1)
+              .filter((x: any) => x?.required !== false);
 
-            const answered = new Set((r?.data || []).map((x: any) => x?.category));
-            complete = required.every((sec: any) => answered.has(sec.category));
+            const answered = new Set(
+              (r?.data || []).map((x: any) => x?.category)
+            );
+
+            complete = required.every((sec: any) =>
+              answered.has(sec.category)
+            );
           }
         } catch {}
 
-        const final = complete ?? localStorage.getItem("questionnaire_complete") === "true";
+        const final =
+          complete ??
+          localStorage.getItem("questionnaire_complete") === "true";
+
         setQuestionnaireComplete(final);
+
         if (final) localStorage.setItem("questionnaire_complete", "true");
 
-        setDiscoveryCompleted(localStorage.getItem("discovery_completed") === "true");
-      } catch {
-        /* ignore */
-      }
+        setDiscoveryCompleted(
+          localStorage.getItem("discovery_completed") === "true"
+        );
+      } catch {}
     };
+
     loadProgress();
   }, [API_BASE_URL, token, userId]);
 
+  /** -------------------------------
+   * Fetch Unlock Flag from DB
+   --------------------------------*/
+  useEffect(() => {
+    const fetchUnlockFlag = async () => {
+      if (!userId) return;
 
-  // 🧩 Determine section states
+      try {
+        const headers: Record<string, string> = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const res = await fetch(`${API_BASE_URL}/users/${userId}`, { headers });
+        const data = await res.json();
+
+        const unlock = data?.is_career_unlock_confirmed === true;
+
+        setCareerUnlockConfirmed(unlock);
+      } catch {}
+    };
+
+    fetchUnlockFlag();
+  }, [API_BASE_URL, userId, token]);
+
+  /** -------------------------------
+   * Compute Milestone States (NO logic removed)
+   --------------------------------*/
   const states: Record<Key, State> = useMemo(() => {
     const s: Record<Key, State> = {
       discovery: "future",
@@ -140,47 +187,42 @@ const Journey: React.FC = () => {
       launch: "future",
     };
 
-    const chatIntroDone = localStorage.getItem("chat_intro_done") === "true";
+    const chatIntroDone =
+      localStorage.getItem("chat_intro_done") === "true";
 
+    // your original logic preserved EXACTLY
     if (chatIntroDone && questionnaireComplete) {
       s.discovery = "past";
       s.coaching = "current";
     } else {
       s.discovery = "current";
+      return s;
+    }
+
+    // DB unlock → matches unlocked
+    if (careerUnlockConfirmed) {
+      s.coaching = "past";
+      s.matches = "current";
+      localStorage.setItem("coach_completed", "true");
     }
 
     return s;
-  }, [questionnaireComplete, discoveryCompleted]);
+  }, [questionnaireComplete, discoveryCompleted, careerUnlockConfirmed]);
+
+  /** -------------------------------
+   * Progress bar based ONLY on past states
+   --------------------------------*/
+  const progressPct = useMemo(() => {
+    const pastCount = Object.values(states).filter((v) => v === "past").length;
+    return pastCount * 20;
+  }, [states]);
 
   const iconFor = (st: State) =>
     st === "past" ? IconPast : st === "current" ? IconCurrent : IconFuture;
 
-  // 🟢 Progress calculation (each milestone = 20%)
-  const progressPct = useMemo(() => {
-    let pct = 0;
-
-    const chatIntroDone = localStorage.getItem("chat_intro_done") === "true";
-    const questionnaireDone = questionnaireComplete;
-
-    // 1️⃣ Discovery
-    if (chatIntroDone && questionnaireDone) pct += 20;
-
-    // 2️⃣ Coaching
-    if (localStorage.getItem("coach_completed") === "true") pct += 20;
-
-    // 3️⃣ Career Matches
-    if (localStorage.getItem("matches_completed") === "true") pct += 20;
-
-    // 4️⃣ Take Action
-    if (localStorage.getItem("action_completed") === "true") pct += 20;
-
-    // 5️⃣ Launch
-    if (localStorage.getItem("launch_completed") === "true") pct += 20;
-
-    return pct;
-  }, [questionnaireComplete]);
-
-  // 🧭 Navigation logic (unchanged)
+  /** -------------------------------
+   * Navigation — YOUR discovery logic preserved
+   --------------------------------*/
   const go = async (k: Key) => {
     switch (k) {
       case "discovery": {
@@ -188,7 +230,10 @@ const Journey: React.FC = () => {
           const headers: Record<string, string> = {};
           if (token) headers.Authorization = `Bearer ${token}`;
 
-          const resp = await fetch(`${API_BASE_URL}/questionnaire/chat_responses/${userId}`, { headers });
+          const resp = await fetch(
+            `${API_BASE_URL}/questionnaire/chat_responses/${userId}`,
+            { headers }
+          );
 
           if (resp.ok) {
             const data = await resp.json();
@@ -224,7 +269,7 @@ const Journey: React.FC = () => {
       case "matches":
         if (questionnaireComplete) navigate("/explorematches");
         return;
-      
+
       case "action":
         if (questionnaireComplete) navigate("/action");
         return;
@@ -238,32 +283,31 @@ const Journey: React.FC = () => {
     }
   };
 
-  // 🧱 Milestone Node component
+  /** -------------------------------
+   * Render node
+   --------------------------------*/
   const Node: React.FC<{
     k: Key;
     className: string;
     bubbleSide: "left" | "right";
   }> = ({ k, className, bubbleSide }) => {
     const st = states[k];
-    const locked = st === "future";
-    const showBubble = st === "current";
-    const Icon = iconFor(st);
 
     return (
       <div className={`jm-node ${className}`}>
         <button
           className={`jm-node-btn ${st}`}
+          disabled={st === "future"}
           onClick={() => go(k)}
-          disabled={locked}
-          aria-label={LABEL[k]}
         >
-          <img src={Icon} className="jm-node-icon" alt="" />
+          <img src={iconFor(st)} className="jm-node-icon" alt="" />
         </button>
-        <div className={`jm-node-label ${locked ? "locked" : ""}`}>
+
+        <div className={`jm-node-label ${st === "future" ? "locked" : ""}`}>
           {LABEL[k]}
         </div>
 
-        {showBubble && (
+        {st === "current" && (
           <button className={`jm-bubble ${bubbleSide}`} onClick={() => go(k)}>
             <span className="accent">{HELPER[k].accent}</span>
             {HELPER[k].rest}
@@ -273,23 +317,30 @@ const Journey: React.FC = () => {
     );
   };
 
-  // 🧩 Render layout
+  /** -------------------------------
+   * UI
+   --------------------------------*/
   return (
     <div className="mobile-frame">
-      {/* Header */}
       <div className="jm-header">
         <div>
           <h3 className="jm-title">Welcome {firstName}</h3>
-          <p className="jm-subtitle">Your journey to a fulfilling career awaits.</p>
+          <p className="jm-subtitle">
+            Your journey to a fulfilling career awaits.
+          </p>
         </div>
-        <FiMenu className="jm-menu" onClick={() => setIsSidebarOpen(true)} />
+
+        <FiMenu
+          className="jm-menu"
+          onClick={() => setIsSidebarOpen(true)}
+        />
       </div>
 
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      {/* Journey Canvas */}
       <div className="jm-canvas">
-        <img src={JourneyLine} className="jm-line" alt="journey line" />
+        <img src={JourneyLine} className="jm-line" alt="" />
+
         <Node k="discovery" className="pos-discovery" bubbleSide="right" />
         <Node k="coaching" className="pos-coaching" bubbleSide="left" />
         <Node k="matches" className="pos-matches" bubbleSide="left" />
@@ -297,14 +348,17 @@ const Journey: React.FC = () => {
         <Node k="launch" className="pos-launch" bubbleSide="left" />
       </div>
 
-      {/* Progress Footer */}
       <div className="jm-progress">
         <div className="row">
           <span>Journey Progress</span>
           <span>{progressPct}%</span>
         </div>
+
         <div className="bar">
-          <div className="fill" style={{ width: `${progressPct}%` }} />
+          <div
+            className="fill"
+            style={{ width: `${progressPct}%` }}
+          />
         </div>
       </div>
 

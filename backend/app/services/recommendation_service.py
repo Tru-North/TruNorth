@@ -760,15 +760,15 @@ def _cos_sim(a: List[float], b: List[float]) -> float:
 
 async def _build_profile_from_external(soc: str, title_hint: Optional[str]) -> Optional[Dict[str, Any]]:
     """Build a single profile dict from O*NET plus Adzuna enrichment."""
-    print(f"[DEBUG] Building profile for SOC: {soc}, title_hint: {title_hint}")
+    # print(f"[DEBUG] Building profile for SOC: {soc}, title_hint: {title_hint}")
     onet = await onet_get_details(soc)
     if not onet:
-        print(f"[DEBUG] O*NET returned None for SOC: {soc}")
+        # print(f"[DEBUG] O*NET returned None for SOC: {soc}")
         return None
 
     title = onet["title"] or title_hint or soc
-    print(f"[DEBUG] Retrieved title from O*NET: {title}")
-    print(f"[DEBUG] FEATURE_ADZUNA = {FEATURE_ADZUNA}")
+    # print(f"[DEBUG] Retrieved title from O*NET: {title}")
+    # print(f"[DEBUG] FEATURE_ADZUNA = {FEATURE_ADZUNA}")
     description = onet.get("description", "") or ""
     skills = onet.get("skills", []) or []
 

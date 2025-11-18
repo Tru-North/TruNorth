@@ -7,6 +7,7 @@ import uuid
 import os
 import json
 import time
+import re
 from typing import List, Optional, Tuple
 import requests
 from openai import AzureOpenAI
@@ -20,10 +21,11 @@ from app.models.user import User
 from app.services.ai.chat_history_service import delete_session
 from app.services.ai.chat_history_service import get_recent_messages
 from app.services.ai.chat_history_service import save_message
-from app.services.ai.chat_history_service import save_message
 from app.services.ai.chat_history_service import get_session_messages
 from app.services.ai.feedback_service import get_user_feedback_patterns
 from app.services import recommendation_service
+from app.services.user_service import get_unlock_status, set_unlock_status
+
 
 class AzureFoundryEmbeddings:
     """Azure Foundry Embeddings Wrapper"""
@@ -49,6 +51,7 @@ class AzureFoundryEmbeddings:
         """Generate a single embedding"""
         return self.embed_texts([text])[0]
 
+
 class LangChainAzureEmbeddings(Embeddings):
     """LangChain compatible embeddings wrapper"""
     def __init__(self, base_embedder):
@@ -59,6 +62,7 @@ class LangChainAzureEmbeddings(Embeddings):
     
     def embed_query(self, text):
         return self.base.embed_query(text)
+
 
 class AICoachService:
     """AI Career Coach Service - Singleton pattern"""
@@ -146,6 +150,63 @@ class AICoachService:
                 self._vector_store = None
         
         return self._vector_store
+
+    # -------------------------------------------------
+    # UNLOCK INTENT DETECTION (PHASE C)
+    # -------------------------------------------------
+    def _detect_unlock_intent(self, text: str) -> str:
+        """
+        Detect user intent around career-match readiness.
+        Returns: "yes", "no", "unclear" or "none"
+        """
+        if not text:
+            return "none"
+
+        t = text.strip().lower()
+
+        # Single-word/short affirmations
+        yes_keywords = {
+            "yes", "yeah", "yep", "yup", "sure", "ok", "okay",
+            "definitely", "absolutely", "of course", "let's do it",
+            "lets do it", "let's go", "lets go", "i'm ready", "im ready",
+            "ready", "sounds good", "let's start", "lets start"
+        }
+
+        no_keywords = {
+            "no", "nope", "nah", "not yet", "not right now",
+            "later", "maybe later", "i'm not ready", "im not ready",
+            "dont want to", "don't want to", "not now"
+        }
+
+        unclear_keywords = {
+            "maybe", "not sure", "i don't know", "idk", "i d k",
+            "confused", "on the fence", "thinking", "let me think"
+        }
+
+        # Direct exact matches
+        if t in yes_keywords:
+            return "yes"
+        if t in no_keywords:
+            return "no"
+        if t in unclear_keywords:
+            return "unclear"
+
+        # Regex patterns for more natural phrases
+        if re.search(r"\bi('?m| am)\s+ready\b", t):
+            return "yes"
+        if re.search(r"\bready\s+to\s+(start|explore|go|move ahead|begin)\b", t):
+            return "yes"
+        if re.search(r"\b(show|see|explore|look at)\s+(my\s+)?(career|role|job)\s+(options|paths|matches)\b", t):
+            return "yes"
+        if re.search(r"\b(check|see|explore)\s+(possible\s+)?career\s+paths\b", t):
+            return "yes"
+
+        if re.search(r"\bnot\s+ready\b", t) or "i'm not sure" in t or "im not sure" in t:
+            return "unclear"
+        if "don't think so" in t or "dont think so" in t:
+            return "no"
+
+        return "none"
     
     def _build_chat_messages(
         self,
@@ -309,7 +370,6 @@ class AICoachService:
                 Answer: It’s normal to feel uncertain at this stage. Let’s focus on one step: identifying your strengths.
                 Question: What activities or tasks make you feel energized and confident?
         """
-
         
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         
@@ -449,15 +509,78 @@ class AICoachService:
         session_id: str,
         db: Session
     ) -> dict:
-        """Process a question and return answer"""
+        """Process a question and return answer + unlock trigger flag"""
         
-        # Save user message
+        # Save user message first (always in history)
         if user:
             try:
                 save_message(db, user.id, session_id, "user", question)
             except ImportError:
                 pass
+
+        trigger_explore_unlock = False
+
+        # ---------- Unlock intent handling before calling GPT ----------
+        if user:
+            try:
+                is_unlocked = get_unlock_status(db, user.id)
+            except Exception as e:
+                print(f"⚠️ Could not read unlock status for user {user.id}: {e}")
+                is_unlocked = False
+
+            if not is_unlocked:
+                intent = self._detect_unlock_intent(question)
+                if intent in {"yes", "no", "unclear"}:
+                    # User is responding with explicit readiness / non-readiness
+                    if intent == "yes":
+                        # Flip flag in DB
+                        try:
+                            set_unlock_status(db, user.id, True)
+                        except Exception as e:
+                            print(f"⚠️ Could not set unlock status for user {user.id}: {e}")
+
+                        trigger_explore_unlock = True
+                        answer = (
+                            "Love that. You've built a strong foundation with your insights so far. "
+                            "Based on your skills and values, there are a few roles that could fit well for you. "
+                            "I'll unlock your career matches so you can start exploring them now."
+                        )
+                        event_type = "unlock_yes"
+                    elif intent == "no":
+                        answer = (
+                            "That's completely okay — we don't have to jump into career matches yet. "
+                            "Tell me what still feels unclear or not ready, and we can explore that together at your pace."
+                        )
+                        event_type = "unlock_no"
+                    else:  # unclear
+                        answer = (
+                            "It sounds like you're not fully sure yet, which is totally normal. "
+                            "We can talk through what's making you hesitant about exploring your career matches. "
+                            "What feels confusing or risky about taking that next step right now?"
+                        )
+                        event_type = "unlock_unclear"
+
+                    # Save assistant message to history
+                    try:
+                        save_message(db, user.id, session_id, "assistant", answer)
+                    except ImportError:
+                        pass
+
+                    self._log_event({
+                        "type": event_type,
+                        "question": question,
+                        "answer": answer,
+                        "session_id": session_id,
+                        "user_id": user.id
+                    })
+
+                    return {
+                        "answer": answer,
+                        "session_id": session_id,
+                        "trigger_explore_unlock": trigger_explore_unlock,
+                    }
         
+        # ---------- Normal GPT flow ----------
         # Retrieve context from vector store
         context = ""
         vector_store = self._get_vector_store()
@@ -497,7 +620,11 @@ class AICoachService:
             "user_id": user.id if user else None
         })
         
-        return {"answer": answer, "session_id": session_id}
+        return {
+            "answer": answer,
+            "session_id": session_id,
+            "trigger_explore_unlock": False
+        }
     
     async def text_to_speech(self, text: str, voice: Optional[str] = None) -> bytes:
         """Convert text to speech"""
@@ -544,7 +671,7 @@ class AICoachService:
     ) -> Tuple[bytes, str]:
         """Ask question and return audio response"""
         
-        # Get text answer
+        # Get text answer (includes unlock logic)
         result = await self.ask(question, user, session_id, db)
         answer_text = result["answer"]
         
@@ -576,7 +703,7 @@ class AICoachService:
         # 1. Transcribe audio
         user_text = await self.speech_to_text(audio_bytes, audio_content_type)
         
-        # 2. Get answer
+        # 2. Get answer (includes unlock logic)
         result = await self.ask(user_text, user, session_id, db)
         answer_text = result["answer"]
         

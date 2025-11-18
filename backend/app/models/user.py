@@ -1,5 +1,5 @@
 # backend/app/models/user.py
-from sqlalchemy import Column, Integer, String, DateTime, func
+from sqlalchemy import Column, Integer, String, DateTime, func, Boolean
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -14,6 +14,7 @@ class User(Base):
     firebase_uid = Column(String(128), unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     last_login = Column(DateTime(timezone=True), nullable=True)
+    is_career_unlock_confirmed = Column(Boolean, default=False)
     chat_history = relationship(
         "ChatHistory", 
         back_populates="user", 
