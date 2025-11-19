@@ -33,19 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const [matchesUnlocked, setMatchesUnlocked] = useState<boolean>(false);
 
   // --------------------------------------------------
-  //  LOGS ON LOAD
-  // --------------------------------------------------
-  useEffect(() => {
-    console.log("🔵 Sidebar mounted");
-    console.log("🔍 Stored userId =", userId);
-    console.log(
-      "🔍 LocalStorage.unlock =",
-      localStorage.getItem("career_unlock_confirmed")
-    );
-  }, []);
-
-  // --------------------------------------------------
-  //  Fetch questionnaire sections
+  // Fetch questionnaire sections
   // --------------------------------------------------
   useEffect(() => {
     const fetchSections = async () => {
@@ -64,7 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   }, []);
 
   // --------------------------------------------------
-  //  Fetch user questionnaire progress
+  // Fetch user questionnaire progress
   // --------------------------------------------------
   useEffect(() => {
     if (!userId) return;
@@ -98,7 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   }, [userId, sections]);
 
   // --------------------------------------------------
-  //  Fetch questionnaire completed flag
+  // Fetch questionnaire completed flag
   // --------------------------------------------------
   useEffect(() => {
     const fetchCompletion = async () => {
@@ -121,33 +109,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   }, [userId]);
 
   // --------------------------------------------------
-  //  FETCH DB CAREER UNLOCK FLAG (IMPORTANT)
+  // Fetch journey unlock flag (correct source)
   // --------------------------------------------------
   useEffect(() => {
     const fetchUnlock = async () => {
       if (!userId) return;
 
       try {
-        console.log("🔵 Sidebar: Fetching unlock flag…");
-
         const headers: Record<string, string> = {};
         if (token) headers.Authorization = `Bearer ${token}`;
 
-        const res = await fetch(`${API_BASE_URL}/users/${userId}`, { headers });
+        const res = await fetch(
+          `${API_BASE_URL}/journey/state/${userId}`,
+          { headers }
+        );
+
         const data = await res.json();
-
-        console.log("🟣 Sidebar backend user:", data);
-
         const unlock = data?.is_career_unlock_confirmed === true;
 
-        console.log("🟢 Sidebar unlock =", unlock);
-
-        if (unlock) {
-          setMatchesUnlocked(true);
-          localStorage.setItem("career_unlock_confirmed", "true");
-        } else {
-          setMatchesUnlocked(false);
-        }
+        setMatchesUnlocked(unlock);
       } catch (err) {
         console.error("❌ Sidebar unlock fetch failed:", err);
       }
@@ -191,7 +171,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   };
 
   // --------------------------------------------------
-  // RENDER
+  // Render
   // --------------------------------------------------
   return (
     <div className={`sidebar-wrapper ${isOpen ? "open" : ""}`}>
@@ -238,6 +218,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <img src={starIcon} className="star-icon" />
             <h4>Questionnaire</h4>
           </div>
+
           <ul>
             {sections.map((section, i) => {
               const isLocked = !completedSections.includes(i);
@@ -266,6 +247,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <img src={starIcon} className="star-icon" />
             <h4>Matches</h4>
           </div>
+
           <ul>
             <li
               className={`sidebar-item ${
@@ -300,6 +282,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <p className="footer-plan">Free</p>
             </div>
           </div>
+
           <button className="footer-upgrade" disabled>
             Upgrade
           </button>

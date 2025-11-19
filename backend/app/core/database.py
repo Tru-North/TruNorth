@@ -36,5 +36,6 @@ def setup_database():
     from app.models import final_data
     from app.models.final_data import UserFinalData
     from app.models.chat_history import ChatHistory  # added chat_history model
+    from app.models.user_journey_state import UserJourneyState
 
     Base.metadata.create_all(bind=engine)

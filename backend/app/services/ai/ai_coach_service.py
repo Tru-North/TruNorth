@@ -25,7 +25,8 @@ from app.services.ai.chat_history_service import get_session_messages
 from app.services.ai.feedback_service import get_user_feedback_patterns
 from app.services import recommendation_service
 from app.services.user_service import get_unlock_status, set_unlock_status
-
+from app.api.schemas.journey_schemas import JourneyStateUpdate
+from app.services.journey_service import apply_journey_update
 
 class AzureFoundryEmbeddings:
     """Azure Foundry Embeddings Wrapper"""
@@ -536,6 +537,13 @@ class AICoachService:
                         # Flip flag in DB
                         try:
                             set_unlock_status(db, user.id, True)
+                            apply_journey_update(
+                                db=db,
+                                payload=JourneyStateUpdate(
+                                    user_id=user.id,
+                                    is_career_unlock_confirmed=True
+                                )
+                            )
                         except Exception as e:
                             print(f"⚠️ Could not set unlock status for user {user.id}: {e}")
 

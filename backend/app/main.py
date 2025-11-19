@@ -7,6 +7,7 @@ from app.api.routes.questionnaire_routes import router as questionnaire_router
 from app.api.routes.ai_coach_routes import router as ai_coach_router  # ✅ Add this
 from app.core.database import setup_database
 from app.api.routes import router as api_router
+from app.api.routes.journey_routes import router as journey_router
 
 app = FastAPI(
     title="TruNorth",
@@ -50,6 +51,8 @@ app.include_router(user_router)
 app.include_router(questionnaire_router)  
 app.include_router(ai_coach_router)  
 app.include_router(api_router)
+app.include_router(journey_router)
+
 
 @app.on_event("startup")
 def startup_event():

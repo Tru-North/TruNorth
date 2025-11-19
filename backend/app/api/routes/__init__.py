@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.api.routes import final_data_routes  # import our new route
 from app.api.routes import recommendation_routes
+from .journey_routes import router as journey_router
 
 router = APIRouter()
 

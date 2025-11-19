@@ -32,6 +32,23 @@ const HELPER: Record<Key, { accent: string; rest: string }> = {
   launch: { accent: "Ready", rest: " for your next move." },
 };
 
+const STAGE_ORDER: Key[] = ["discovery", "coaching", "matches", "action", "launch"];
+
+interface JourneyState {
+  user_id: number;
+  chat_intro_done: boolean;
+  questionnaire_completed: boolean;
+  discovery_completed: boolean;
+  coach_completed: boolean;
+  matches_completed: boolean;
+  action_completed: boolean;
+  launch_completed: boolean;
+  is_career_unlock_confirmed: boolean;
+  current_stage: "discovery" | "coaching" | "matches" | "action" | "launch" | "completed";
+  progress_percent: number;
+  updated_at: string;
+}
+
 const Journey: React.FC = () => {
   const navigate = useNavigate();
 
@@ -40,16 +57,13 @@ const Journey: React.FC = () => {
     localStorage.getItem("first_name") || "User"
   );
 
-  const [discoveryCompleted, setDiscoveryCompleted] = useState<boolean>(
-    localStorage.getItem("discovery_completed") === "true"
-  );
+  const [journeyState, setJourneyState] = useState<JourneyState | null>(null);
+  const [loadingJourney, setLoadingJourney] = useState<boolean>(true);
 
+  // still used for gating navigation into coach/matches/etc.
   const [questionnaireComplete, setQuestionnaireComplete] = useState<boolean>(
     localStorage.getItem("questionnaire_complete") === "true"
   );
-
-  const [careerUnlockConfirmed, setCareerUnlockConfirmed] =
-    useState<boolean>(false);
 
   const userId = localStorage.getItem("user_id");
   const token = localStorage.getItem("token");
@@ -62,9 +76,15 @@ const Journey: React.FC = () => {
     p?.user?.first_name ||
     p?.user?.firstname;
 
-  /** -------------------------------
-   * Load Name
-   --------------------------------*/
+  const authHeaders = (): Record<string, string> => {
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return headers;
+  };
+
+  // --------------------------------
+  // Load Name (unchanged)
+  // --------------------------------
   useEffect(() => {
     const loadName = async () => {
       try {
@@ -73,12 +93,14 @@ const Journey: React.FC = () => {
         const cached = localStorage.getItem("first_name");
         if (cached) setFirstName(cached);
 
-        const headers: Record<string, string> = {};
-        if (token) headers.Authorization = `Bearer ${token}`;
-
-        let r = await fetch(`${API_BASE_URL}/users/${userId}`, { headers });
-        if (r.status === 404)
-          r = await fetch(`${API_BASE_URL}/user/${userId}`, { headers });
+        let r = await fetch(`${API_BASE_URL}/users/${userId}`, {
+          headers: authHeaders(),
+        });
+        if (r.status === 404) {
+          r = await fetch(`${API_BASE_URL}/user/${userId}`, {
+            headers: authHeaders(),
+          });
+        }
 
         if (!r.ok) return;
         const data = await r.json();
@@ -88,22 +110,80 @@ const Journey: React.FC = () => {
           setFirstName(name);
           localStorage.setItem("first_name", name);
         }
-      } catch {}
+      } catch {
+        // ignore
+      }
     };
 
     loadName();
-  }, [API_BASE_URL, token, userId]);
+  }, [userId, token]);
 
-  /** -------------------------------
-   * Load Questionnaire Completion
-   --------------------------------*/
+  // --------------------------------
+  // Fetch journey state from backend
+  // --------------------------------
+  const fetchJourneyState = async () => {
+    if (!userId) return;
+    setLoadingJourney(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/journey/state/${userId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders(),
+        },
+      });
+      if (res.ok) {
+        const data: JourneyState = await res.json();
+        setJourneyState(data);
+      }
+    } catch (err) {
+      console.error("Error loading journey state", err);
+    } finally {
+      setLoadingJourney(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchJourneyState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, token]);
+
+  // --------------------------------
+  // Update journey state in backend
+  // --------------------------------
+  const updateJourneyState = async (payload: Partial<JourneyState>) => {
+    if (!userId) return;
+    try {
+      const body = {
+        user_id: Number(userId),
+        ...payload,
+      };
+      const res = await fetch(`${API_BASE_URL}/journey/state/update`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders(),
+        },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        const data: JourneyState = await res.json();
+        setJourneyState(data);
+      }
+    } catch (err) {
+      console.error("Error updating journey state", err);
+    }
+  };
+
+  // --------------------------------
+  // Questionnaire completion check
+  // (same logic as before, now also syncs to journey)
+  // --------------------------------
   useEffect(() => {
     const loadProgress = async () => {
       try {
         if (!userId) return;
 
-        const headers: Record<string, string> = {};
-        if (token) headers.Authorization = `Bearer ${token}`;
+        const headers = authHeaders();
 
         let complete: boolean | null = null;
 
@@ -133,102 +213,93 @@ const Journey: React.FC = () => {
               answered.has(sec.category)
             );
           }
-        } catch {}
+        } catch {
+          // ignore network errors here
+        }
 
         const final =
-          complete ??
-          localStorage.getItem("questionnaire_complete") === "true";
+          complete ?? localStorage.getItem("questionnaire_complete") === "true";
 
         setQuestionnaireComplete(final);
 
-        if (final) localStorage.setItem("questionnaire_complete", "true");
-
-        setDiscoveryCompleted(
-          localStorage.getItem("discovery_completed") === "true"
-        );
-      } catch {}
+        if (final) {
+          localStorage.setItem("questionnaire_complete", "true");
+          await updateJourneyState({ questionnaire_completed: true });
+        }
+      } catch {
+        // ignore
+      }
     };
 
     loadProgress();
-  }, [API_BASE_URL, token, userId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, token]);
 
-  /** -------------------------------
-   * Fetch Unlock Flag from DB
-   --------------------------------*/
-  useEffect(() => {
-    const fetchUnlockFlag = async () => {
-      if (!userId) return;
-
-      try {
-        const headers: Record<string, string> = {};
-        if (token) headers.Authorization = `Bearer ${token}`;
-
-        const res = await fetch(`${API_BASE_URL}/users/${userId}`, { headers });
-        const data = await res.json();
-
-        const unlock = data?.is_career_unlock_confirmed === true;
-
-        setCareerUnlockConfirmed(unlock);
-      } catch {}
-    };
-
-    fetchUnlockFlag();
-  }, [API_BASE_URL, userId, token]);
-
-  /** -------------------------------
-   * Compute Milestone States (NO logic removed)
-   --------------------------------*/
+  // --------------------------------
+  // Compute milestone states from backend journeyState
+  // --------------------------------
   const states: Record<Key, State> = useMemo(() => {
-    const s: Record<Key, State> = {
-      discovery: "future",
+    const base: Record<Key, State> = {
+      discovery: "current",
       coaching: "future",
       matches: "future",
       action: "future",
       launch: "future",
     };
 
-    const chatIntroDone =
-      localStorage.getItem("chat_intro_done") === "true";
+    if (!journeyState) return base;
 
-    // your original logic preserved EXACTLY
-    if (chatIntroDone && questionnaireComplete) {
-      s.discovery = "past";
-      s.coaching = "current";
-    } else {
-      s.discovery = "current";
-      return s;
+    const currentStage = journeyState.current_stage;
+    if (currentStage === "completed") {
+      return {
+        discovery: "past",
+        coaching: "past",
+        matches: "past",
+        action: "past",
+        launch: "past",
+      };
     }
 
-    // DB unlock → matches unlocked
-    if (careerUnlockConfirmed) {
-      s.coaching = "past";
-      s.matches = "current";
-      localStorage.setItem("coach_completed", "true");
-    }
+    const currentIndex = STAGE_ORDER.indexOf(currentStage as Key);
+    const result: Record<Key, State> = { ...base };
 
-    return s;
-  }, [questionnaireComplete, discoveryCompleted, careerUnlockConfirmed]);
+    STAGE_ORDER.forEach((stage, idx) => {
+      if (idx < currentIndex) {
+        result[stage] = "past";
+      } else if (idx === currentIndex) {
+        result[stage] = "current";
+      } else {
+        result[stage] = "future";
+      }
+    });
 
-  /** -------------------------------
-   * Progress bar based ONLY on past states
-   --------------------------------*/
+    return result;
+  }, [journeyState]);
+
+  // --------------------------------
+  // Progress bar from backend
+  // --------------------------------
   const progressPct = useMemo(() => {
-    const pastCount = Object.values(states).filter((v) => v === "past").length;
-    return pastCount * 20;
-  }, [states]);
+    if (!journeyState || typeof journeyState.progress_percent !== "number") {
+      return 0;
+    }
+    const pct = journeyState.progress_percent;
+    if (pct < 0) return 0;
+    if (pct > 100) return 100;
+    return pct;
+  }, [journeyState]);
 
   const iconFor = (st: State) =>
     st === "past" ? IconPast : st === "current" ? IconCurrent : IconFuture;
 
-  /** -------------------------------
-   * Navigation — YOUR discovery logic preserved
-   --------------------------------*/
+  // --------------------------------
+  // Navigation — discovery logic preserved
+  // --------------------------------
   const go = async (k: Key) => {
     switch (k) {
       case "discovery": {
         try {
-          const headers: Record<string, string> = {};
-          if (token) headers.Authorization = `Bearer ${token}`;
+          const headers = authHeaders();
 
           const resp = await fetch(
             `${API_BASE_URL}/questionnaire/chat_responses/${userId}`,
@@ -248,7 +319,9 @@ const Journey: React.FC = () => {
 
             if (introDone) {
               localStorage.setItem("chat_intro_done", "true");
-              localStorage.setItem("discovery_completed", "true");
+              await updateJourneyState({
+                chat_intro_done: true,
+              });
               navigate("/questionnaire");
               return;
             }
@@ -283,9 +356,9 @@ const Journey: React.FC = () => {
     }
   };
 
-  /** -------------------------------
-   * Render node
-   --------------------------------*/
+  // --------------------------------
+  // Milestone node
+  // --------------------------------
   const Node: React.FC<{
     k: Key;
     className: string;
@@ -317,9 +390,9 @@ const Journey: React.FC = () => {
     );
   };
 
-  /** -------------------------------
-   * UI
-   --------------------------------*/
+  // --------------------------------
+  // UI
+  // --------------------------------
   return (
     <div className="mobile-frame">
       <div className="jm-header">
@@ -330,10 +403,7 @@ const Journey: React.FC = () => {
           </p>
         </div>
 
-        <FiMenu
-          className="jm-menu"
-          onClick={() => setIsSidebarOpen(true)}
-        />
+        <FiMenu className="jm-menu" onClick={() => setIsSidebarOpen(true)} />
       </div>
 
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
@@ -355,12 +425,15 @@ const Journey: React.FC = () => {
         </div>
 
         <div className="bar">
-          <div
-            className="fill"
-            style={{ width: `${progressPct}%` }}
-          />
+          <div className="fill" style={{ width: `${progressPct}%` }} />
         </div>
       </div>
+
+      {loadingJourney && (
+        <div className="jm-loading">
+          <span>Loading your journey...</span>
+        </div>
+      )}
 
       <BottomNav />
     </div>
