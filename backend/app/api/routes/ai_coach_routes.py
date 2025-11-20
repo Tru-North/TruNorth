@@ -87,6 +87,34 @@ async def health_check():
         "version": "1.0.0"
     }
 
+@router.post("/session/initiate")
+async def initiate_session(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: Optional[User] = Depends(get_current_user)
+):
+    """
+    **Proactive Trigger**
+    Call this when the user enters the chat screen. 
+    The AI will generate the first message (Greeting or Welcome Back).
+    """
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required for session initiation")
+    
+    session_id = request.headers.get("x-session-id") or str(uuid.uuid4())
+    
+    try:
+        # EDITED: Calls the new service method that runs the 'initiate' node in LangGraph
+        result = await ai_coach_service.initiate_session(
+            user=user,
+            session_id=session_id,
+            db=db
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Session initiation failed: {str(e)}")
+
+
 @router.post("/ask")
 async def ask_question(
     request: Request,
@@ -99,7 +127,7 @@ async def ask_question(
     
     Headers:
     - x-firebase-uid: Firebase UID for user authentication (optional)
-    - x-session-id: Session ID to continue conversation (optional)
+    - x-session-id: Session ID to continue conversation (optional)where i
     
     Body:
     - question: User's question

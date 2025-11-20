@@ -552,6 +552,8 @@
 .chat-input-bar {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;      /* <— PREVENTS overflow */
+  overflow: hidden;       /* <— HIDES excess spacing */
   background: #fff;
   border: 1.5px solid #ddd;
   border-radius: 30px;
@@ -569,6 +571,7 @@
   color: #000;
   background: transparent;
   margin: 0 8px;
+  min-width: 0; 
 }
 
 .chat-input::placeholder {
@@ -580,6 +583,7 @@
   height: 26px;
   cursor: pointer;
   transition: none !important;
+  flex-shrink: 0;
 }
 
 .chat-icon.mic,

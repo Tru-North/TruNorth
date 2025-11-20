@@ -1,0 +1,31 @@
+/* FONT IMPORT */
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap");
+
+/* GLOBAL RESET FOR ADMIN PAGES */
+html, body, #root {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  height: 100%;
+}
+
+/* ADMIN THEME VARIABLES */
+:root {
+  --admin-bg-left: #e3ddff;
+  --admin-primary: #9d8bf9;
+  --admin-text-main: #000000;
+  --admin-text-muted: #777777;
+  --admin-page-bg: #f4f4f7;
+}
+
+/* BASE CLASS FOR ALL ADMIN PAGES */
+.admin-page {
+  font-family: "Outfit", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  color: var(--admin-text-main);
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: var(--admin-page-bg);
+}

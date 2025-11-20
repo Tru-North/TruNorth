@@ -42,6 +42,9 @@ const AICoachChat: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
 
+  // NEW: guard so initiate-session runs only once
+  const [sessionInitiated, setSessionInitiated] = useState(false);
+
   // Audio / playback
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   const [showPlaybackBar, setShowPlaybackBar] = useState(false);
@@ -49,7 +52,7 @@ const AICoachChat: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [popupCoords, setPopupCoords] = useState<{ top: number; left: number } | null>(null); // ✅ new
+  const [popupCoords, setPopupCoords] = useState<{ top: number; left: number } | null>(null);
 
   // Feedback
   const [feedbackState, setFeedbackState] = useState<Record<number, "like" | "dislike" | null>>(
@@ -62,22 +65,21 @@ const AICoachChat: React.FC = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
 
+  // Unlock bubble
   const [showUnlockBubble, setShowUnlockBubble] = useState(false);
 
   useEffect(() => {
     console.log("🟠 showUnlockBubble changed:", showUnlockBubble);
   }, [showUnlockBubble]);
 
-  // 🔥 Auto-scroll when the unlock bubble becomes visible
+  // Auto-scroll when unlock bubble becomes visible
   useEffect(() => {
     if (showUnlockBubble) {
-      console.log("📌 Auto-scrolling because unlock bubble became visible");
       setTimeout(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 50);
     }
   }, [showUnlockBubble]);
-
 
   /* -------------------- Firebase & session init -------------------- */
   useEffect(() => {
@@ -89,6 +91,7 @@ const AICoachChat: React.FC = () => {
           setError("User not authenticated.");
           return;
         }
+
         let sid = localStorage.getItem("session_id");
         if (!sid) {
           sid = crypto.randomUUID();
@@ -113,52 +116,61 @@ const AICoachChat: React.FC = () => {
   /* -------------------- WebSocket connection -------------------- */
   const connectWebSocket = () => {
     if (!firebaseUid || socketRef.current) return;
+
     try {
       const wsUrl = `${API_BASE_URL.replace("http", "ws")}/ai-coach/ws/coach`;
       const socket = new WebSocket(wsUrl);
       socketRef.current = socket;
 
       socket.onopen = () => setIsSocketConnected(true);
+
       socket.onclose = () => {
         setIsSocketConnected(false);
         socketRef.current = null;
         setIsLoading(false);
         setIsStreaming(false);
       };
+
       socket.onerror = () => {
         setIsSocketConnected(false);
         setIsLoading(false);
         setIsStreaming(false);
       };
+
       socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          // 🔥 Detect unlock trigger (backend sends unlock_prompt = true)
-          // 🔥 Detect unlock trigger from backend
+
+          // UNLOCK logic (unchanged)
           if (data.trigger_explore_unlock === true) {
             console.log("🔥 BACKEND TRIGGERED UNLOCK — setting showUnlockBubble = true");
             setShowUnlockBubble(true);
           } else {
-            console.log("⚪ No unlock trigger in this chunk:", data);
+            console.log("⚪ No unlock trigger:", data);
           }
 
           if (data.answer) {
             if (!data.trigger_explore_unlock) {
               setShowUnlockBubble(false);
             }
+
             setMessages((prev) => {
               const updated = [...prev];
               const last = updated[updated.length - 1];
-              if (last && last.role === "assistant")
+              if (last && last.role === "assistant") {
                 updated[updated.length - 1] = {
                   ...last,
                   content: last.content + data.answer,
                 };
-              else updated.push({ role: "assistant", content: data.answer });
+              } else {
+                updated.push({ role: "assistant", content: data.answer });
+              }
               return updated;
             });
+
             setIsStreaming(true);
           }
+
           if (data.done === true) {
             setIsStreaming(false);
             setIsLoading(false);
@@ -183,6 +195,7 @@ const AICoachChat: React.FC = () => {
   useEffect(() => {
     const loadHistory = async () => {
       if (!firebaseUid || !sessionId) return;
+
       try {
         const res = await fetch(`${API_BASE_URL}/ai-coach/history/${sessionId}`, {
           headers: {
@@ -190,6 +203,7 @@ const AICoachChat: React.FC = () => {
             "Content-Type": "application/json",
           },
         });
+
         if (res.ok) {
           const data = await res.json();
           if (data && Array.isArray(data.messages)) {
@@ -205,8 +219,53 @@ const AICoachChat: React.FC = () => {
         console.warn("No previous chat history.");
       }
     };
+
     if (isReady) loadHistory();
   }, [firebaseUid, sessionId, isReady, location?.state]);
+
+  /* ---------------------------------------------------------
+     🔥 NEW: Initiate Session EVERY TIME page loads (Option C)
+     --------------------------------------------------------- */
+  useEffect(() => {
+    const initiate = async () => {
+      if (!firebaseUid || !sessionId || sessionInitiated === true) return;
+
+      try {
+        console.log("🚀 Initiating AI Coach session...");
+        const res = await fetch(`${API_BASE_URL}/ai-coach/session/initiate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-firebase-uid": firebaseUid,
+            "x-session-id": sessionId,
+          },
+        });
+
+        if (!res.ok) {
+          console.error("❌ Failed to initiate session");
+          setSessionInitiated(true);
+          return;
+        }
+
+        const data = await res.json();
+
+        if (data?.answer) {
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: data.answer },
+          ]);
+        }
+      } catch (err) {
+        console.error("Session initiation error:", err);
+      } finally {
+        setSessionInitiated(true);
+      }
+    };
+
+    if (isReady && firebaseUid && sessionId) {
+      initiate();
+    }
+  }, [isReady, firebaseUid, sessionId, sessionInitiated]);
 
   /* -------------------- Auto-scroll -------------------- */
   useEffect(() => {
@@ -216,7 +275,9 @@ const AICoachChat: React.FC = () => {
   /* -------------------- Send message -------------------- */
   const handleSendMessage = async () => {
     if (!inputValue.trim() || !firebaseUid || !sessionId) return;
+
     setShowUnlockBubble(false);
+
     const text = inputValue.trim();
     setInputValue("");
     setMessages((prev) => [...prev, { role: "user", content: text }]);
@@ -225,15 +286,17 @@ const AICoachChat: React.FC = () => {
 
     try {
       if (isSocketConnected && socketRef.current) {
-        const payload = {
-          message: text,
-          firebase_uid: firebaseUid,
-          session_id: sessionId,
-        };
-        socketRef.current.send(JSON.stringify(payload));
+        socketRef.current.send(
+          JSON.stringify({
+            message: text,
+            firebase_uid: firebaseUid,
+            session_id: sessionId,
+          })
+        );
         setIsStreaming(true);
         return;
       }
+
       const res = await fetch(`${API_BASE_URL}/ai-coach/ask`, {
         method: "POST",
         headers: {
@@ -243,89 +306,92 @@ const AICoachChat: React.FC = () => {
         },
         body: JSON.stringify({ question: text }),
       });
+
       if (!res.ok) throw new Error("Failed");
+
       const data = await res.json();
-      setMessages((p) => [...p, { role: "assistant", content: data.answer || "..." }]);
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: data.answer || "..." },
+      ]);
+
       setIsLoading(false);
-    } catch {
-      setMessages((p) => [...p, { role: "assistant", content: "⚠️ Something went wrong." }]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "⚠️ Something went wrong." },
+      ]);
       setIsLoading(false);
     }
   };
 
   /* -------------------- Audio / Feedback / STT -------------------- */
-    // ✅ Updated playTTS anchored to speaker icon & clamped within chat-body
-    const playTTS = async (text: string, index: number, iconRect?: DOMRect | null) => {
+  const playTTS = async (text: string, i: number, iconRect?: DOMRect | null) => {
     try {
-        if (!firebaseUid || !sessionId) return;
-        if (audio) audio.pause();
+      if (!firebaseUid || !sessionId) return;
+      if (audio) audio.pause();
 
-        // ✅ FINAL FIX — always visible near bottom of mobile frame
-        if (iconRect) {
+      if (iconRect) {
         const frame = document.querySelector(".mobile-frame") as HTMLElement | null;
         if (frame) {
-            const popupWidth = 220;
-            const popupHeight = 60;
-            const marginBottom = 100; // just above input bar
+          const popupWidth = 220;
+          const popupHeight = 60;
+          const marginBottom = 100;
 
-            // ✅ Center horizontally in 390px frame
-            const frameWidth = frame.clientWidth || 390;
-            const left = frameWidth / 2 - popupWidth / 2;
+          const frameWidth = frame.clientWidth || 390;
+          const left = frameWidth / 2 - popupWidth / 2;
+          const top = frame.clientHeight - popupHeight - marginBottom;
 
-            // ✅ Stick popup above input bar (fixed, not scroll-based)
-            const top = frame.clientHeight - popupHeight - marginBottom;
-
-            console.log("Popup fixed inside mobile frame:", { top, left });
-            setPopupCoords({ top, left });
+          setPopupCoords({ top, left });
         }
-        }
+      }
 
-        // ✅ Request and play audio as before
-        const res = await fetch(`${API_BASE_URL}/ai-coach/voice/tts`, {
+      const res = await fetch(`${API_BASE_URL}/ai-coach/voice/tts`, {
         method: "POST",
         headers: {
-            "x-firebase-uid": firebaseUid,
-            "x-session-id": sessionId,
-            "Content-Type": "application/json",
+          "x-firebase-uid": firebaseUid,
+          "x-session-id": sessionId,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ text }),
-        });
+      });
 
-        if (!res.ok) throw new Error();
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const newAudio = new Audio(url);
-        setAudio(newAudio);
-        setActiveMsgIndex(index);
-        setShowPlaybackBar(true);
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const newAudio = new Audio(url);
+      setAudio(newAudio);
+      setActiveMsgIndex(i);
+      setShowPlaybackBar(true);
 
-        newAudio.play();
-        newAudio.onplay = () => setIsPlaying(true);
-        newAudio.onpause = () => setIsPlaying(false);
-        newAudio.onended = () => {
+      newAudio.play();
+      newAudio.onplay = () => setIsPlaying(true);
+      newAudio.onpause = () => setIsPlaying(false);
+      newAudio.onended = () => {
         setShowPlaybackBar(false);
+        setPopupCoords(null);
         setActiveMsgIndex(null);
         setIsPlaying(false);
-        setPopupCoords(null);
         setCurrentTime(0);
         setDuration(0);
-        };
-        newAudio.ontimeupdate = () => setCurrentTime(newAudio.currentTime);
-        newAudio.onloadedmetadata = () => setDuration(newAudio.duration);
-    } catch (err) {
-        console.error("TTS error:", err);
-        alert("Voice unavailable — showing text only.");
+      };
+      newAudio.ontimeupdate = () => setCurrentTime(newAudio.currentTime);
+      newAudio.onloadedmetadata = () => setDuration(newAudio.duration);
+    } catch {
+      alert("Voice unavailable — showing text only.");
     }
-    };
+  };
 
   const togglePlayPause = () => {
-    if (!audio) return;
-    isPlaying ? audio.pause() : audio.play();
+    if (audio) (isPlaying ? audio.pause() : audio.play());
   };
-  const skip = (s: number) => {
+
+  const skip = (sec: number) => {
     if (!audio) return;
-    audio.currentTime = Math.min(Math.max(audio.currentTime + s, 0), duration);
+    audio.currentTime = Math.min(Math.max(audio.currentTime + sec, 0), duration);
   };
+
   const cancelPlayback = () => {
     if (audio) {
       audio.pause();
@@ -336,6 +402,7 @@ const AICoachChat: React.FC = () => {
     setActiveMsgIndex(null);
     setIsPlaying(false);
   };
+
   const formatTime = (t: number) => {
     const m = Math.floor(t / 60)
       .toString()
@@ -349,39 +416,41 @@ const AICoachChat: React.FC = () => {
   /* -------------------- Feedback -------------------- */
   const handleFeedback = async (index: number, type: "like" | "dislike") => {
     setFeedbackState((prev) => {
-      const cur = prev[index];
-      const next = cur === type ? null : type;
+      const current = prev[index];
+      const next = current === type ? null : type;
       if (firebaseUid && sessionId) sendFeedbackToBackend(index, next);
       return { ...prev, [index]: next };
     });
   };
 
   const sendFeedbackToBackend = async (
-    messageIndex: number,
+    i: number,
     feedbackType: "like" | "dislike" | null
   ) => {
     if (!firebaseUid || feedbackType === null) return;
+
     try {
-      const message = messages[messageIndex];
+      const message = messages[i];
       if (!message || message.role !== "assistant") return;
-      const messagePreview = message.content.substring(0, 50);
+
+      const preview = message.content.substring(0, 50);
+
       const params = new URLSearchParams({
         feedback_type: feedbackType,
-        message_content: messagePreview,
+        message_content: preview,
       });
-      await fetch(`${API_BASE_URL}/ai-coach/feedback?${params.toString()}`, {
+
+      await fetch(`${API_BASE_URL}/ai-coach/feedback?${params}`, {
         method: "POST",
         headers: {
           "x-firebase-uid": firebaseUid,
           "Content-Type": "application/json",
         },
       });
-    } catch (err) {
-      console.error("Feedback submission error:", err);
-    }
+    } catch {}
   };
 
-  /* -------------------- Inline recording -------------------- */
+  /* -------------------- STT Upload -------------------- */
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -402,24 +471,36 @@ const AICoachChat: React.FC = () => {
       alert("Microphone access denied.");
     }
   };
+
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
   };
+
   const cancelRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording")
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
       mediaRecorderRef.current.stop();
+    }
     setIsRecording(false);
   };
 
   const handleSTTUpload = async (blob: Blob) => {
     if (!firebaseUid || !sessionId) return;
+
     try {
       setIsProcessingSTT(true);
+
       const fd = new FormData();
       fd.append("audio", blob, "rec.webm");
+
       const res = await fetch(`${API_BASE_URL}/ai-coach/voice/stt`, {
         method: "POST",
         headers: {
@@ -428,6 +509,7 @@ const AICoachChat: React.FC = () => {
         },
         body: fd,
       });
+
       const data = await res.json();
       if (data.text) setInputValue(data.text);
       else alert("Didn’t catch that.");
@@ -444,14 +526,14 @@ const AICoachChat: React.FC = () => {
       className="mobile-frame ai-coach-container"
       style={{
         position: "relative",
-        height: "844px",             // ✅ fixed height for bottom-nav math
+        height: "844px",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
       }}
     >
-      {/* Header */}
+      {/* HEADER */}
       <div className="ai-coach-header">
         <FiX onClick={() => navigate("/journey")} className="header-icon left" />
         <div className="header-text">
@@ -460,89 +542,81 @@ const AICoachChat: React.FC = () => {
         </div>
         <FiMenu onClick={() => setIsSidebarOpen(true)} className="header-icon right" />
       </div>
+
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      {/* Chat body */}
+      {/* CHAT BODY */}
       <div className="chat-body">
-
-        {/* Existing messages */}
         {messages.map((msg, i) => (
           <ChatBubbleCoach
             key={i}
             role={msg.role}
             content={msg.content}
             feedbackState={feedbackState[i]}
-            onFeedback={(type) => handleFeedback(i, type)}
+            onFeedback={(t) => handleFeedback(i, t)}
             onPlayTTS={(bubbleRef) => playTTS(msg.content, i, bubbleRef)}
           />
         ))}
 
-        {/* Unlock bubble appears after AI message */}
+        {/* UNLOCK BUBBLE (UNCHANGED) */}
         {showUnlockBubble && (
           <>
-          {console.log("🟣 RENDERING UNLOCK BUBBLE — showUnlockBubble = TRUE")}
-          <UnlockBubble
-            onYes={() => {
-              console.log("🟢 USER CLICKED YES on unlock bubble");
-              setShowUnlockBubble(false);
-              console.log("🔵 Hiding bubble after YES (setShowUnlockBubble = false)");
-              navigate("/explorematches");
-            }}
-            onNotNow={() => {
-              console.log("🟡 USER CLICKED NOT NOW on unlock bubble");
-
-               // Hide bubble
-              setShowUnlockBubble(false);
-              console.log("🔵 Hiding bubble after NOT NOW (setShowUnlockBubble = false)");
-            }}
-          />
-        </>
+            <UnlockBubble
+              onYes={() => {
+                setShowUnlockBubble(false);
+                navigate("/explorematches");
+              }}
+              onNotNow={() => {
+                setShowUnlockBubble(false);
+              }}
+            />
+          </>
         )}
+
         <div ref={chatEndRef} />
       </div>
 
-
-      {/* Playback bar (anchored) */}
-        {showPlaybackBar && popupCoords && (
-            <div
-            className="playback-bar-popup"
-            style={{
-                position: "absolute",
-                top: `${popupCoords.top}px`,
-                left: `${popupCoords.left}px`,
-                transform: "translateY(0)",
-                zIndex: 50,
-                background: "#fff",
-                borderRadius: "12px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                padding: "10px 14px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                minWidth: "220px",
-                transition: "opacity 0.2s ease",
-            }}
-            >
-
-            <div className="playback-controls">
+      {/* PLAYBACK BAR */}
+      {showPlaybackBar && popupCoords && (
+        <div
+          className="playback-bar-popup"
+          style={{
+            position: "absolute",
+            top: popupCoords.top,
+            left: popupCoords.left,
+            zIndex: 50,
+            background: "#fff",
+            borderRadius: "12px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            padding: "10px 14px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            minWidth: "220px",
+          }}
+        >
+          <div className="playback-controls">
             <img src={RewindIcon} alt="Rewind" onClick={() => skip(-10)} />
             <img src={PauseIcon} alt="Pause/Play" onClick={togglePlayPause} />
             <img src={ForwardIcon} alt="Forward" onClick={() => skip(10)} />
             <img src={CancelIcon} alt="Cancel" onClick={cancelPlayback} />
-            </div>
-            <p className="playback-time">
-            {formatTime(currentTime)} / {formatTime(duration || 0)}
-            </p>
+          </div>
+          <p className="playback-time">
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </p>
         </div>
-        )}
+      )}
 
-      {/* 🎙 Recording Popup */}
+      {/* RECORDING POPUP */}
       {isRecording && (
         <div className="recording-popup">
           <div className="recording-left">
             <span className="recording-dot"></span>
-            <span className="recording-text">Recording...</span>
+            <span className="recording-text">
+              {isProcessingSTT ? "Processing..." : "Recording..."}
+            </span>
           </div>
+
           <div className="recording-controls">
             <button onClick={stopRecording}>⏹ Stop</button>
             <button onClick={cancelRecording}>✖ Cancel</button>
@@ -550,7 +624,7 @@ const AICoachChat: React.FC = () => {
         </div>
       )}
 
-      {/* Input bar */}
+      {/* INPUT BAR */}
       <div className="chat-input-bar">
         <img
           src={MicIcon}
@@ -558,24 +632,29 @@ const AICoachChat: React.FC = () => {
           className={`chat-icon mic ${isRecording ? "recording" : ""}`}
           onClick={startRecording}
         />
+
         <img
           src={VoiceNavIcon}
           alt="Voice Mode"
           className="chat-icon voice"
           onClick={() => navigate("/coach/voice")}
         />
+
         <input
           type="text"
-          placeholder="Type here..."
+          placeholder={isProcessingSTT ? "Transcribing..." : "Type here..."}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
           className="chat-input"
         />
+
         <img
           src={SendIcon}
           alt="Send"
-          className={`chat-icon send ${!inputValue.trim() || isLoading ? "disabled" : ""}`}
+          className={`chat-icon send ${
+            !inputValue.trim() || isLoading ? "disabled" : ""
+          }`}
           onClick={handleSendMessage}
         />
       </div>

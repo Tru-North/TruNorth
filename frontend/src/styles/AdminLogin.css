@@ -1,0 +1,214 @@
+/* ------------------------------
+   ADMIN LOGIN PAGE (FINAL / CLEAN)
+   Fully responsive — NO vertical scroll on right side
+   Perfect 50/50 desktop layout
+--------------------------------*/
+
+.admin-login-page {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden; /* prevent any page scroll */
+}
+
+/* ------------------------------
+   50/50 DESKTOP LAYOUT
+--------------------------------*/
+.admin-login-container {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
+
+/* ------------------------------
+   LEFT SIDE — Illustration
+--------------------------------*/
+.admin-login-left {
+  flex: 1;
+  background-color: var(--admin-bg-left);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  overflow: hidden;
+}
+
+.admin-login-illustration {
+  width: clamp(55%, 75%, 85%);
+  max-width: 640px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* ------------------------------
+   RIGHT SIDE — NO SCROLL
+   Fully responsive vertical centering
+--------------------------------*/
+.admin-login-right {
+  flex: 1;
+  background-color: #ffffff;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* 🔥 vertical centering (fixes your issue) */
+
+  padding: 4vh 48px;
+  box-sizing: border-box;
+
+  height: 100vh;
+  overflow: hidden; /* 🔥 no scroll ever */
+}
+
+/* ------------------------------
+   Logo Section
+--------------------------------*/
+.admin-login-logo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: clamp(16px, 4vh, 48px);
+}
+
+.admin-login-logo {
+  width: 88px;
+  height: auto;
+  margin-bottom: 8px;
+}
+
+.admin-login-logo-text {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--admin-primary);
+}
+
+/* ------------------------------
+   Form Container
+--------------------------------*/
+.admin-login-form-wrapper {
+  width: 100%;
+  max-width: 494px;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 2vh, 14px);
+}
+
+.admin-login-title {
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.admin-login-subtitle {
+  font-size: 14px;
+  color: var(--admin-text-main);
+  margin: 0;
+}
+
+/* ------------------------------
+   Form Fields
+--------------------------------*/
+.admin-login-form {
+  margin-top: clamp(12px, 3vh, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2vh, 18px);
+}
+
+.admin-login-field {
+  width: 100%;
+}
+
+.admin-login-input {
+  width: 100%;
+  height: clamp(54px, 7vh, 77px); /* 🔥 fully responsive height */
+  border-radius: 15px;
+  border: 2px solid var(--admin-primary);
+
+  padding: clamp(14px, 2vh, 24px) clamp(20px, 2.2vw, 35px);
+  box-sizing: border-box;
+
+  font-size: 16px;
+  font-weight: 400;
+  background-color: #ffffff;
+  outline: none;
+}
+
+.admin-login-input::placeholder {
+  color: #b0b0b9;
+}
+
+.admin-login-input:focus {
+  box-shadow: 0 0 0 3px rgba(157, 139, 249, 0.35);
+}
+
+/* ------------------------------
+   Remember Me / Forgot Password
+--------------------------------*/
+.admin-login-remember-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: clamp(6px, 1vh, 10px);
+  font-size: 14px;
+}
+
+.admin-login-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--admin-text-main);
+}
+
+.admin-login-remember input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-login-forgot-button {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 14px;
+  color: var(--admin-text-main);
+  cursor: pointer;
+}
+
+/* ------------------------------
+   Submit Button (Responsive)
+--------------------------------*/
+.admin-login-submit {
+  margin-top: clamp(14px, 3vh, 20px);
+  width: 100%;
+  max-width: 494px;
+  height: clamp(54px, 7vh, 77px);
+
+  border: none;
+  border-radius: 15px;
+  background-color: var(--admin-primary);
+  color: white;
+
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.admin-login-submit:hover {
+  filter: brightness(0.96);
+  box-shadow: 0 6px 18px rgba(157, 139, 249, 0.35);
+}
+
+.admin-login-submit:active {
+  transform: translateY(1px);
+}
+
+/* ------------------------------
+   Footer
+--------------------------------*/
+.admin-login-footer {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+  text-align: center;
+  margin-top: clamp(16px, 3vh, 24px);
+}

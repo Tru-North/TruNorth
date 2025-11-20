@@ -43,6 +43,5 @@ class CareerProfile(Base):
         cascade="all, delete-orphan",
     )
 
-
 if TYPE_CHECKING:  # pragma: no cover - imported only for type checking
     from app.models.user_recommendation import UserCareerRecommendation, UserRecommendationAction

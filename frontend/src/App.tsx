@@ -22,10 +22,19 @@ import ExploreMatches from "./pages/ExploreMatches";
 import ActionPlanPreview from "./pages/ActionPlanPreview";
 import SavedCareers from "./pages/SavedCareers";
 
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUserReview from "./pages/admin/AdminUserReview";
+
 const App: React.FC = () => {
   return (
     <Router>
       <Routes>
+        {/* 🛠 Admin Routes (Public for Now — Add Admin ProtectedRoute Later) */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/user-review" element={<AdminUserReview />} />
+
         {/* 🌐 Public Routes */}
         <Route path="/" element={<Welcome />} />
         <Route path="/onboarding" element={<Onboarding />} />
@@ -160,7 +169,6 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
-
         {/* 🚦 Redirect unknown routes */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

@@ -3,6 +3,7 @@
   align-items: flex-start;
   gap: 10px;
   margin-bottom: 16px;
+  width: 100%;
 }
 
 /* ✅ Avatar: no border, no background, uses image as-is */

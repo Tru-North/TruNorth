@@ -1,0 +1,148 @@
+/* OUTER PAGE */
+.admin-review-page {
+  width: 100%;
+  min-height: 100vh;
+  background: #f5f5f5;
+  font-family: "Outfit", sans-serif;
+}
+
+/* -------------------------------------------------- */
+/*  TOP GLOBAL HEADER (STICKY)                       */
+/* -------------------------------------------------- */
+
+.header-top {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+}
+
+.review-page-header {
+  width: 100%;
+  background: #B1A2FF;
+  padding: 16px 40px;
+  box-sizing: border-box;
+}
+
+.page-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-header-logo {
+  width: 42px;
+  height: 42px;
+}
+
+.page-header-title {
+  color: white;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+/* -------------------------------------------------- */
+/* SECOND HEADER (USER BAR) — NOT STICKY             */
+/* -------------------------------------------------- */
+
+.header-sub {
+  position: relative;
+  top: 0;
+  z-index: 1;
+  margin-top: 280px;
+}
+
+.review-user-header {
+  width: 100%;
+  max-width: 1200px;
+  background: #B1A2FF;
+
+  margin: 0 auto;
+  padding: 18px 30px;
+  border-radius: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.review-user-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-user-label {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.review-user-value {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.review-user-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.review-user-confidence {
+  background: white;
+  color: #4a3cb1;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1.5px solid #e8e3ff;
+}
+
+/* -------------------------------------------------- */
+/* MAIN CONTENT WRAPPER                              */
+/* -------------------------------------------------- */
+
+.admin-review-wrapper {
+  width: 100%;
+  padding-top: 28px; /* small gap below user header */
+}
+
+/* MAIN 60 / 40 LAYOUT */
+.admin-review-layout {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+}
+
+/* LEFT SIDE (chat simulation) */
+.review-left {
+  width: 60%;
+  min-height: 600px; /* placeholder */
+}
+
+/* VERTICAL LINE */
+.review-divider {
+  width: 2px;                 /* thin vertical line */
+  background-color: #d6d2f7;  /* soft light-purple like Figma */
+  margin: 0 24px;
+  border-radius: 2px;
+
+  min-height: 600px;          /* ensures the line is VISIBLE */
+  align-self: stretch;        /* grows with the content */
+}
+
+/* RIGHT SIDE PANEL */
+.review-right {
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+}
+
+.review-right-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1f1f1f;
+  margin-bottom: 24px;
+}
