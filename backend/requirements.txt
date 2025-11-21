@@ -19,10 +19,10 @@ psycopg2-binary==2.9.9
 sqlalchemy==2.0.25
 alembic==1.12.1
 
-# --- Firebase (Pyrebase compatibility) ---
+# --- Firebase (with compatibility fixes) ---
 pyrebase4==4.8.0
 firebase-admin==6.3.0
-requests-toolbelt==0.10.1     # MUST stay <1.0 for Pyrebase
+requests-toolbelt==0.10.1
 urllib3==1.26.15
 
 # --- Authentication & Security ---
@@ -44,14 +44,8 @@ pinecone-client==3.1.0
 langchain==0.1.20
 langchain-core==0.1.53
 langchain-community==0.0.38
-langchain-text-splitters==0.0.2
 
-# --- LangGraph (AI Coach) ---
-langgraph==1.0.3
-langgraph-sdk==0.2.9
-langgraph-checkpoint==3.0.1
-langgraph-prebuilt==1.0.5
-
+langgraph==0.0.26
 
 # --- Data processing ---
 pandas==2.0.3
