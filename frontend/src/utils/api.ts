@@ -69,6 +69,12 @@ export async function loginUser(email: string, password: string) {
       console.warn("⚠️ Backend did not return user.id:", data);
     }
 
+    // Save firebase_uid from backend
+    if (data.user?.firebase_uid) {
+      localStorage.setItem("firebase_uid", data.user.firebase_uid);
+      console.log("🔥 Saved firebase_uid:", data.user.firebase_uid);
+    }
+
     return data;
   } catch (error: any) {
     console.error("❌ Login error:", error.message);
@@ -209,3 +215,21 @@ export const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+import { getAuth } from "firebase/auth";
+
+// Attach firebase_uid on every API request
+api.interceptors.request.use(
+  async (config) => {
+    const firebaseUid = localStorage.getItem("firebase_uid");
+
+    if (firebaseUid) {
+      config.headers["x-firebase-uid"] = firebaseUid;
+    }
+
+    console.log("🔐 Sending Firebase UID:", firebaseUid || "NONE");
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);

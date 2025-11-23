@@ -89,7 +89,7 @@ const ActionPlanPreview: React.FC = () => {
                 personalized next steps so you can start taking action.
               </p>
 
-              <button className="ready-btn">Ready To Try This Path?</button>
+              <button className="ready-btn" onClick={() => navigate(`/microsteps/${id}`)}>Ready To Try This Path?</button>
 
               <button
                 className="explore-btn-alt"

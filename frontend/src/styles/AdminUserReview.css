@@ -50,7 +50,7 @@
   position: relative;
   top: 0;
   z-index: 1;
-  margin-top: 280px;
+  margin-top: 1420px;
 }
 
 .review-user-header {
@@ -122,6 +122,77 @@
   min-height: 600px; /* placeholder */
 }
 
+/* ========================= LEFT PANEL ========================= */
+
+.review-left {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  padding-right: 10px;
+}
+
+/* ========================= TAB ROW ========================= */
+
+.chat-tabs {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  margin-bottom: 18px;
+}
+
+.user-tab {
+  min-width: 220px;
+  padding: 12px 18px;
+  border-radius: 16px;
+  border: 2px solid #e5ddff;
+  background: #f7f5ff;
+  cursor: pointer;
+  transition: 0.2s ease;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.user-tab-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.user-tab-subtitle {
+  font-size: 13px;
+  color: #6d6d6d;
+  margin-top: 4px;
+}
+
+/* ACTIVE TAB */
+.user-tab.active {
+  background: #b49cff;
+  border-color: #b49cff;
+}
+
+.user-tab.active .user-tab-title,
+.user-tab.active .user-tab-subtitle {
+  color: white;
+}
+
+/* ========================= CHAT BOX ========================= */
+
+.chat-box {
+  width: 100%;
+  height: 1590px;              /* required height */
+  overflow-y: auto;
+  padding: 20px;
+  border: 2px solid #B1A2FF;
+  border-radius: 14px;
+  background: white;
+  box-sizing: border-box;
+}
+
+
+/* =================================LINE====================== */
+
 /* VERTICAL LINE */
 .review-divider {
   width: 2px;                 /* thin vertical line */
@@ -145,4 +216,249 @@
   font-weight: 600;
   color: #1f1f1f;
   margin-bottom: 24px;
+}
+
+/* ====================== OUTER BOXES ====================== */
+.review-box {
+  width: 100%;
+  background: white;
+  border: 2px solid #B1A2FF;
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 32px;
+}
+
+/* ====================== INTERNAL SECTIONS ====================== */
+.review-section {
+  padding-bottom: 18px;
+  /* margin-bottom: 5px; */
+  /* border-bottom: 1px solid #ececff; */
+}
+
+.review-section.last {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f1f1f;
+  margin-bottom: 10px;
+}
+
+/* ======================================= */
+/*     AI INTENT SUMMARY TEXTAREA         */
+/* ======================================= */
+
+.intent-textarea {
+  width: 100%;
+  min-height: 140px;
+
+  background: #ffffff;
+  border: 2px solid #B1A2FF;
+  border-radius: 12px;
+
+  padding: 16px 18px;
+  font-size: 15px;
+  font-family: "Outfit", sans-serif;
+  color: #2b2b2b;
+
+  resize: none;            /* prevents manual resizing */
+  outline: none;
+  line-height: 1.45;
+  box-sizing: border-box;
+}
+
+.intent-textarea:focus {
+  border-color: #9d8bf9;
+  /* box-shadow: 0 0 0 3px rgba(157, 139, 249, 0.25); */
+}
+
+/* ======================================================== */
+/* EDITABLE OUTPUT BOX, COMMENT BOX, MESSAGE USER, NUDGE AI */
+/* ======================================================== */
+/* Parent wrapper */
+.editable-output-wrapper {
+  position: relative;
+  width: 100%;
+  border: 2px solid #c5b3ff;
+  border-radius: 16px;
+  padding: 16px;
+  background: #ffffff;
+  min-height: 170px;         /* Height of the whole box */
+  box-sizing: border-box;
+}
+
+/* Textarea stays ABOVE the button */
+.editable-output-textarea {
+  width: 100%;
+  height: 100px;             /* 👈 REDUCE HEIGHT TO PREVENT OVERLAP */
+  border: none;
+  outline: none;
+  resize: none;              /* no manual resize */
+  font-size: 15px;
+  font-family: "Outfit", sans-serif;
+  color: #333;
+  padding: 4px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/* Save button INSIDE bottom-right corner */
+.editable-save-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: #b49cff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.editable-save-btn:hover {
+  background: #a48bf3;
+}
+
+/* ======================================= */
+/*                 TAG DROPDOWN            */
+/* ======================================= */
+/* TAG DROPDOWN */
+.tag-dropdown {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #c7b5ff;
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+  background: white;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.tag-dropdown:focus {
+  border-color: #a690ff;
+}
+
+/* INLINE BOX (NO OUTER BIG BOX) */
+.tag-other-inline-box {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* TEXTAREA (short height + rounded) */
+.tag-other-inline-input {
+  flex: 1;
+  height: 50px;
+  padding: 10px 12px;
+  border: 2px solid #c7b5ff;
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+  resize: none;
+}
+
+.tag-other-inline-input:focus {
+  border-color: #a690ff;
+}
+
+/* SAVE BUTTON INLINE */
+.tag-other-inline-save-btn {
+  background: #b49cff;
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.tag-other-inline-save-btn:hover {
+  background: #a48bf3;
+}
+
+/* ======================================= */
+/*          PROFILE SUMMARY BOX            */
+/* ======================================= */
+
+.profile-summary-wrapper {
+  width: 100%;
+  background: #ffffff;
+  border: 2px solid #c7b5ff;
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-sizing: border-box;
+}
+
+.profile-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.profile-summary-icon {
+  width: 32px;
+  height: 32px;
+  background: #b49cff;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.profile-summary-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1f1f1f;
+}
+
+.profile-summary-text {
+  margin-top: 4px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #2b2b2b;
+  white-space: normal;
+  /* min-height: 200px; */
+  max-height: 200px;     /* 👈 set height */
+  overflow-y: auto;      /* 👈 enables scroll */
+  padding-right: 6px;    /* nicer scroll spacing */
+}
+
+.logout-btn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  background: #ffffff;
+  color: #8f77ff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 12px;
+
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+
+  transition: 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.logout-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
 }

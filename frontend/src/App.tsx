@@ -21,6 +21,8 @@ import Language from "./pages/Language";
 import ExploreMatches from "./pages/ExploreMatches";
 import ActionPlanPreview from "./pages/ActionPlanPreview";
 import SavedCareers from "./pages/SavedCareers";
+import MicroSteps from "./pages/MicroSteps";
+import MicrostepDetail from "./pages/MicrostepDetail";
 
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -33,7 +35,7 @@ const App: React.FC = () => {
         {/* 🛠 Admin Routes (Public for Now — Add Admin ProtectedRoute Later) */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/user-review" element={<AdminUserReview />} />
+        <Route path="/admin/user-review/:id" element={<AdminUserReview />} />
 
         {/* 🌐 Public Routes */}
         <Route path="/" element={<Welcome />} />
@@ -169,6 +171,24 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        {/* 📋 Microsteps Routes - MOVED HERE, PROTECTED */}
+        <Route 
+          path="/microsteps/:id" 
+          element={
+            <ProtectedRoute>
+              <MicroSteps />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/microstep/:id" 
+          element={
+            <ProtectedRoute>
+              <MicrostepDetail />
+            </ProtectedRoute>
+          } 
+        />
+
         {/* 🚦 Redirect unknown routes */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

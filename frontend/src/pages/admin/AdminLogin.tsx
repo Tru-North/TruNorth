@@ -7,19 +7,33 @@ import "../../styles/AdminLogin.css";
 import AdminLoginIllustration from "../../assets/admin/admin_login_leftside.svg";
 import TruNorthLogo from "../../assets/trunorth/trunorth_icon.svg";
 
+import { adminAuthService } from "../../services/admin_auth_service"; // ⭐ NEW IMPORT
+
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
 
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setErrorMsg("");
 
-    // TODO: replace this with real admin auth API call.
-    // For now, just navigate to the dashboard on submit.
-    navigate("/admin/dashboard");
+    try {
+      // ⭐ API CALL
+      const res = await adminAuthService.login(emailOrUsername, password);
+
+      // ⭐ SAVE TOKEN
+      localStorage.setItem("admin_token", res.access_token);
+
+      // ⭐ REDIRECT
+      navigate("/admin/dashboard");
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg("Invalid login. Please try again.");
+    }
   };
 
   return (
@@ -50,6 +64,13 @@ const AdminLogin: React.FC = () => {
           <div className="admin-login-form-wrapper">
             <h1 className="admin-login-title">Welcome!</h1>
             <p className="admin-login-subtitle">Admin Login</p>
+
+            {/* ⭐ ERROR MESSAGE */}
+            {errorMsg && (
+              <div className="admin-login-error">
+                {errorMsg}
+              </div>
+            )}
 
             <form className="admin-login-form" onSubmit={handleSubmit}>
               <div className="admin-login-field">
@@ -85,10 +106,7 @@ const AdminLogin: React.FC = () => {
                 <button
                   type="button"
                   className="admin-login-forgot-button"
-                  onClick={() => {
-                    // TODO: hook up to real forgot-password flow later
-                    console.log("Forgot password clicked");
-                  }}
+                  onClick={() => console.log("Forgot password clicked")}
                 >
                   Forget Your Password?
                 </button>

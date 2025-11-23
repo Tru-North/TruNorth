@@ -1,5 +1,6 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, Boolean, String, ForeignKey, DateTime
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -18,6 +19,8 @@ class UserJourneyState(Base):
     matches_completed = Column(Boolean, default=False, nullable=False)
     action_completed = Column(Boolean, default=False, nullable=False)
     launch_completed = Column(Boolean, default=False, nullable=False)
+    ai_confidence_score = Column(Integer, nullable=True)
+    ai_confidence_breakdown = Column(JSONB, nullable=True)
 
     # Unlock flag
     is_career_unlock_confirmed = Column(Boolean, default=False, nullable=False)

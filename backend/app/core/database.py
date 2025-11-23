@@ -38,5 +38,7 @@ def setup_database():
     from app.models.chat_history import ChatHistory  # added chat_history model
     from app.models.user_journey_state import UserJourneyState
     from app.models.microstep import Microstep
+    from app.models import admin_review  # Phase 6
+    from app.models import admin_action_log  # Phase 6
 
     Base.metadata.create_all(bind=engine)
