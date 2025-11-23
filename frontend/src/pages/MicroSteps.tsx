@@ -4,7 +4,7 @@ import { FiArrowLeft, FiMenu } from "react-icons/fi";
 import BottomNav from "../components/BottomNav";
 import Sidebar from "../components/Sidebar";
 import ChatBubbleStatic from "../components/ChatBubbleStatic";
-import "../styles/Microsteps.css";
+import "../styles/MicroSteps.css";
 import UnexploredFilterSVG from "../assets/microsteps/unexplored_black_icon.svg";
 import InProgressFilterSVG from "../assets/microsteps/inprogress_black_icon.svg";
 import CompletedFilterSVG from "../assets/microsteps/completed_black_icon.svg";
