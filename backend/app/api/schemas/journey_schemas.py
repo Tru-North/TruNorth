@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 
 
@@ -26,7 +26,7 @@ class JourneyStateOut(BaseModel):
 
     class Config:
         from_attributes = True  # for ORM → Pydantic
-        
+
 
 # ------------------------------
 # INBOUND SCHEMA (Frontend POST)
@@ -43,4 +43,22 @@ class JourneyStateUpdate(BaseModel):
 
     is_career_unlock_confirmed: Optional[bool] = None
 
-    # Do NOT include current_stage or progress_percent here.
+
+# ---------------------------------------------------
+#  NEW SCHEMAS — for /journey/actionable-careers/{id}
+# ---------------------------------------------------
+
+class CareerActionItem(BaseModel):
+    career_profile_id: int
+    title: str
+
+    class Config:
+        from_attributes = True
+
+
+class ActionableCareersOut(BaseModel):
+    user_id: int
+    careers: List[CareerActionItem]
+
+    class Config:
+        from_attributes = True

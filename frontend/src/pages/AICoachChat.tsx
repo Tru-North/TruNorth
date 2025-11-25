@@ -537,7 +537,7 @@ const AICoachChat: React.FC = () => {
       <div className="ai-coach-header">
         <FiX onClick={() => navigate("/journey")} className="header-icon left" />
         <div className="header-text">
-          <h3>TruNorthAI Assistant</h3>
+          <h3>TruNorth</h3>
           <p>Chat with your Career Coach</p>
         </div>
         <FiMenu onClick={() => setIsSidebarOpen(true)} className="header-icon right" />

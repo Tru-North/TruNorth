@@ -11,6 +11,8 @@ import IconCurrent from "../assets/journey/journey_current_milestone_icon.svg";
 import IconFuture from "../assets/journey/journey_inactive_future_milestone_icon.svg";
 import JourneyLine from "../assets/journey/journey_linking_icon.svg";
 
+import TakeActionPopup from "../components/TakeActionPopup";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 type Key = "discovery" | "coaching" | "matches" | "action" | "launch";
@@ -60,13 +62,20 @@ const Journey: React.FC = () => {
   const [journeyState, setJourneyState] = useState<JourneyState | null>(null);
   const [loadingJourney, setLoadingJourney] = useState<boolean>(true);
 
-  // still used for gating navigation into coach/matches/etc.
   const [questionnaireComplete, setQuestionnaireComplete] = useState<boolean>(
     localStorage.getItem("questionnaire_complete") === "true"
   );
 
   const userId = localStorage.getItem("user_id");
   const token = localStorage.getItem("token");
+
+  // --------------------------------
+  // TAKE ACTION POPUP STATES
+  // --------------------------------
+  const [showTakeActionPopup, setShowTakeActionPopup] = useState(false);
+  const [actionableCareers, setActionableCareers] = useState<
+    { career_profile_id: number; career_name: string }[]
+  >([]);
 
   const pickFirstName = (p: any): string | undefined =>
     p?.first_name ||
@@ -83,7 +92,7 @@ const Journey: React.FC = () => {
   };
 
   // --------------------------------
-  // Load Name (unchanged)
+  // LOAD USER NAME
   // --------------------------------
   useEffect(() => {
     const loadName = async () => {
@@ -110,16 +119,14 @@ const Journey: React.FC = () => {
           setFirstName(name);
           localStorage.setItem("first_name", name);
         }
-      } catch {
-        // ignore
-      }
+      } catch {}
     };
 
     loadName();
   }, [userId, token]);
 
   // --------------------------------
-  // Fetch journey state from backend
+  // LOAD JOURNEY STATE
   // --------------------------------
   const fetchJourneyState = async () => {
     if (!userId) return;
@@ -144,19 +151,16 @@ const Journey: React.FC = () => {
 
   useEffect(() => {
     fetchJourneyState();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, token]);
 
   // --------------------------------
-  // Update journey state in backend
+  // UPDATE JOURNEY STATE
   // --------------------------------
   const updateJourneyState = async (payload: Partial<JourneyState>) => {
     if (!userId) return;
     try {
-      const body = {
-        user_id: Number(userId),
-        ...payload,
-      };
+      const body = { user_id: Number(userId), ...payload };
+
       const res = await fetch(`${API_BASE_URL}/journey/state/update`, {
         method: "POST",
         headers: {
@@ -165,6 +169,7 @@ const Journey: React.FC = () => {
         },
         body: JSON.stringify(body),
       });
+
       if (res.ok) {
         const data: JourneyState = await res.json();
         setJourneyState(data);
@@ -175,8 +180,28 @@ const Journey: React.FC = () => {
   };
 
   // --------------------------------
-  // Questionnaire completion check
-  // (same logic as before, now also syncs to journey)
+  // LOAD ACTIONABLE CAREERS
+  // --------------------------------
+  const loadActionableCareers = async () => {
+    if (!userId) return;
+
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/journey/actionable-careers/${userId}`,
+        { headers: authHeaders() }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        setActionableCareers(data.careers || []);
+      }
+    } catch (err) {
+      console.error("Failed to load actionable careers", err);
+    }
+  };
+
+  // --------------------------------
+  // QUESTIONNAIRE COMPLETION CHECK
   // --------------------------------
   useEffect(() => {
     const loadProgress = async () => {
@@ -205,17 +230,13 @@ const Journey: React.FC = () => {
               .slice(0, -1)
               .filter((x: any) => x?.required !== false);
 
-            const answered = new Set(
-              (r?.data || []).map((x: any) => x?.category)
-            );
+            const answered = new Set((r?.data || []).map((x: any) => x?.category));
 
             complete = required.every((sec: any) =>
               answered.has(sec.category)
             );
           }
-        } catch {
-          // ignore network errors here
-        }
+        } catch {}
 
         const final =
           complete ?? localStorage.getItem("questionnaire_complete") === "true";
@@ -226,17 +247,14 @@ const Journey: React.FC = () => {
           localStorage.setItem("questionnaire_complete", "true");
           await updateJourneyState({ questionnaire_completed: true });
         }
-      } catch {
-        // ignore
-      }
+      } catch {}
     };
 
     loadProgress();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, token]);
 
   // --------------------------------
-  // Compute milestone states from backend journeyState
+  // MILESTONE STATES
   // --------------------------------
   const states: Record<Key, State> = useMemo(() => {
     const base: Record<Key, State> = {
@@ -264,36 +282,28 @@ const Journey: React.FC = () => {
     const result: Record<Key, State> = { ...base };
 
     STAGE_ORDER.forEach((stage, idx) => {
-      if (idx < currentIndex) {
-        result[stage] = "past";
-      } else if (idx === currentIndex) {
-        result[stage] = "current";
-      } else {
-        result[stage] = "future";
-      }
+      if (idx < currentIndex) result[stage] = "past";
+      else if (idx === currentIndex) result[stage] = "current";
+      else result[stage] = "future";
     });
 
     return result;
   }, [journeyState]);
 
   // --------------------------------
-  // Progress bar from backend
+  // PROGRESS PERCENT
   // --------------------------------
   const progressPct = useMemo(() => {
-    if (!journeyState || typeof journeyState.progress_percent !== "number") {
-      return 0;
-    }
+    if (!journeyState) return 0;
     const pct = journeyState.progress_percent;
-    if (pct < 0) return 0;
-    if (pct > 100) return 100;
-    return pct;
+    return Math.min(100, Math.max(0, pct));
   }, [journeyState]);
 
   const iconFor = (st: State) =>
     st === "past" ? IconPast : st === "current" ? IconCurrent : IconFuture;
 
   // --------------------------------
-  // Navigation — discovery logic preserved
+  // NAVIGATION LOGIC
   // --------------------------------
   const go = async (k: Key) => {
     switch (k) {
@@ -319,17 +329,14 @@ const Journey: React.FC = () => {
 
             if (introDone) {
               localStorage.setItem("chat_intro_done", "true");
-              await updateJourneyState({
-                chat_intro_done: true,
-              });
+              await updateJourneyState({ chat_intro_done: true });
               navigate("/questionnaire");
               return;
             }
           }
 
           navigate("/chat-intro");
-        } catch (err) {
-          console.error("Error checking chat intro:", err);
+        } catch {
           navigate("/chat-intro");
         }
         return;
@@ -344,7 +351,13 @@ const Journey: React.FC = () => {
         return;
 
       case "action":
-        if (questionnaireComplete) navigate("/action");
+        if (!questionnaireComplete) return;
+
+        // LOAD POPUP DATA
+        await loadActionableCareers();
+
+        // SHOW POPUP
+        setShowTakeActionPopup(true);
         return;
 
       case "launch":
@@ -357,7 +370,7 @@ const Journey: React.FC = () => {
   };
 
   // --------------------------------
-  // Milestone node
+  // NODE COMPONENT
   // --------------------------------
   const Node: React.FC<{
     k: Key;
@@ -433,6 +446,18 @@ const Journey: React.FC = () => {
         <div className="jm-loading">
           <span>Loading your journey...</span>
         </div>
+      )}
+
+      {/* TAKE ACTION POPUP RENDER */}
+      {showTakeActionPopup && (
+        <TakeActionPopup
+          careers={actionableCareers}
+          onClose={() => setShowTakeActionPopup(false)}
+          onSelect={(careerId) => {
+            setShowTakeActionPopup(false);
+            navigate(`/microsteps/${careerId}`);
+          }}
+        />
       )}
 
       <BottomNav />

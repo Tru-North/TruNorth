@@ -560,7 +560,7 @@ class AICoachService:
                 
                 if feedback_patterns["has_feedback"] and (feedback_patterns["like_count"] > 0 or feedback_patterns["dislike_count"] > 0):
                     feedback_context = f"""
-        USER FEEDBACK HISTORY:
+        USER FEEDBACK HISTORY:focus 
         This user has provided feedback on your previous responses:
         - Likes: {feedback_patterns['like_count']}
         - Dislikes: {feedback_patterns['dislike_count']}
@@ -1145,6 +1145,23 @@ class AICoachService:
                 db.add(new_action)
                 db.commit()
                 print(f"✅ Created new action record with 'action_taken' for career_id={career_id}")
+
+                # -------------------------------------------------------------
+                # Journey Map Update → First “action_taken” triggers stage 4
+                # -------------------------------------------------------------
+                from app.services.journey_service import apply_journey_update
+                from app.api.schemas.journey_schemas import JourneyStateUpdate
+
+                apply_journey_update(
+                    db,
+                    JourneyStateUpdate(
+                        user_id=user.id,
+                        matches_completed=True
+                    )
+                )
+
+                print(f"🎯 Journey state updated: matches_completed=True for user {user.id}")
+
         
         except Exception as e:
             print(f"⚠️ Warning: Could not update action for career_id={career_id}: {e}")
@@ -1260,7 +1277,7 @@ class AICoachService:
     - Stay focused on {career_title} career goals
     - Connect this step to their broader career journey
 
-    Remember: This is a focused conversation about "{step_title}" - keep your advice relevant to this specific learning step.
+    Remember: This is a focused conversation about "{step_title}" - keep your advice relevant to this specific learning step. And keep the answers Strictly only within 250-400 characters.
     """
         
         # Build conversation history
@@ -1427,3 +1444,122 @@ class AICoachService:
                 fallback = "Welcome! I'm Ruby. Shall we get started?"
                 save_message(db, user.id, session_id, "assistant", fallback)
                 return {"answer": fallback, "session_id": session_id}
+            
+
+
+
+
+
+
+################# Ready To Launch #################
+
+
+
+    def calculate_completion_percentage(self, microstep: Microstep) -> float:
+        """Calculate completion percentage for a microstep"""
+        
+        steps = microstep.data.get("steps", [])
+        if not steps:
+            return 0.0
+        
+        total_items = 0
+        completed_items = 0
+        
+        for step in steps:
+            # Count main step
+            total_items += 1
+            if step.get("status") == "completed":
+                completed_items += 1
+            
+            # Count ministeps
+            ministeps = step.get("ministeps", [])
+            total_items += len(ministeps)
+            completed_items += len([m for m in ministeps if m.get("status") == "completed"])
+        
+        percentage = (completed_items / total_items * 100) if total_items > 0 else 0.0
+        return round(percentage, 2)
+
+
+    async def check_ready_to_launch(self, microstep: Microstep, db: Session) -> dict:
+        """
+        Check if user is ready to launch (≥80% completion).
+        Returns status and triggers launch if ready.
+        """
+        
+        completion = self.calculate_completion_percentage(microstep)
+        
+        # Update completion percentage
+        microstep.completion_percentage = completion
+        db.commit()
+        
+        # Check if ready to launch
+        if completion >= 99.99 and not microstep.is_ready_to_launch:
+            # Mark as ready to launch
+            microstep.is_ready_to_launch = True
+            db.commit()
+            
+            print(f"🚀 User {microstep.user_id} ready to launch! Completion: {completion}%")
+            
+            return {
+                "ready_to_launch": True,
+                "completion_percentage": completion,
+                "message": "Congratulations! You've completed enough steps to launch your career transition.",
+                "is_new_milestone": True
+            }
+        
+        return {
+            "ready_to_launch": microstep.is_ready_to_launch,
+            "completion_percentage": completion,
+            "message": f"Keep going! {completion}% complete.",
+            "is_new_milestone": False
+        }
+
+
+    async def generate_progress_summary(
+        self,
+        microstep: Microstep,
+        user: User
+    ) -> str:
+        """Generate AI summary of user's career journey"""
+        
+        steps = microstep.data.get("steps", [])
+        completed_steps = [s for s in steps if s.get("status") == "completed"]
+        
+        # Build context
+        completion = self.calculate_completion_percentage(microstep)
+        
+        SUMMARY_PROMPT = f"""You are a career coach reflecting on a user's journey. Generate a warm, personal summary of their progress.
+
+    **Career Path:** {microstep.career_title}
+    **Completion:** {completion}%
+    **Steps Completed:** {len(completed_steps)}/{len(steps)}
+
+    **Completed Steps:**
+    {chr(10).join([f"- {s.get('title')}" for s in completed_steps[:5]])}
+
+    Generate a 3-4 sentence summary that:
+    - Acknowledges their journey and progress
+    - Highlights key milestones they've achieved
+    - Celebrates their readiness to launch
+    - Encourages their next steps
+
+    Keep it warm, personal, and motivating. Use their career path ({microstep.career_title}) as context.
+    """
+        
+        messages = [{"role": "user", "content": SUMMARY_PROMPT}]
+        
+        try:
+            response = self._get_azure_client().chat.completions.create(
+                model=settings.AZURE_CHAT_DEPLOYMENT,
+                messages=messages,
+                temperature=0.7,
+                max_tokens=200
+            )
+            
+            summary = response.choices[0].message.content.strip()
+            print(f"✅ Generated progress summary ({len(summary)} chars)")
+            return summary
+            
+        except Exception as e:
+            print(f"❌ Error generating summary: {e}")
+            return f"You've made incredible progress on your journey to becoming a {microstep.career_title}. You've completed {len(completed_steps)} major learning steps and are ready to take the next step in your career transition!"

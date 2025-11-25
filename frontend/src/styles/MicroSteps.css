@@ -1,73 +1,65 @@
-/* --------------------------
-   Microsteps page CSS (FULL FILE, UPDATED FOR INLINE SVG STATUS ICONS)
-   -------------------------- */
+/* ===========================
+   MICROSTEPS PAGE — CLEAN VERSION
+   =========================== */
 
-/* Allow both .iphone (old) and .mobile-frame.microsteps-page (current) to share same styles */
-.iphone,
+/* The .mobile-frame rules now come ONLY from global.css */
+
 .mobile-frame.microsteps-page {
-  background-color: #ffffff;
-  height: 844px;
-  position: relative;
-  width: 390px;
-  margin: 24px auto;
-  border-radius: 32px;
-  box-shadow: 0 12px 30px rgba(11,10,20,0.08);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  font-family: "Outfit", "Inter", Helvetica, Arial, sans-serif;
+  padding-top: 17px;
 }
 
 /* ---------------- Header ---------------- */
 .microsteps-header {
-  width: 100%;
-  height: 88px;
+  height: 72px; 
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
   background: #fff;
   border-bottom: 1px solid #f2f2f4;
+  position: relative;     /* THIS IS KEY */
   padding: 0 16px;
+  flex-shrink: 0;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .microsteps-header-btn {
-  position: absolute;
+  position: absolute;      /* EXACT FIX — match Privacy */
   top: 50%;
   transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  font-size: 20px;
-  color: #111;
-  background: none;
-  border: none;
+  font-size: 22px;
+  color: #000;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.microsteps-header-btn.left { left: 16px; }
-.microsteps-header-btn.right { right: 16px; }
+.microsteps-header-btn.left {
+  left: 16px;
+}
 
+.microsteps-header-btn.right {
+  right: 16px;
+}
+
+/* Center section should NOT be absolute, should naturally center */
 .microsteps-header-center {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  max-width: 80%;
+  align-content: center;
 }
 
-.microsteps-header-center h3 {
-  margin: 0;
-  font-size: 17px;
+.microsteps-header-title {
+  font-size: 18px;
   font-weight: 600;
+  margin: 0;
   color: #000;
 }
 
-.microsteps-subtitle {
+.microsteps-header-subtitle {
   margin: 0;
+  margin-top: 2px;
   font-size: 12px;
   color: #666;
 }
@@ -77,19 +69,12 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  margin: 24px 16px 16px 16px;
-}
-
-.chatbubble-static-avatar {
-  width: 42px;
-  height: 42px;
+  margin: 20px 16px 16px 16px;
 }
 
 .chatbubble-static-avatar-img {
-  width: 42px;
-  height: 42px;
-  object-fit: contain;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
 }
 
 .chatbubble-static-bubble {
@@ -104,8 +89,8 @@
 
 /* ---------------- Progress bar ---------------- */
 .progress-section {
-  width: calc(100% - 32px);
-  margin: 12px 16px 20px 16px;
+  margin: 0 0 20px 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -114,7 +99,7 @@
 .progress-bar-wrap {
   width: 100%;
   position: relative;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .progress-bar-bg {
@@ -140,16 +125,19 @@
   color: #8E7BF8;
 }
 
-/* ---------------- Filter pills ---------------- */
+/* ---------------- Filter Pills — NEW GRID SYSTEM ---------------- */
 .filter-row {
-  display: flex;
-  gap: 6px;
-  flex-wrap: nowrap;
-  margin: 0 16px 20px 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 0 0 20px 0;
+  width: 100%;
+  overflow-x: hidden; /* FULLY PREVENT horizontal scroll */
 }
 
 .filter-pill {
-  padding: 6px 10px;
+  width: 100%;
+  padding: 8px 10px;
   background: #fff;
   border: 1.5px solid #E8E8ED;
   border-radius: 18px;
@@ -157,21 +145,21 @@
   font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center; /* Centers text + icon */
+  gap: 6px;
   cursor: pointer;
   white-space: nowrap;
-}
-
-.filter-pill .filter-icon {
-  font-size: 12px;
-  display: inline-block;
-  line-height: 1;
 }
 
 .filter-pill.active {
   background: #8E7BF8;
   color: #fff;
   border-color: #8E7BF8;
+}
+
+.filter-icon-img {
+  width: 14px;
+  height: 14px;
 }
 
 /* ---------------- Microstep Cards ---------------- */
@@ -181,8 +169,8 @@
 }
 
 .microstep-card {
-  width: calc(100% - 32px);
-  margin: 0 16px 12px 16px;
+  width: 100%;
+  margin: 0 0 12px 0;
   padding: 16px;
   border-radius: 18px;
   background: #9d8bf926;
@@ -193,23 +181,6 @@
   box-sizing: border-box;
 }
 
-/* space to the right of icon so text doesn't touch */
-.microstep-main {
-  flex: 1;
-  min-width: 0;
-}
-
-/* top line layout */
-.microstep-topline {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-/* ---------------- STATUS INDICATORS (INLINE SVG) ---------------- */
-
-/* base container – SVG provides the visual */
 .status-indicator {
   width: 20px;
   height: 20px;
@@ -217,46 +188,22 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-sizing: border-box;
-  background: transparent;
-  border: none;
-  padding: 0;
-  margin-right: 6px; /* small gap between icon and text */
 }
 
-.status-indicator svg {
-  width: 20px;
-  height: 20px;
-  display: block;
+.microstep-main {
+  flex: 1;
+  min-width: 0;
 }
 
-/* allow slightly larger on small screens */
-@media (max-width: 360px) {
-  .status-indicator {
-    width: 18px;
-    height: 18px;
-    margin-right: 8px;
-  }
-
-  .status-indicator svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .microsteps-header { height: 72px; }
-}
-
-/* ---------------- Label & description ---------------- */
 .microstep-title {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
   color: #000;
-  overflow-wrap: anywhere;
 }
 
 .microstep-description {
-  margin: 6px 0 0 0;
+  margin-top: 6px;
   font-size: 13px;
   color: #666;
 }
@@ -275,26 +222,24 @@
   color: white;
   font-size: 12px;
   font-weight: 600;
-  cursor: pointer;
 }
 
-/* ---------------- Misc ---------------- */
+/* ---------------- Scroll container ---------------- */
 .microsteps-body {
   flex: 1;
   overflow-y: auto;
-  background: white;
-  padding-bottom: 80px;
+  overflow-x: hidden !important;
+  padding: 0;
+  position: relative;
+}
+
+.microsteps-body-inner {
+  padding: 0 16px 70px 16px;
+  box-sizing: border-box;
 }
 
 .no-steps-message {
   text-align: center;
   color: #999;
   padding: 40px 20px;
-}
-
-.filter-icon-img {
-  width: 14px;
-  height: 14px;
-  margin-left: 4px;
-  display: inline-block;
 }

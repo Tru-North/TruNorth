@@ -1,0 +1,70 @@
+.all-microsteps-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5000;
+}
+
+.all-microsteps-popup {
+  width: 88%;
+  max-width: 380px;
+  background: #9d8bf9;
+  border-radius: 16px;
+  padding: 28px 20px;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.popup-illustration {
+  width: 120px;
+  margin-bottom: 14px;
+}
+
+.popup-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.popup-subtitle {
+  font-size: 15px;
+  color: #fff;
+  line-height: 1.45;
+  margin-bottom: 22px;
+}
+
+.popup-btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.popup-btn-outline {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 2px solid white;
+  background: transparent;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  width: 48%;
+}
+
+.popup-btn-filled {
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: white;
+  color: #9d8bf9;
+  font-size: 14px;
+  font-weight: 600;
+  width: 48%;
+  border: none;
+}

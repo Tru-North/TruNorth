@@ -1481,7 +1481,8 @@ def get_latest_recommendations(db: Session, user_id: int) -> List[Dict[str, Any]
         .filter(
             (Action.action.is_(None)) |
             #(Action.action.in_(["favorite", "saved"]))
-            (Action.action != "dismiss")
+            #(Action.action != "dismiss")
+            ~Action.action.in_(["dismiss", "action_taken"])
         )
         .order_by(
             UserCareerRecommendation.generated_at.desc(),

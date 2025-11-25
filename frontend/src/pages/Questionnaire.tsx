@@ -390,7 +390,7 @@ const Questionnaire: React.FC = () => {
       <div className="qn-header">
         <FiX className="qn-icon left" onClick={handleCrossClick} />
         <div className="qn-header-center">
-          <h2 className="qn-title">TruNorthAI Assistant</h2>
+          <h2 className="qn-title">TruNorth</h2>
           <p className="qn-subtitle">{currentSection?.display_name || ""}</p>
         </div>
         <FiMenu className="qn-icon right" onClick={() => setIsSidebarOpen(true)} />

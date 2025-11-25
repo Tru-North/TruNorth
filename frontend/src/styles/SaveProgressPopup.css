@@ -1,0 +1,74 @@
+/* Overlay */
+.save-progress-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+}
+
+/* Card */
+.save-progress-card {
+  width: 92%;
+  max-width: 360px;
+  background: #9d8bf9;
+  border-radius: 24px;
+  padding: 32px 26px 28px;
+  text-align: center;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.save-progress-icon {
+  width: 60px;
+  height: auto;
+  margin-bottom: 14px;
+}
+
+.save-progress-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.save-progress-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  opacity: 0.95;
+}
+
+.save-progress-actions {
+  margin-top: 26px;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+/* Left button: outlined */
+.popup-btn-keep {
+  padding: 10px 22px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #ffffff;
+  background: transparent;
+  border: 2px solid #ffffff;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+/* Right button: filled white */
+.popup-btn-save {
+  padding: 10px 22px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #8E7BF8;
+  background: #ffffff;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.20);
+}

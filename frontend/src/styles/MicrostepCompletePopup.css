@@ -1,0 +1,73 @@
+/* Overlay */
+.microstep-complete-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* Card */
+.microstep-complete-card {
+  width: 92%;
+  max-width: 360px;
+  background: #9d8bf9;
+  border-radius: 24px;
+  padding: 32px 26px 28px;
+  text-align: center;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.updated-illustration {
+  width: 150px;
+  margin-bottom: 20px;
+}
+
+.updated-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.updated-text {
+  font-size: 15px;
+  line-height: 1.55;
+  opacity: 0.95;
+  margin-bottom: 20px;
+}
+
+/* Buttons container */
+.popup-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+/* Stay Here — outlined */
+.popup-btn-stay {
+  padding: 10px 22px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #ffffff;
+  background: transparent;
+  border: 2px solid #ffffff;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+/* Back to Microsteps — white filled */
+.popup-btn-back {
+  padding: 10px 22px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #8E7BF8;
+  background: #ffffff;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.20);
+}

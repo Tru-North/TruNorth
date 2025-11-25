@@ -136,3 +136,56 @@ def _apply_progression_rules(state: UserJourneyState):
         completed_stages += 1
 
     state.progress_percent = completed_stages * 20
+
+
+# ---------------------------------------------------------
+# FETCH LIST OF CAREERS WHERE USER CLICKED "READY TO TAKE ACTION"
+# ---------------------------------------------------------
+from app.models.user_recommendation import UserRecommendationAction
+from app.models.career_profile import CareerProfile
+from app.api.schemas.journey_schemas import CareerActionItem
+
+
+def get_actionable_careers(db: Session, user_id: int):
+    """
+    Returns all careers where action='action_taken'
+    Used for Take Action popup.
+    """
+
+    # Ensure user exists
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Fetch action_taken rows
+    actions = (
+        db.query(UserRecommendationAction)
+        .filter(
+            UserRecommendationAction.user_id == user_id,
+            UserRecommendationAction.action == "action_taken"
+        )
+        .all()
+    )
+
+    if not actions:
+        return []  # no careers started yet
+
+    career_ids = [a.career_profile_id for a in actions]
+
+    # Fetch career profile titles
+    careers = (
+        db.query(CareerProfile)
+        .filter(CareerProfile.id.in_(career_ids))
+        .all()
+    )
+
+    # Convert to Pydantic DTOs
+    result = [
+        CareerActionItem(
+            career_profile_id=c.id,
+            title=c.title
+        )
+        for c in careers
+    ]
+
+    return result

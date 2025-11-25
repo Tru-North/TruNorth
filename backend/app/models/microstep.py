@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, JSON
+from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, JSON, Float, Text, Boolean
 from datetime import datetime
 from app.core.database import Base
 
@@ -14,5 +14,15 @@ class Microstep(Base):
     # complete microsteps data 
     data = Column(JSON, nullable=False)
     
+    completion_percentage = Column(Float, default=0.0)
+    is_ready_to_launch = Column(Boolean, default=False)
+    launched_at = Column(DateTime, nullable=True)
+    rating = Column(Integer, nullable=True)  # 1-5 stars
+    review_text = Column(Text, nullable=True)
+    progress_summary = Column(Text, nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+

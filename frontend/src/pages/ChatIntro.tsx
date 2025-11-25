@@ -112,7 +112,7 @@ const ChatIntro: React.FC = () => {
     <div className="mobile-frame">
       {/* 🧠 HEADER */}
       <div style={{ textAlign: "center", padding: "1rem 0 0.5rem" }}>
-        <h3 style={{ fontWeight: 700, color: "#0f1416" }}>TruNorthAI Assistant</h3>
+        <h3 style={{ fontWeight: 700, color: "#0f1416" }}>TruNorth</h3>
         <p style={{ fontSize: "0.85rem", color: "#6c6c6c" }}>
           Start a conversation to get career guidance.
         </p>
