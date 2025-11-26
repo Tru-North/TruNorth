@@ -68,3 +68,12 @@ class ProfileSummary(BaseModel):
     background: Optional[str] = None
     career_direction: Optional[str] = None
     context: Optional[str] = None
+
+
+
+class AdminUserListPage(BaseModel):
+    items: List[AdminUserListItem]
+    page: int
+    page_size: int
+    total: int
+    total_pages: int

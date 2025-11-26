@@ -13,9 +13,10 @@ export const adminUserService = {
   async getUsers(params?: {
     search?: string;
     sort_by?: string;
+    page?: number;
   }) {
     const res = await api.get("/admin/users", {
-      params,
+      params: { ...params, page_size: 10 },
     });
     return res.data;
   },
@@ -97,11 +98,11 @@ export const adminUserService = {
   },
 
   /* ---------------------------------------------------------
-    GET a single user by loading all users and filtering
+    GET a single user by ID (efficient endpoint)  
   --------------------------------------------------------- */
   async getSingleUser(userId: number) {
-    const res = await api.get("/admin/users");   // load all users
-    return res.data.find((u: any) => u.id === userId) || null;
+    const res = await api.get(`/admin/users/${userId}`);
+    return res.data;
   },
 
 };

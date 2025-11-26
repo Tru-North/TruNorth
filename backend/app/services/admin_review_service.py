@@ -17,6 +17,8 @@ def list_users_for_admin(
     search: Optional[str] = None,
     sort_by: str = "created_at",  # "created_at" | "last_login" | "name"
     sort_dir: str = "desc",       # "asc" | "desc"
+    page: int = 1, 
+    page_size: int = 10
 ) -> List[User]:
     """
     Returns a list of users for the admin dashboard user list.
@@ -50,7 +52,19 @@ def list_users_for_admin(
     else:
         q = q.order_by(desc(order_col))
 
-    return q.all()
+    #return q.all()
+    # ---- PAGINATION ----
+    page = page or 1
+    page_size = page_size or 10
+    offset = (page - 1) * page_size
+
+    total = q.count()
+    items = q.offset(offset).limit(page_size).all()
+
+    return {
+        "items": items,
+        "total": total
+    }
 
 
 # ---------- Session & Chat Transcript ----------
@@ -150,3 +164,7 @@ def log_admin_action(
     )
     db.add(log)
     # Commit is controlled by caller (route)
+
+
+def get_single_user(db: Session, user_id: int):
+    return db.query(User).filter(User.id == user_id).first()

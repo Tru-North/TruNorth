@@ -48,6 +48,8 @@ const AdminDashboard: React.FC = () => {
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   // ---------------------------------------------------------
   // 🔐 AUTH GUARD
@@ -67,10 +69,12 @@ const AdminDashboard: React.FC = () => {
 
       const res = await adminUserService.getUsers({
         search,
-        sort_by: selectedSort.value
+        sort_by: selectedSort.value,
+        page
       });
 
-      setUsers(res);
+      setUsers(res.items);
+      setTotalPages(res.total_pages);
     } catch (err) {
       console.error("Failed to fetch users", err);
     } finally {
@@ -80,7 +84,7 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     loadUsers();
-  }, [search, selectedSort]);
+  }, [search, selectedSort, page]);
 
   // ---------------------------------------------------------
   // 🚪 HANDLE LOGOUT
@@ -128,7 +132,10 @@ const AdminDashboard: React.FC = () => {
           className="admin-search-input"
           placeholder="Search By Username Or User ID"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1); // Reset to page 1 when search changes
+          }}
         />
       </div>
 
@@ -197,6 +204,31 @@ const AdminDashboard: React.FC = () => {
             )}
           </div>
 
+        </div>
+      </div>
+
+      {/* PAGINATION CONTROLS - OUTSIDE TABLE */}
+      <div className="admin-pagination-wrapper">
+        <div className="admin-pagination-controls">
+          <button 
+            className="admin-pagination-btn admin-pagination-prev"
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+          >
+            Previous
+          </button>
+
+          <div className="admin-pagination-info">
+            <span className="admin-pagination-text">Page {page} of {totalPages}</span>
+          </div>
+
+          <button 
+            className="admin-pagination-btn admin-pagination-next"
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+          >
+            Next
+          </button>
         </div>
       </div>
 

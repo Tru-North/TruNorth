@@ -1,3 +1,4 @@
+import math
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -13,6 +14,7 @@ from app.services.ai_confidence_service import ai_confidence_service
 from app.utils.admin_auth import get_current_admin
 from app.api.schemas.admin_schemas import (
     AdminUserListItem,
+    AdminUserListPage,
     SessionSummary,
     ChatMessage,
     SessionReviewPayload,
@@ -25,10 +27,12 @@ router = APIRouter(prefix="/admin", tags=["Admin"])
 
 # ---------- User List View ----------
 
-@router.get("/users", response_model=List[AdminUserListItem])
+@router.get("/users", response_model=AdminUserListPage)
 def admin_list_users(
     search: Optional[str] = None,
     sort_by: str = "created_at_desc",   # <-- now we accept combined values
+    page: int = 1,
+    page_size: int = 10,
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin),
 ):
@@ -66,14 +70,36 @@ def admin_list_users(
     # ------------------------------------------
     # Fetch sorted users
     # ------------------------------------------
-    users = admin_review_service.list_users_for_admin(
+    results = admin_review_service.list_users_for_admin(
         db,
         search=search,
         sort_by=sort_field,
         sort_dir=sort_dir,
+        page=page,
+        page_size=page_size,
     )
+    total = results["total"]
+    items = results["items"]
+    total_pages = math.ceil(total / page_size)
 
-    return users
+    return {
+        "items": items,
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "total_pages": total_pages
+    }
+    #return users
+
+
+@router.get("/users/{user_id}", response_model=AdminUserListItem)
+def admin_get_user(user_id: int,
+                   db: Session = Depends(get_db),
+                   admin: User = Depends(get_current_admin)):
+    user = admin_review_service.get_single_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
 
 # ---------- User Sessions ----------
