@@ -1499,6 +1499,20 @@ class AICoachService:
             db.commit()
             
             print(f"🚀 User {microstep.user_id} ready to launch! Completion: {completion}%")
+
+            from app.services.journey_service import apply_journey_update
+            from app.api.schemas.journey_schemas import JourneyStateUpdate
+
+            # Journey Trigger → Move user to Launch milestone
+            apply_journey_update(
+                db,
+                JourneyStateUpdate(
+                    user_id=microstep.user_id,
+                    action_completed=True  # unlocks Action
+                )
+            )
+            print(f"🚀 User {microstep.user_id} ready to launch! Completion: {completion}% is added to the Journey map")
+
             
             return {
                 "ready_to_launch": True,

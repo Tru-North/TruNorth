@@ -1,0 +1,142 @@
+/* ----------------------------------------
+   Rating & Review Modal (Cleaned & Updated)
+----------------------------------------- */
+
+/* Overlay */
+.rrm-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+/* Modal Container */
+.rrm-modal {
+  width: 350px;
+  max-width: 100%;
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+
+  border-radius: 12px;
+  border: 1px solid #9D8BF9;
+
+  background: linear-gradient(180deg, #E8E3FF 0%, #F5F3FF 100%);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* Title */
+.rrm-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  color: #000;
+}
+
+/* Stars container */
+.rrm-stars {
+  display: flex;
+  gap: 18px;
+}
+
+/* Star button */
+.rrm-star-btn {
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+/* .rrm-star-btn:hover {
+  transform: scale(1.12);
+} */
+
+.rrm-star-btn:active {
+  transform: scale(0.95);
+}
+
+.rrm-star-icon {
+  width: 30px;
+  height: 30px;
+}
+
+/* Question text */
+.rrm-question {
+  font-size: 12px;
+  font-weight: 400;
+  color: #000;
+  text-align: center;
+  margin: 0;
+  line-height: 18px;
+}
+
+/* Feedback textarea */
+.rrm-textarea {
+  width: 100%;
+  height: 60px;
+  border-radius: 8px;
+  border: 1px solid #9D8BF9;
+  background: #D4D2D2;
+
+  padding: 10px 12px;
+  resize: none;
+  outline: none;
+
+  font-size: 12px;
+  font-weight: 400;
+  color: #000;
+}
+
+.rrm-textarea::placeholder {
+  color: #777;
+}
+
+/* Submit button */
+.rrm-submit-btn {
+  padding: 8px 20px;
+  background: #9D8BF9;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.25);
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.rrm-submit-btn:hover:not(:disabled) {
+  background: #8A78E8;
+}
+
+.rrm-submit-btn:disabled {
+  background: #cfc9f3;
+  cursor: not-allowed;
+}
+
+/* Skip button */
+.rrm-skip-btn {
+  background: none;
+  border: none;
+  color: #9D8BF9;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 420px) {
+  .rrm-modal {
+    width: 90%;
+    padding: 16px 12px;
+  }
+
+  .rrm-stars {
+    gap: 14px;
+  }
+}

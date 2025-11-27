@@ -594,7 +594,6 @@ async def check_launch_status(
         "has_rating": microstep.rating is not None
     }
 
-
 @router.post("/{microstep_id}/launch", summary="Complete launch milestone")
 async def complete_launch(
     microstep_id: int,
@@ -635,10 +634,33 @@ async def complete_launch(
     microstep.launched_at = datetime.now(timezone.utc)
     microstep.progress_summary = summary
     microstep.completion_percentage = completion
-    
     db.commit()
     db.refresh(microstep)
-    
+
+    # ------------------------------------------------------
+    # 🚀 FINAL MILESTONE TRIGGER — SUMMARY = READY TO LAUNCH
+    # ------------------------------------------------------
+    from app.models.user_journey_state import UserJourneyState
+    journey = (
+        db.query(UserJourneyState)
+        .filter(UserJourneyState.user_id == microstep.user_id)
+        .first()
+    )
+
+    if summary and journey and not journey.launch_completed:
+        print("🚀 Journey Trigger: Launch milestone completed via summary creation")
+
+        from app.services.journey_service import apply_journey_update
+        from app.api.schemas.journey_schemas import JourneyStateUpdate
+
+        apply_journey_update(
+            db,
+            JourneyStateUpdate(
+                user_id=microstep.user_id,
+                launch_completed=True
+            )
+        )
+
     print(f"🚀 Launched: User {user.id} completed {microstep.career_title}")
     
     return {
@@ -767,7 +789,7 @@ def get_journey_summary(
             {
                 "title": s.get("title"),
                 "difficulty": s.get("difficulty_level"),
-                "estimated_time": s.get("estimated_time")
+                "estimated_time": s.get("time_estimate")
             }
             for s in completed_steps
         ]

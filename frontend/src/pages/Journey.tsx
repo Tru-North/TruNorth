@@ -12,6 +12,7 @@ import IconFuture from "../assets/journey/journey_inactive_future_milestone_icon
 import JourneyLine from "../assets/journey/journey_linking_icon.svg";
 
 import TakeActionPopup from "../components/TakeActionPopup";
+import LaunchPopup from "../components/LaunchPopup";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -70,10 +71,18 @@ const Journey: React.FC = () => {
   const token = localStorage.getItem("token");
 
   // --------------------------------
-  // TAKE ACTION POPUP STATES
+  // TAKE ACTION POPUP STATE
   // --------------------------------
   const [showTakeActionPopup, setShowTakeActionPopup] = useState(false);
   const [actionableCareers, setActionableCareers] = useState<
+    { career_profile_id: number; career_name: string }[]
+  >([]);
+
+  // --------------------------------
+  // LAUNCH POPUP STATE
+  // --------------------------------
+  const [showLaunchPopup, setShowLaunchPopup] = useState(false);
+  const [launchableCareers, setLaunchableCareers] = useState<
     { career_profile_id: number; career_name: string }[]
   >([]);
 
@@ -180,7 +189,7 @@ const Journey: React.FC = () => {
   };
 
   // --------------------------------
-  // LOAD ACTIONABLE CAREERS
+  // LOAD TAKE ACTION CAREERS
   // --------------------------------
   const loadActionableCareers = async () => {
     if (!userId) return;
@@ -197,6 +206,27 @@ const Journey: React.FC = () => {
       }
     } catch (err) {
       console.error("Failed to load actionable careers", err);
+    }
+  };
+
+  // --------------------------------
+  // LOAD LAUNCHABLE CAREERS
+  // --------------------------------
+  const loadLaunchableCareers = async () => {
+    if (!userId) return;
+
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/journey/launchable-careers/${userId}`,
+        { headers: authHeaders() }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        setLaunchableCareers(data.careers || []);
+      }
+    } catch (err) {
+      console.error("Failed to load launchable careers", err);
     }
   };
 
@@ -307,7 +337,7 @@ const Journey: React.FC = () => {
   // --------------------------------
   const go = async (k: Key) => {
     switch (k) {
-      case "discovery": {
+      case "discovery":
         try {
           const headers = authHeaders();
 
@@ -340,7 +370,6 @@ const Journey: React.FC = () => {
           navigate("/chat-intro");
         }
         return;
-      }
 
       case "coaching":
         if (questionnaireComplete) navigate("/coach");
@@ -353,15 +382,15 @@ const Journey: React.FC = () => {
       case "action":
         if (!questionnaireComplete) return;
 
-        // LOAD POPUP DATA
         await loadActionableCareers();
-
-        // SHOW POPUP
         setShowTakeActionPopup(true);
         return;
 
       case "launch":
-        if (questionnaireComplete) navigate("/launch");
+        if (!questionnaireComplete) return;
+
+        await loadLaunchableCareers();
+        setShowLaunchPopup(true);
         return;
 
       default:
@@ -448,7 +477,7 @@ const Journey: React.FC = () => {
         </div>
       )}
 
-      {/* TAKE ACTION POPUP RENDER */}
+      {/* TAKE ACTION POPUP */}
       {showTakeActionPopup && (
         <TakeActionPopup
           careers={actionableCareers}
@@ -456,6 +485,18 @@ const Journey: React.FC = () => {
           onSelect={(careerId) => {
             setShowTakeActionPopup(false);
             navigate(`/microsteps/${careerId}`);
+          }}
+        />
+      )}
+
+      {/* LAUNCH POPUP */}
+      {showLaunchPopup && (
+        <LaunchPopup
+          careers={launchableCareers}
+          onClose={() => setShowLaunchPopup(false)}
+          onSelect={(careerId) => {
+            setShowLaunchPopup(false);
+            navigate(`/readytolaunch/${careerId}`);
           }}
         />
       )}

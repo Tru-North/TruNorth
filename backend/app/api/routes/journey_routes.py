@@ -42,3 +42,23 @@ def get_actionable_careers_route(user_id: int, db: Session = Depends(get_db)):
         "user_id": user_id,
         "careers": careers
     }
+
+
+# ==========================================================
+# NEW ROUTE: Get all launchable careers (is_ready_to_launch)
+# ==========================================================
+from app.api.schemas.journey_schemas import LaunchableCareersOut
+from app.services.journey_service import get_launchable_careers
+
+
+@router.get("/launchable-careers/{user_id}", response_model=LaunchableCareersOut)
+def get_launchable_careers_route(user_id: int, db: Session = Depends(get_db)):
+    """
+    Returns all careers where microsteps.is_ready_to_launch = true.
+    Used for Ready to Launch popup.
+    """
+    careers = get_launchable_careers(db, user_id)
+    return {
+        "user_id": user_id,
+        "careers": careers
+    }

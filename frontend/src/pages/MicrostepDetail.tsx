@@ -43,6 +43,8 @@ const MicrostepDetail: React.FC = () => {
   const [timeEstimate, setTimeEstimate] = useState("");
   const [careerTitleFromAPI, setCareerTitleFromAPI] = useState("");
 
+  const [careerIdFromAPI, setCareerIdFromAPI] = useState<number | null>(null); // ✅ ADDED
+
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
 
   const [messages, setMessages] = useState<any[]>([]);
@@ -60,7 +62,7 @@ const MicrostepDetail: React.FC = () => {
   const [allStepsCompleted, setAllStepsCompleted] = useState(false);
 
   // ---------------------------------------------------------
-  // LOAD MICROSTEP DETAIL + LOG EVERYTHING
+  // LOAD MICROSTEP DETAIL
   // ---------------------------------------------------------
   useEffect(() => {
     const loadDetail = async () => {
@@ -72,6 +74,8 @@ const MicrostepDetail: React.FC = () => {
         console.log("🔥 FULL MICROSTEP DETAIL:", detail);
 
         if (detail.career_title) setCareerTitleFromAPI(detail.career_title);
+
+        if (detail.career_id) setCareerIdFromAPI(detail.career_id); // ✅ ADDED
 
         const steps = detail?.data?.steps ?? [];
 
@@ -243,7 +247,6 @@ const MicrostepDetail: React.FC = () => {
       status: "completed",
     });
 
-    // 🔄 REFRESH FULL STATUS FROM BACKEND BEFORE TRIGGER
     const refreshed = await microstepsService.getMicrostepDetail(microstepId);
     const refreshedSteps = refreshed.data.steps;
 
@@ -274,11 +277,18 @@ const MicrostepDetail: React.FC = () => {
     navigate("/explorematches");
   };
 
+  // ---------------------------------------------------------
+  // ✅ UPDATED HANDLE LAUNCH (ONLY CHANGE REQUIRED)
+  // ---------------------------------------------------------
   const handleLaunch = () => {
-    console.log("🚀 Navigating to /launch");
-    navigate("/launch");
-  };
+    if (!careerIdFromAPI) {
+      console.error("❌ No career_id found for ready-to-launch navigation");
+      return;
+    }
 
+    console.log("🚀 Navigating to /readytolaunch/" + careerIdFromAPI);
+    navigate(`/readytolaunch/${careerIdFromAPI}`);
+  };
 
   return (
     <div className="mobile-frame microstep-detail-page">

@@ -124,6 +124,31 @@ async function getSummary(microstepId: number, stepIndex: number) {
   return res.data.summary;
 }
 
+// ======================================================
+// LAUNCH RELATED ROUTES
+// ======================================================
+async function getLaunchSummary(microstepId: number) {
+  const res = await api.get(`/microsteps/${microstepId}/summary`);
+  return res.data;   // full summary object (progress_summary, stats, rating, etc.)
+}
+
+async function launchMicrostep(microstepId: number) {
+  const res = await api.post(`/microsteps/${microstepId}/launch`);
+  return res.data;   // contains launched_at, progress_summary, message
+}
+
+async function rateMicrostep(
+  microstepId: number,
+  rating: number,
+  review_text: string
+) {
+  const res = await api.post(`/microsteps/${microstepId}/rate`, {
+    rating,
+    review_text,
+  });
+  return res.data;   // { message, review_submitted }
+}
+
 // ---------------------------------------
 // EXPORT SERVICE
 // ---------------------------------------
@@ -136,6 +161,9 @@ const microstepsService = {
   getReflectionChat,
   generateSummary,
   getSummary,
+  getLaunchSummary,
+  launchMicrostep,
+  rateMicrostep,
 };
 
 export default microstepsService;

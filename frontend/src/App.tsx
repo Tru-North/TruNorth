@@ -23,6 +23,7 @@ import ActionPlanPreview from "./pages/ActionPlanPreview";
 import SavedCareers from "./pages/SavedCareers";
 import MicroSteps from "./pages/MicroSteps";
 import MicrostepDetail from "./pages/MicrostepDetail";
+import ReadyToLaunch from "./pages/ReadyToLaunch";
 
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -188,6 +189,15 @@ const App: React.FC = () => {
             </ProtectedRoute>
           } 
         />
+        <Route 
+          path="/readytolaunch/:career_id" 
+          element={
+            <ProtectedRoute>
+              <ReadyToLaunch />
+            </ProtectedRoute>
+          } 
+        />
+
 
         {/* 🚦 Redirect unknown routes */}
         <Route path="*" element={<Navigate to="/" />} />

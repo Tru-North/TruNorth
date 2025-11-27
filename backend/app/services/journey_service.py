@@ -189,3 +189,45 @@ def get_actionable_careers(db: Session, user_id: int):
     ]
 
     return result
+
+# ---------------------------------------------------------
+# FETCH LIST OF CAREERS WHERE USER COMPLETED MICROSTEPS
+# (is_ready_to_launch = TRUE)
+# ---------------------------------------------------------
+from app.models.microstep import Microstep
+
+
+def get_launchable_careers(db: Session, user_id: int):
+    """
+    Returns all careers from microsteps where is_ready_to_launch = TRUE.
+    Used for Ready to Launch popup.
+    """
+
+    # Ensure user exists
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Fetch microsteps where user completed the steps
+    ms_rows = (
+        db.query(Microstep)
+        .filter(
+            Microstep.user_id == user_id,
+            Microstep.is_ready_to_launch == True
+        )
+        .all()
+    )
+
+    if not ms_rows:
+        return []
+
+    # Convert to DTO
+    result = [
+        CareerActionItem(
+            career_profile_id=m.career_id,   # matches your column name
+            title=m.career_title             # use title directly
+        )
+        for m in ms_rows
+    ]
+
+    return result

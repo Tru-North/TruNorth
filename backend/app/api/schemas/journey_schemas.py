@@ -45,9 +45,8 @@ class JourneyStateUpdate(BaseModel):
 
 
 # ---------------------------------------------------
-#  NEW SCHEMAS — for /journey/actionable-careers/{id}
+#  SCHEMAS — for careers lists used in popups
 # ---------------------------------------------------
-
 class CareerActionItem(BaseModel):
     career_profile_id: int
     title: str
@@ -57,6 +56,18 @@ class CareerActionItem(BaseModel):
 
 
 class ActionableCareersOut(BaseModel):
+    user_id: int
+    careers: List[CareerActionItem]
+
+    class Config:
+        from_attributes = True
+
+
+class LaunchableCareersOut(BaseModel):
+    """
+    Used for GET /journey/launchable-careers/{user_id}
+    Carries all careers where microsteps.is_ready_to_launch = true.
+    """
     user_id: int
     careers: List[CareerActionItem]
 
