@@ -669,3 +669,21 @@
 .recording-controls button:active {
   transform: scale(0.95);
 }
+
+/* AI COACH ONLY — override typing indicator spacing/alignment */
+.ai-coach-container .typing-wrapper {
+  padding: 0 !important;
+  margin: 6px 0 10px 0 !important;
+}
+
+.ai-coach-container .typing-bubble {
+  padding: 8px 12px !important;
+  min-width: 50px !important;
+  height: 28px !important;
+  border-radius: 16px 16px 16px 4px !important; /* match assistant bubble */
+}
+
+.ai-coach-container .typing-avatar {
+  width: 32px !important;
+  height: 32px !important;
+}

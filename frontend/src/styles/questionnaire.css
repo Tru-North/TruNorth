@@ -239,22 +239,22 @@
   background: #fff;
   border: 1px solid #ccc;
 }
-.qn-back:hover {
+/* .qn-back:hover {
   border-color: #a594f9;
   color: #a594f9;
-}
+} */
 .qn-next {
   background: #a594f9;
   color: #fff;
   border: none;
 }
-.qn-next:hover {
+/* .qn-next:hover {
   background: #8a75f6;
-}
+} */
 
 /* ✨ Exit Confirmation Modal */
 .exit-modal-overlay {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -312,10 +312,10 @@
   color: #000;
 }
 
-.btn-keep:hover,
+/* .btn-keep:hover,
 .btn-exit:hover {
   transform: scale(1.02);
-}
+} */
 
 /* 🟣 Work Values Custom Design (Perfect Grid Alignment) */
 .work-values-grid {
@@ -386,7 +386,7 @@
 
 /* 🌈 Purple Exit Modal Theme (Figma accurate) */
 .exit-modal.purple-theme {
-  background: #a594f9;
+  background: #9D8BF9;
   border: none;
   border-radius: 18px;
   width: 85%;
@@ -437,9 +437,9 @@
   transition: all 0.2s ease;
 }
 
-.btn-keep.outlined:hover {
+/* .btn-keep.outlined:hover {
   background: rgba(255, 255, 255, 0.2);
-}
+} */
 
 .btn-exit.filled {
   background: #fff;
@@ -453,6 +453,6 @@
   transition: all 0.2s ease;
 }
 
-.btn-exit.filled:hover {
+/* .btn-exit.filled:hover {
   transform: scale(1.03);
-}
+} */

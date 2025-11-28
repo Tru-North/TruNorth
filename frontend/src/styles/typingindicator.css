@@ -1,0 +1,70 @@
+/* WRAPPER: avatar + bubble */
+.typing-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 0 16px;
+  margin-bottom: 10px;
+}
+
+/* TruNorth bot avatar */
+.typing-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Purple bubble */
+.typing-bubble {
+  background: var(--accent); /* same purple as coach bubble */
+  padding: 10px 14px;
+  border-radius: 16px 16px 16px 4px; /* match coach bubble */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 55px;
+  height: 32px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* 3 animated bouncing dots */
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  background-color: white;
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: typingBounce 1.4s infinite ease-in-out;
+}
+
+/* Animation delays for each dot */
+.typing-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* Smooth bouncing animation */
+@keyframes typingBounce {
+  0% {
+    transform: translateY(0px);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(0px);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(0px);
+    opacity: 0.4;
+  }
+}

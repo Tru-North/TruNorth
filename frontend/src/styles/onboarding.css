@@ -105,9 +105,9 @@
   margin: auto;
   margin-bottom: 1.5rem;
 }
-.next-btn:hover {
+/* .next-btn:hover {
   transform: scale(1.03);
-}
+} */
 
 /* ------------------------- */
 /* 🟣 Step 2 — Chat Section  */
@@ -169,7 +169,7 @@
   background: #9d8bf9;
 }
 .bubble-secondary {
-  background: #b8a7fc;
+  background: #9d8bf9;
 }
 
 .reply-bubbles.right {
@@ -228,6 +228,6 @@
   cursor: pointer;
   transition: color 0.3s ease;
 }
-.skip-btn:hover {
+/* .skip-btn:hover {
   color: #9d8bf9;
-}
+} */

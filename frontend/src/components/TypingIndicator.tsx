@@ -1,24 +1,17 @@
 import React from "react";
+import botLogo from "../assets/trunorth/trunorth_icon.svg";
+import "../styles/typingindicator.css";
 
 const TypingIndicator: React.FC = () => {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "5px",
-        backgroundColor: "#f0f0f0",
-        padding: "0.6rem 0.9rem",
-        borderRadius: "16px",
-        maxWidth: "70%",
-        marginLeft: "3.2rem",
-        marginBottom: "0.8rem",
-        boxShadow: "0 2px 6px rgba(0, 0, 0, 0.08)",
-      }}
-    >
-      <span className="dot" />
-      <span className="dot" />
-      <span className="dot" />
+    <div className="typing-wrapper">
+      <img src={botLogo} alt="bot" className="typing-avatar" />
+
+      <div className="typing-bubble">
+        <span className="typing-dot"></span>
+        <span className="typing-dot"></span>
+        <span className="typing-dot"></span>
+      </div>
     </div>
   );
 };

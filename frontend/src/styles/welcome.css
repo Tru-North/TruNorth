@@ -56,10 +56,10 @@
   box-shadow: 0 4px 12px rgba(76, 76, 255, 0.25);
 }
 
-.welcome-btn:hover {
+/* .welcome-btn:hover {
   background-color: #9d8bf9;
   transform: scale(1.05);
-}
+} */
 
 /* Subtle float + fade-in animations */
 @keyframes float {

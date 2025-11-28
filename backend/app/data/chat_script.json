@@ -5,13 +5,13 @@
     {
       "id": "chat_1",
       "sender": "bot",
-      "text": "👋 Hi there, and welcome to TruNorth. Thinking about a career change—or even just exploring possibilities—can feel exciting, overwhelming, or somewhere in between. What brings you here today?",
+      "text": "Hi there, and welcome to TruNorth. Thinking about a career change or even just exploring possibilities can feel exciting, overwhelming, or somewhere in between. What brings you here today?",
       "response_type": "text_input"
     },
     {
       "id": "chat_2",
       "sender": "bot",
-      "text": "Thanks for sharing that. What’s making you think about a career change right now? (It could be anything—from burnout to curiosity to wanting something more aligned with your values.)",
+      "text": "Thanks for sharing that. What’s making you think about a career change right now? (It could be anything from burnout to curiosity to wanting something more aligned with your values.)",
       "response_type": "text_input"
     },
     {
@@ -36,7 +36,7 @@
     {
       "id": "chat_5",
       "sender": "bot",
-      "text": "Thanks for that—you’re off to a great start. To help you get clearer on what matters most in your work life, let’s start with a short questionnaire about your work values. It only takes a few minutes and will guide everything we do next. Ready to dive in?",
+      "text": "Thanks for that, you’re off to a great start. To help you get clearer on what matters most in your work life, let’s start with a short questionnaire about your work values. It only takes a few minutes and will guide everything we do next. Ready to dive in?",
       "response_type": "single_choice",
       "options": [
         "Yes, ready!",

@@ -29,7 +29,7 @@
 .otp-back-button {
   display: flex;
   align-items: center;
-  color: #9ca3af;
+  color: #000000;
   margin-bottom: 2.5rem;
   transition: color 0.2s;
   background: none;
@@ -39,9 +39,9 @@
   padding: 0;
 }
 
-.otp-back-button:hover:not(:disabled) {
+/* .otp-back-button:hover:not(:disabled) {
   color: #6b7280;
-}
+} */
 
 .otp-back-button:disabled {
   opacity: 0.5;
@@ -157,11 +157,11 @@
   justify-content: center;
 }
 
-.verify-button:hover:not(:disabled) {
+/* .verify-button:hover:not(:disabled) {
   background-color: #9333ea;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3);
-}
+} */
 
 .verify-button:active:not(:disabled) {
   transform: translateY(0);
@@ -223,10 +223,10 @@
   font-family: inherit;
 }
 
-.resend-link:hover:not(:disabled) {
+/* .resend-link:hover:not(:disabled) {
   color: #9333ea;
   text-decoration: underline;
-}
+} */
 
 .resend-link:disabled {
   opacity: 0.5;
@@ -291,4 +291,9 @@
   margin-bottom: 1rem;
   font-size: 0.875rem;
   text-align: center;
+}
+
+.otp-back-button img.otp-back-svg {
+  width: 36px;
+  height: 36px;
 }

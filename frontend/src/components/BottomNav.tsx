@@ -38,6 +38,28 @@ const BottomNav: React.FC = () => {
     fetchProgress();
   }, []);
 
+  // ⭐ Pages that should activate JOURNEY spotlight
+  const journeyActivePaths = [
+    "/journey",
+    "/explorematches",
+    "/savedcareers",
+    "/career",
+    "/microsteps",
+    "/microstep",
+    "/readytolaunch",
+  ];
+
+  // ⭐ Pages that should activate YOU spotlight
+  const youActivePaths = [
+    "/aboutYou",
+    "/account",
+    "/notifications",
+    "/privacy",
+    "/help",
+    "/terms",
+    "/language",
+  ];
+
   const tabs = [
     {
       name: "Journey",
@@ -48,7 +70,7 @@ const BottomNav: React.FC = () => {
     {
       name: "AI Coach",
       path: "/coach",
-      activeIcon: coachIcon, // same icon but spotlight will show when active
+      activeIcon: coachIcon,
       inactiveIcon: coachIcon,
       locked: !isQuestionnaireComplete,
     },
@@ -68,10 +90,22 @@ const BottomNav: React.FC = () => {
     navigate(tab.path);
   };
 
+  const isJourneyActive = journeyActivePaths.some((p) =>
+    location.pathname.startsWith(p)
+  );
+  const isYouActive = youActivePaths.some((p) =>
+    location.pathname.startsWith(p)
+  );
+
   return (
     <nav className="bottom-nav">
       {tabs.map((tab) => {
-        const isActive = location.pathname === tab.path;
+        let isActive = false;
+
+        if (tab.name === "Journey") isActive = isJourneyActive;
+        else if (tab.name === "You") isActive = isYouActive;
+        else isActive = location.pathname === tab.path;
+
         return (
           <div
             key={tab.name}
@@ -81,7 +115,9 @@ const BottomNav: React.FC = () => {
             onClick={() => handleClick(tab)}
           >
             <div className="icon-wrapper">
-              {isActive && <img src={spotlight} alt="spotlight" className="spotlight" />}
+              {isActive && (
+                <img src={spotlight} alt="spotlight" className="spotlight" />
+              )}
               <img
                 src={isActive ? tab.activeIcon : tab.inactiveIcon}
                 alt={tab.name}

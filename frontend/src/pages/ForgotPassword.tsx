@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
 import '../styles/forgotpassword.css'
-import { forgotPassword } from '../utils/api' // ✅ import backend call
+import { forgotPassword } from '../utils/api'
+
+// ✅ Import your custom SVG icon
+import BackIcon from '../assets/login_and_registration/back_button_icon.svg'
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('')
@@ -16,7 +18,6 @@ const ForgotPassword: React.FC = () => {
     setLoading(true)
 
     try {
-      // ✅ real backend call
       await forgotPassword(email)
       navigate('/verify-code', { state: { email } })
     } catch (err: any) {
@@ -33,9 +34,14 @@ const ForgotPassword: React.FC = () => {
   return (
     <div className="forgot-container">
       <div className="forgot-card">
+
+        {/* ✅ Back button with SVG */}
         <button onClick={() => navigate(-1)} className="back-button">
-          <ArrowLeft />
-          Back
+          <img 
+            src={BackIcon} 
+            alt="Back"
+            className="back-svg"
+          />
         </button>
 
         <h1>Forgot password</h1>

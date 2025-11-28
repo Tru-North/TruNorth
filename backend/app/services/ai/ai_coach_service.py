@@ -329,15 +329,24 @@ class AICoachService:
     # -------------------------------------------------
     # UNLOCK INTENT DETECTION (PHASE C)
     # -------------------------------------------------
-    def _detect_unlock_intent(self, text: str) -> str:
+    def _detect_unlock_intent(self, text: str, last_ai_message: Optional[str] = None) -> str:
         """
         Detect user intent around career-match readiness.
         Returns: "yes", "no", "unclear" or "none"
         """
         if not text:
             return "none"
-
         t = text.strip().lower()
+        last = (last_ai_message or "").strip().lower()
+        # Heuristic: is the user replying to the specific "are you ready to explore your career paths?"
+        from_unlock_prompt = False
+        if last:
+            if (
+                "ready" in last
+                and "explore" in last
+                and any(word in last for word in ["career", "careers", "matches", "paths"])
+            ) or "unlock your career matches" in last:
+                from_unlock_prompt = True
 
         # Single-word/short affirmations
         yes_keywords = {
@@ -380,6 +389,26 @@ class AICoachService:
             return "unclear"
         if "don't think so" in t or "dont think so" in t:
             return "no"
+
+        if from_unlock_prompt:
+            if t in yes_keywords:
+                return "yes"
+            if t in no_keywords:
+                return "no"
+            if t in unclear_keywords:
+                return "unclear"
+            if re.search(r"\bi('?m| am)\s+ready\b", t):
+                return "yes"
+            if re.search(r"\bready\s+to\s+(start|explore|go|move ahead|begin)\b", t):
+                return "yes"
+            if re.search(r"\b(show|see|explore|look at)\s+(my\s+)?(career|role|job)\s+(options|paths|matches)\b", t):
+                return "yes"
+            if re.search(r"\b(check|see|explore)\s+(possible\s+)?career\s+paths\b", t):
+                return "yes"
+            if re.search(r"\bnot\s+ready\b", t) or "i'm not sure" in t or "im not sure" in t:
+                return "unclear"
+            if "don't think so" in t or "dont think so" in t:
+                return "no"
 
         return "none"
     
@@ -700,14 +729,86 @@ class AICoachService:
 
         # ---------- Unlock intent handling before calling GPT ----------
         if user:
+            # Gather unlock state and recent assistant message
+            last_ai_message = None
+            user_message_count = 0
+            is_unlocked = False
+            try:
+                recent_messages = get_recent_messages(db, user.id, session_id, limit=8)
+                for msg in reversed(recent_messages or []):
+                    if getattr(msg, "role", None) == "assistant":
+                        last_ai_message = getattr(msg, "message", None)
+                        break
+            except Exception as e:
+                print(f"⚠️ Could not load recent messages for unlock detection: {e}")
             try:
                 is_unlocked = get_unlock_status(db, user.id)
             except Exception as e:
                 print(f"⚠️ Could not read unlock status for user {user.id}: {e}")
-                is_unlocked = False
+            try:
+                all_messages = get_session_messages(db, user.id, session_id)
+                user_message_count = sum(1 for m in all_messages if getattr(m, "role", None) == "user")
+            except Exception as e:
+                print(f"⚠️ Could not load all messages for interval unlock detection: {e}")
 
+            # 1. Interval-based unlock prompt every 10 user messages, repeat every additional 10
+            if not is_unlocked and user_message_count >= 10 and (user_message_count % 10 == 0 or user_message_count % 10 == 1):
+                unlock_prompt_text = "Would you like to explore your career matches now? This will show you roles that fit your strengths and interests."
+                if not last_ai_message or unlock_prompt_text.lower() not in last_ai_message.lower():
+                    answer = unlock_prompt_text
+                    try:
+                        save_message(db, user.id, session_id, "assistant", answer)
+                    except ImportError:
+                        pass
+                    self._log_event({
+                        "type": "interval_unlock_prompt",
+                        "question": question,
+                        "answer": answer,
+                        "session_id": session_id,
+                        "user_id": user.id
+                    })
+                    return {
+                        "answer": answer,
+                        "session_id": session_id,
+                        "trigger_explore_unlock": False,
+                    }
+
+            # 2. End-of-conversation unlock prompt
+            end_phrases = [
+                "anything else you'd like to discuss",
+                "is there something specific you'd like to focus on",
+                "what should we talk about next",
+                "how would you like to proceed",
+                "is there anything else I can help with",
+                "what would you like to do next",
+                "should I ask something else",
+                "is there anything else",
+                "should I ask what you want",
+                "should I ask what it should be"
+            ]
+            if not is_unlocked and last_ai_message and any(phrase in last_ai_message.lower() for phrase in end_phrases):
+                unlock_prompt_text = "Before we wrap up, would you like to explore your career matches?"
+                answer = unlock_prompt_text
+                try:
+                    save_message(db, user.id, session_id, "assistant", answer)
+                except ImportError:
+                    pass
+                self._log_event({
+                    "type": "end_convo_unlock_prompt",
+                    "question": question,
+                    "answer": answer,
+                    "session_id": session_id,
+                    "user_id": user.id
+                })
+                return {
+                    "answer": answer,
+                    "session_id": session_id,
+                    "trigger_explore_unlock": False,
+                }
+
+            # 3. Explicit intent detection (user says yes/no/unclear)
             if not is_unlocked:
-                intent = self._detect_unlock_intent(question)
+                intent = self._detect_unlock_intent(question, last_ai_message=last_ai_message)
                 if intent in {"yes", "no", "unclear"}:
                     # User is responding with explicit readiness / non-readiness
                     if intent == "yes":
@@ -1512,7 +1613,6 @@ class AICoachService:
                 )
             )
             print(f"🚀 User {microstep.user_id} ready to launch! Completion: {completion}% is added to the Journey map")
-
             
             return {
                 "ready_to_launch": True,

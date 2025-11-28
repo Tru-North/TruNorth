@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import '../styles/verifycode.css'
-import { verifyCode, forgotPassword } from '../utils/api' // ✅ import API helpers
+import { verifyCode, forgotPassword } from '../utils/api'
+
+// ✅ Import back button SVG
+import BackIcon from '../assets/login_and_registration/back_button_icon.svg'
 
 const VerifyCode: React.FC = () => {
   const [code, setCode] = useState<string[]>(['', '', '', '', '', ''])
@@ -61,7 +64,6 @@ const VerifyCode: React.FC = () => {
     const verificationCode = code.join('')
 
     try {
-      // ✅ real API call
       await verifyCode(email, verificationCode)
       navigate('/set-new-password', { state: { email, code: verificationCode } })
     } catch (err: any) {
@@ -76,7 +78,6 @@ const VerifyCode: React.FC = () => {
     setLoading(true)
     setError('')
     try {
-      // ✅ call forgotPassword again to resend
       await forgotPassword(email)
       alert('Verification code resent!')
       setCode(['', '', '', '', '', ''])
@@ -94,12 +95,18 @@ const VerifyCode: React.FC = () => {
   return (
     <div className="otp-container">
       <div className="otp-card">
+
+        {/* ✅ Back button with SVG */}
         <button
           onClick={() => navigate(-1)}
           className="otp-back-button"
           disabled={loading}
         >
-          ←
+          <img
+            src={BackIcon}
+            alt="Back"
+            className="otp-back-svg"
+          />
         </button>
 
         <h1>Check your email</h1>

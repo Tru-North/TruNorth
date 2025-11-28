@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef} from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FiX, FiMenu, FiCheck } from "react-icons/fi";
 import Sidebar from "../components/Sidebar";
 import "../styles/global.css";
 import "../styles/questionnaire.css";
-import { useRef } from "react";
+import QuestionnaireExitModal from "../components/QuestionnaireExitModal";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -435,7 +435,7 @@ const Questionnaire: React.FC = () => {
 
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      {showExitModal && (
+      {/* {showExitModal && (
         <div className="exit-modal-overlay">
           <div className="exit-modal purple-theme">
             <div className="exit-icon-container">
@@ -488,7 +488,15 @@ const Questionnaire: React.FC = () => {
             )}
           </div>
         </div>
-      )}
+      )} */}
+
+      {/* ✅ REPLACED INLINE MODAL WITH COMPONENT */}
+      <QuestionnaireExitModal
+        show={showExitModal}
+        isSavingExit={isSavingExit}
+        onKeepGoing={handleKeepGoing}
+        onSaveAndExit={handleSaveAndExit}
+      />
 
     </div>
   );

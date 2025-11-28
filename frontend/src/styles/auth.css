@@ -128,9 +128,9 @@
   transition: background 0.3s ease;
 }
 
-.primary-btn:hover {
+/* .primary-btn:hover {
   background: #8b7cf0;
-}
+} */
 
 /* Divider */
 .divider {

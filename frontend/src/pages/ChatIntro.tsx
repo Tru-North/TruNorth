@@ -1,10 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import BottomNav from "../components/BottomNav";
-import ChatBubble from "../components/ChatBubble";
+import { FiX, FiMenu } from "react-icons/fi";
+import Sidebar from "../components/Sidebar";
+import ChatBubbleCoachLite from "../components/ChatBubbleCoachLite";
 import TypingIndicator from "../components/TypingIndicator";
 import ModalPrompt from "../components/ModalPrompt";
 import "../styles/global.css";
+import "../styles/chatintro.css";
+import SendIcon from "../assets/chatIntro_and_questionnaire/chatIntro_send_button_icon.svg";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -18,6 +21,9 @@ interface ChatMessage {
 
 const ChatIntro: React.FC = () => {
   const navigate = useNavigate();
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const [chatScript, setChatScript] = useState<ChatMessage[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [userInput, setUserInput] = useState("");
@@ -26,7 +32,7 @@ const ChatIntro: React.FC = () => {
   const userId = localStorage.getItem("user_id") || "1";
   const [showToast, setShowToast] = useState(false);
 
-  // 🧠 Fetch Chat Script
+  // Fetch Chat Script
   useEffect(() => {
     const fetchChatScript = async () => {
       try {
@@ -47,12 +53,12 @@ const ChatIntro: React.FC = () => {
     fetchChatScript();
   }, []);
 
-  // 🔄 Scroll to bottom when new message appears
+  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // 💬 Handle User Reply
+  // Handle User Reply
   const handleUserResponse = async (text: string) => {
     if (!chatScript.length) return;
 
@@ -67,7 +73,7 @@ const ChatIntro: React.FC = () => {
     };
     setMessages((prev) => [...prev, userMsg]);
 
-    // Save response to backend
+    // Save to backend
     try {
       await fetch(`${API_BASE_URL}/questionnaire/chat/save`, {
         method: "POST",
@@ -82,17 +88,17 @@ const ChatIntro: React.FC = () => {
       console.error("Error saving chat response:", err);
     }
 
-    // 🕓 Show typing indicator
+    // Typing bubble
     setMessages((prev) => [...prev, { id: "typing", sender: "bot", text: "..." }]);
 
     setTimeout(() => {
-      setMessages((prev) => prev.filter((m) => m.id !== "typing")); // remove typing indicator
+      setMessages((prev) => prev.filter((m) => m.id !== "typing"));
 
       if (nextIndex < chatScript.length) {
         setMessages((prev) => [...prev, chatScript[nextIndex]]);
       } else {
-        // ✅ Show modal after final message
         const lowerText = text.toLowerCase().trim();
+
         if (lowerText.includes("maybe later") || lowerText.includes("remind me")) {
           setShowToast(true);
           setTimeout(() => {
@@ -103,60 +109,66 @@ const ChatIntro: React.FC = () => {
           setShowModal(true);
         }
       }
-    }, 1200); // typing delay
+    }, 1200);
 
     setUserInput("");
   };
 
   return (
     <div className="mobile-frame">
-      {/* 🧠 HEADER */}
-      <div style={{ textAlign: "center", padding: "1rem 0 0.5rem" }}>
-        <h3 style={{ fontWeight: 700, color: "#0f1416" }}>TruNorth</h3>
-        <p style={{ fontSize: "0.85rem", color: "#6c6c6c" }}>
-          Start a conversation to get career guidance.
-        </p>
+
+      {/* HEADER */}
+      <div className="chatintro-header">
+        <button className="chatintro-header-btn" onClick={() => navigate("/journey")}>
+          <FiX size={22} />
+        </button>
+
+        <div className="chatintro-header-center">
+          <h3>TruNorth</h3>
+          <p>Setting up your profile</p>
+        </div>
+
+        <button
+          className="chatintro-header-btn"
+          onClick={() => setIsSidebarOpen(true)}
+        >
+          <FiMenu size={22} />
+        </button>
       </div>
 
-      {/* 💬 CHAT AREA */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          display: "flex",
-          flexDirection: "column",
-          paddingTop: "0.5rem",
-          paddingBottom: "0.5rem",
-        }}
-      >
+      {/* SIDEBAR */}
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+      {/* CHAT AREA */}
+      <div className="chatintro-chat-area">
         {messages.map((msg, idx) =>
           msg.id === "typing" ? (
             <TypingIndicator key={idx} />
           ) : (
-            <ChatBubble
-              key={idx}
-              sender={msg.sender}
-              text={msg.text}
-              options={msg.options}
-              onOptionSelect={(option) => handleUserResponse(option)}
-            />
+            <div key={idx} className="chatintro-msg-wrapper">
+              <ChatBubbleCoachLite sender={msg.sender} text={msg.text} />
+
+              {msg.options && msg.options.length > 0 && (
+                <div className="chatintro-options">
+                  {msg.options.map((option, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleUserResponse(option)}
+                      className="chatintro-option-btn"
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ✏️ INPUT AREA */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          backgroundColor: "#fff",
-          borderRadius: "24px",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-          margin: "0.6rem 1rem 3.2rem",
-          padding: "0.4rem 0.8rem",
-        }}
-      >
+      {/* INPUT */}
+      <div className="chatintro-input-wrapper">
         <input
           type="text"
           placeholder="Type here..."
@@ -165,66 +177,35 @@ const ChatIntro: React.FC = () => {
           onKeyDown={(e) =>
             e.key === "Enter" && handleUserResponse(userInput.trim())
           }
-          style={{
-            flex: 1,
-            border: "none",
-            outline: "none",
-            fontSize: "0.95rem",
-            backgroundColor: "transparent",
-            color: "#333",
-            padding: "0.5rem",
-          }}
+          className="chatintro-input-field"
         />
+
         <button
           onClick={() => handleUserResponse(userInput.trim())}
           disabled={!userInput.trim()}
-          style={{
-            backgroundColor: "var(--accent)",
-            border: "none",
-            color: "#fff",
-            borderRadius: "50%",
-            width: "36px",
-            height: "36px",
-            cursor: userInput.trim() ? "pointer" : "not-allowed",
-          }}
+          className="chatintro-send-btn-new"
         >
-          ↑
+          <img src={SendIcon} alt="send" className="chatintro-send-icon" />
         </button>
       </div>
 
-      {/* 🎯 COMPLETION MODAL */}
+      {/* MODAL */}
       <ModalPrompt
         isOpen={showModal}
-        title="🎯 Questionnaire Completed"
-        message="You’ve finished the intro chat. Would you like to start your personalized questionnaire now?"
-        primaryText="Yes, let's go!"
-        secondaryText="Maybe later"
+        title="Questionnaire"
+        message="I've attached a series of questions to help us get to know you."
+        primaryText="Answer"
+        secondaryText="Remind Me"
         onPrimary={() => navigate("/questionnaire")}
         onSecondary={() => navigate("/journey")}
       />
 
       {showToast && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: "90px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            backgroundColor: "#0f1416",
-            color: "#fff",
-            padding: "0.7rem 1.2rem",
-            borderRadius: "20px",
-            fontSize: "0.9rem",
-            boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
-            animation: "fadeInOut 2s ease-in-out",
-            zIndex: 200,
-          }}
-        >
+        <div className="chatintro-toast">
           You can continue the questionnaire later from the Journey tab.
         </div>
       )}
 
-      <BottomNav />
     </div>
   );
 };

@@ -7,6 +7,7 @@ import "../styles/global.css";
 import "../styles/aicoach.css";
 import ChatBubbleCoach from "../components/ChatBubbleCoach";
 import UnlockBubble from "../components/UnlockBubble";
+import TypingIndicator from "../components/TypingIndicator";
 
 import RewindIcon from "../assets/ai_coach/10sec_rewind_icon.svg";
 import ForwardIcon from "../assets/ai_coach/10sec_forward_icon.svg";
@@ -573,6 +574,11 @@ const AICoachChat: React.FC = () => {
           </>
         )}
 
+        {/* 👇👇 Add this */}
+        {(isLoading || isStreaming) && messages.length > 0 && 
+          messages[messages.length - 1].role === "user" && (
+            <TypingIndicator />
+          )}
         <div ref={chatEndRef} />
       </div>
 
