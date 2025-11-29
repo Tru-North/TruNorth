@@ -8,6 +8,7 @@ import "../styles/aicoach.css";
 import ChatBubbleCoach from "../components/ChatBubbleCoach";
 import UnlockBubble from "../components/UnlockBubble";
 import TypingIndicator from "../components/TypingIndicator";
+import ContentLoader from "../components/ContentLoader";
 
 import RewindIcon from "../assets/ai_coach/10sec_rewind_icon.svg";
 import ForwardIcon from "../assets/ai_coach/10sec_forward_icon.svg";
@@ -328,11 +329,75 @@ const AICoachChat: React.FC = () => {
   };
 
   /* -------------------- Audio / Feedback / STT -------------------- */
+  // const playTTS = async (text: string, i: number, iconRect?: DOMRect | null) => {
+  //   try {
+  //     if (!firebaseUid || !sessionId) return;
+  //     if (audio) audio.pause();
+
+  //     if (iconRect) {
+  //       const frame = document.querySelector(".mobile-frame") as HTMLElement | null;
+  //       if (frame) {
+  //         const popupWidth = 220;
+  //         const popupHeight = 60;
+  //         const marginBottom = 100;
+
+  //         const frameWidth = frame.clientWidth || 390;
+  //         const left = frameWidth / 2 - popupWidth / 2;
+  //         const top = frame.clientHeight - popupHeight - marginBottom;
+
+  //         setPopupCoords({ top, left });
+  //       }
+  //     }
+
+  //     const res = await fetch(`${API_BASE_URL}/ai-coach/voice/tts`, {
+  //       method: "POST",
+  //       headers: {
+  //         "x-firebase-uid": firebaseUid,
+  //         "x-session-id": sessionId,
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ text }),
+  //     });
+
+  //     if (!res.ok) throw new Error();
+  //     const blob = await res.blob();
+  //     const url = URL.createObjectURL(blob);
+  //     const newAudio = new Audio(url);
+  //     setAudio(newAudio);
+  //     setActiveMsgIndex(i);
+  //     setShowPlaybackBar(true);
+
+  //     newAudio.play();
+  //     newAudio.onplay = () => setIsPlaying(true);
+  //     newAudio.onpause = () => setIsPlaying(false);
+  //     newAudio.onended = () => {
+  //       setShowPlaybackBar(false);
+  //       setPopupCoords(null);
+  //       setActiveMsgIndex(null);
+  //       setIsPlaying(false);
+  //       setCurrentTime(0);
+  //       setDuration(0);
+  //     };
+  //     newAudio.ontimeupdate = () => setCurrentTime(newAudio.currentTime);
+  //     newAudio.onloadedmetadata = () => setDuration(newAudio.duration);
+  //   } catch {
+  //     alert("Voice unavailable — showing text only.");
+  //   }
+  // };
+
   const playTTS = async (text: string, i: number, iconRect?: DOMRect | null) => {
     try {
       if (!firebaseUid || !sessionId) return;
+
+      // Stop previous audio
       if (audio) audio.pause();
 
+      // 👉 SHOW POPUP INSTANTLY
+      setAudio(null); // forces loading waveform mode
+      setActiveMsgIndex(i);
+      setShowPlaybackBar(true);
+
+      // 👉 POSITION POPUP INSTANTLY
       if (iconRect) {
         const frame = document.querySelector(".mobile-frame") as HTMLElement | null;
         if (frame) {
@@ -348,6 +413,7 @@ const AICoachChat: React.FC = () => {
         }
       }
 
+      // 👉 Fetch TTS AFTER popup already visible
       const res = await fetch(`${API_BASE_URL}/ai-coach/voice/tts`, {
         method: "POST",
         headers: {
@@ -359,16 +425,19 @@ const AICoachChat: React.FC = () => {
       });
 
       if (!res.ok) throw new Error();
+
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
+
       const newAudio = new Audio(url);
+
+      // Replace loader with real audio
       setAudio(newAudio);
-      setActiveMsgIndex(i);
-      setShowPlaybackBar(true);
 
       newAudio.play();
       newAudio.onplay = () => setIsPlaying(true);
       newAudio.onpause = () => setIsPlaying(false);
+
       newAudio.onended = () => {
         setShowPlaybackBar(false);
         setPopupCoords(null);
@@ -377,12 +446,14 @@ const AICoachChat: React.FC = () => {
         setCurrentTime(0);
         setDuration(0);
       };
+
       newAudio.ontimeupdate = () => setCurrentTime(newAudio.currentTime);
       newAudio.onloadedmetadata = () => setDuration(newAudio.duration);
     } catch {
       alert("Voice unavailable — showing text only.");
     }
   };
+
 
   const togglePlayPause = () => {
     if (audio) (isPlaying ? audio.pause() : audio.play());
@@ -527,13 +598,18 @@ const AICoachChat: React.FC = () => {
       className="mobile-frame ai-coach-container"
       style={{
         position: "relative",
-        height: "844px",
+        // height: "844px",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
       }}
     >
+      {/* FULL-PAGE LOADER (initial setup & websocket connect) */}
+      {(!firebaseUid || !sessionId || !isReady || (!isSocketConnected && messages.length === 0)) && (
+        <ContentLoader text="Starting your coach session…" />
+      )}
+
       {/* HEADER */}
       <div className="ai-coach-header">
         <FiX onClick={() => navigate("/journey")} className="header-icon left" />
@@ -583,7 +659,7 @@ const AICoachChat: React.FC = () => {
       </div>
 
       {/* PLAYBACK BAR */}
-      {showPlaybackBar && popupCoords && (
+      {/* {showPlaybackBar && popupCoords && (
         <div
           className="playback-bar-popup"
           style={{
@@ -611,7 +687,57 @@ const AICoachChat: React.FC = () => {
             {formatTime(currentTime)} / {formatTime(duration)}
           </p>
         </div>
+      )} */}
+      {showPlaybackBar && popupCoords && (
+        <div
+          className="playback-bar-popup"
+          style={{
+            position: "absolute",
+            top: popupCoords.top,
+            left: popupCoords.left,
+            zIndex: 50,
+            background: "#fff",
+            borderRadius: "12px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            padding: "10px 14px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            minWidth: "220px",
+          }}
+        >
+
+          {/* BEFORE AUDIO LOADS → show waveform loader */}
+          {!audio && (
+            <div className="tts-loading-wrapper">
+              <div className="tts-bars">
+                <div className="tts-bar"></div>
+                <div className="tts-bar"></div>
+                <div className="tts-bar"></div>
+              </div>
+              <div className="tts-loading-text">Generating audio…</div>
+            </div>
+          )}
+
+          {/* AFTER AUDIO LOADS → show real controls */}
+          {audio && (
+            <>
+              <div className="playback-controls">
+                <img src={RewindIcon} alt="Rewind" onClick={() => skip(-10)} />
+                <img src={PauseIcon} alt="Pause/Play" onClick={togglePlayPause} />
+                <img src={ForwardIcon} alt="Forward" onClick={() => skip(10)} />
+                <img src={CancelIcon} alt="Cancel" onClick={cancelPlayback} />
+              </div>
+
+              <p className="playback-time">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </p>
+            </>
+          )}
+
+        </div>
       )}
+
 
       {/* RECORDING POPUP */}
       {isRecording && (

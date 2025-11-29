@@ -732,7 +732,7 @@ async def _adzuna_enrichment(title: str, title_hint: Optional[str]) -> Tuple[Opt
                 candidate = await adzuna_salary_stats(term) or None
                 if candidate:
                     salary = candidate
-                    print(f"Adzuna salary for '{term}': {candidate}")
+                    # print(f"Adzuna salary for '{term}': {candidate}")
             except Exception as exc:
                 print(f"Adzuna salary API error for '{term}': {exc}")
         if trend is None and FEATURE_ADZUNA:
@@ -741,7 +741,7 @@ async def _adzuna_enrichment(title: str, title_hint: Optional[str]) -> Tuple[Opt
                 if candidate_trend:
                     trend = candidate_trend
                     safe_trend = candidate_trend.encode("ascii", errors="ignore").decode()
-                    print(f"Adzuna trend for '{term}': {safe_trend}")
+                    # print(f"Adzuna trend for '{term}': {safe_trend}")
             except Exception as exc:
                 print(f"Adzuna trend API error for '{term}': {exc}")
         if salary and trend:

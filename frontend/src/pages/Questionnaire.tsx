@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useRef} from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FiX, FiMenu, FiCheck } from "react-icons/fi";
 import Sidebar from "../components/Sidebar";
 import "../styles/global.css";
 import "../styles/questionnaire.css";
 import QuestionnaireExitModal from "../components/QuestionnaireExitModal";
+import QuestionnaireCoachPopup from "../components/QuestionnaireCoachPopup";
+
+// ✅ UNIVERSAL LOADER
+import ContentLoader from "../components/ContentLoader";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -51,7 +55,7 @@ const Questionnaire: React.FC = () => {
   useEffect(() => {
     const loadAllData = async () => {
       try {
-        // 🔁 Reset before loading new questionnaire
+        // Reset
         setLoading(true);
         setSections([]);
         setResponses({});
@@ -83,22 +87,22 @@ const Questionnaire: React.FC = () => {
         }
         setResponses(restored);
 
-        // 3️⃣ Fetch progress (only for journey reopen)
+        // 3️⃣ Fetch progress
         const pRes = await fetch(`${API_BASE_URL}/questionnaire/progress/${userId}`);
         const pData = await pRes.json();
         const isCompleted = !!pData?.is_completed;
 
-        // 🧠 Determine whether this load came from sidebar or journey
+        // 🧠 Sidebar or journey navigation?
         const cameFromSidebar = location.search.includes("section=");
         if (cameFromSidebar) {
-          // 🟣 Sidebar navigation → always start at first question of target section
           setActiveSection(newSectionIndex);
           setActiveQuestion(0);
-          console.log("🔄 Loaded via sidebar navigation → starting from section:", newSectionIndex);
+          console.log("🔄 Loaded via sidebar → start from section", newSectionIndex);
         } else {
-          // 🟢 Journey reopen → resume from last unanswered
+          // Resume logic
           type FlatQ = { qid: string; sIdx: number; qIdx: number; required: boolean };
           const flat: FlatQ[] = [];
+
           allSections.forEach((s, sIdx) => {
             s.questions.forEach((q, qIdx) => {
               flat.push({ qid: q.id, sIdx, qIdx, required: !!s.required });
@@ -127,13 +131,13 @@ const Questionnaire: React.FC = () => {
 
           setActiveSection(resumeSection);
           setActiveQuestion(resumeQuestion);
-          console.log("🟢 Loaded via journey resume → resuming from", resumeSection, resumeQuestion);
+          console.log("🟢 Resume:", resumeSection, resumeQuestion);
         }
       } catch (err) {
-        console.error("❌ Failed to load questionnaire data:", err);
+        console.error("❌ Failed to load questionnaire:", err);
       } finally {
         setLoading(false);
-        window.scrollTo(0, 0); // ✅ scroll to top for new section
+        window.scrollTo(0, 0);
       }
     };
 
@@ -145,7 +149,7 @@ const Questionnaire: React.FC = () => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (Object.keys(responses).length > 0) {
         e.preventDefault();
-        saveAllResponses(); // fire async, browser may cancel
+        saveAllResponses();
         e.returnValue = "";
       }
     };
@@ -158,13 +162,12 @@ const Questionnaire: React.FC = () => {
     responsesRef.current = responses;
   }, [responses]);
 
-  /* ---------------- Autosave on component unmount (e.g., sidebar navigation) ---------------- */
+  /* ---------------- Autosave on unmount ---------------- */
   useEffect(() => {
     return () => {
       const saved = responsesRef.current;
       if (saved && Object.keys(saved).length > 0) {
-        console.log("🧩 Auto-saving before unmount (navigation away)...");
-
+        console.log("🧩 Auto-saving before unmount...");
         try {
           const payload = Object.entries(saved).map(([qid, ans]) => ({
             user_id: parseInt(userId, 10),
@@ -177,23 +180,20 @@ const Questionnaire: React.FC = () => {
             type: "application/json",
           });
 
-          // ✅ Uses sendBeacon so it completes even if the page unloads
           const ok = navigator.sendBeacon(
             `${API_BASE_URL}/questionnaire/bulk-save`,
             blob
           );
 
-          console.log(ok ? "✅ Beacon sent successfully" : "⚠️ Beacon failed, fallback save...");
-          if (!ok) saveAllResponses(); // fallback if beacon unsupported
+          if (!ok) saveAllResponses();
         } catch (err) {
-          console.error("⚠️ Beacon save error:", err);
+          console.error("Beacon error:", err);
         }
       }
     };
-  }, []); // run only on unmount
+  }, []);
 
-
-  /* ---------------- Helper: save all responses at once ---------------- */
+  /* ---------------- Save responses ---------------- */
   const saveAllResponses = async () => {
     if (isSaving) return;
     setIsSaving(true);
@@ -212,9 +212,9 @@ const Questionnaire: React.FC = () => {
       });
 
       if (!res.ok) throw new Error("Bulk save failed");
-      console.log("✅ All responses saved successfully");
+      console.log("✅ Saved");
     } catch (err) {
-      console.error("⚠️ Bulk save error:", err);
+      console.error("Save error:", err);
     } finally {
       setIsSaving(false);
     }
@@ -227,10 +227,16 @@ const Questionnaire: React.FC = () => {
     return "unknown";
   };
 
-  /* ---------------- Navigation ---------------- */
-  if (loading) return <p style={{ textAlign: "center" }}>Loading questionnaire...</p>;
-  if (!sections.length) return <p style={{ textAlign: "center" }}>No questionnaire found.</p>;
+  /* ---------------- Loading State ---------------- */
+  if (loading) {
+    return <ContentLoader text="Loading questionnaire…" />; // ✅ UNIVERSAL LOADER
+  }
 
+  if (!sections.length) {
+    return <p style={{ textAlign: "center" }}>No questionnaire found.</p>;
+  }
+
+  /* ---------------- Section + Question Logic ---------------- */
   const currentSection = sections[activeSection];
   const questions = currentSection?.questions || [];
   const totalInSection = questions.length;
@@ -242,7 +248,7 @@ const Questionnaire: React.FC = () => {
   };
 
   const handleNext = async () => {
-    if (isTransitioning) return; // prevent rapid multi-clicks
+    if (isTransitioning) return;
     setIsTransitioning(true);
 
     const q = questions[activeQuestion];
@@ -254,28 +260,19 @@ const Questionnaire: React.FC = () => {
       return;
     } else setErrorMsg("");
 
-    // 🧭 Case 1: Move to next question in same section
     if (activeQuestion < questions.length - 1) {
       setActiveQuestion((prev) => prev + 1);
-    }
-    // 🧭 Case 2: Move to next section (first question)
-    else if (activeSection < sections.length - 1) {
+    } else if (activeSection === 1 && activeQuestion === questions.length - 1) {
+      await saveAllResponses();
+      setShowPopup(true);
+    } else if (activeSection < sections.length - 1) {
       setActiveSection((prev) => prev + 1);
       setActiveQuestion(0);
-    }
-    // 🧭 Case 3: Last question of last section — save & go to journey
-    else {
-      console.log("🚀 Last question reached — saving all responses...");
-      try {
-        await saveAllResponses();
-        console.log("✅ All responses saved — redirecting to journey...");
-        navigate("/journey");
-      } catch (err) {
-        console.error("⚠️ Save or navigation failed:", err);
-      }
+    } else {
+      await saveAllResponses();
+      navigate("/journey");
     }
 
-    // small cooldown to prevent rapid clicks
     setTimeout(() => setIsTransitioning(false), 600);
   };
 
@@ -307,9 +304,11 @@ const Questionnaire: React.FC = () => {
         const prev = val ? JSON.parse(val) : [];
         const already = prev.includes(opt);
         const maxSelect = q.max_select || Infinity;
+
         let updated = [...prev];
         if (already) updated = prev.filter((o: string) => o !== opt);
         else if (prev.length < maxSelect) updated.push(opt);
+
         handleResponse(q.id, JSON.stringify(updated));
       } else {
         handleResponse(q.id, opt);
@@ -359,6 +358,7 @@ const Questionnaire: React.FC = () => {
                 </button>
               ))}
             </div>
+
             {q.scale?.labels && (
               <div className="qn-rating-labels">
                 <span>{q.scale.labels[0]}</span>
@@ -415,7 +415,9 @@ const Questionnaire: React.FC = () => {
               {renderQuestion(currentQ)}
             </>
           ) : (
-            <p style={{ textAlign: "center", marginTop: "2rem" }}>Loading question...</p>
+            <p style={{ textAlign: "center", marginTop: "2rem" }}>
+              Loading question...
+            </p>
           )}
         </div>
       </div>
@@ -435,62 +437,6 @@ const Questionnaire: React.FC = () => {
 
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      {/* {showExitModal && (
-        <div className="exit-modal-overlay">
-          <div className="exit-modal purple-theme">
-            <div className="exit-icon-container">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                stroke="white"
-                width="32"
-                height="32"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"
-                />
-              </svg>
-            </div>
-
-            <h2 className="exit-title white">Leaving already?</h2>
-
-            {isSavingExit ? (
-              <>
-                <p className="exit-text white">💾 Saving your progress...</p>
-              </>
-            ) : (
-              <>
-                <p className="exit-text white">We will save your progress</p>
-                <div className="exit-buttons">
-                  <button className="btn-keep outlined" onClick={handleKeepGoing}>
-                    Keep Going
-                  </button>
-                  <button
-                    className="btn-exit filled"
-                    onClick={async () => {
-                      setIsSavingExit(true);
-                      await saveAllResponses();
-                      setTimeout(() => {
-                        setIsSavingExit(false);
-                        setShowExitModal(false);
-                        navigate("/journey");
-                      }, 1000); // smooth UX transition
-                    }}
-                  >
-                    Save And Exit
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )} */}
-
-      {/* ✅ REPLACED INLINE MODAL WITH COMPONENT */}
       <QuestionnaireExitModal
         show={showExitModal}
         isSavingExit={isSavingExit}
@@ -498,6 +444,18 @@ const Questionnaire: React.FC = () => {
         onSaveAndExit={handleSaveAndExit}
       />
 
+      {showPopup && (
+        <QuestionnaireCoachPopup
+          onGoToCoach={async () => {
+            await saveAllResponses();
+            navigate("/coach");
+          }}
+          onContinue={async () => {
+            await saveAllResponses();
+            navigate(`/questionnaire?section=2`);
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -40,7 +40,7 @@ async def send_reset_code(email: str, code: str):
         await loop.run_in_executor(
             None, lambda: SendGridAPIClient(SENDGRID_API_KEY).send(message)
         )
-        print(f"✅ Password reset email sent to {email}")
+        # print(f"✅ Password reset email sent to {email}")
     except Exception as e:
         print(f"❌ Failed to send email to {email}: {e}")
         raise

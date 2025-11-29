@@ -190,18 +190,18 @@ async def update_progress(
             raise HTTPException(status_code=400, detail="Invalid ministep_index")
         
         ministeps[ministep_index]["status"] = status
-        print(f"✅ Updated ministep {ministep_index} in step {step_index} to status={status}")
+        # print(f"✅ Updated ministep {ministep_index} in step {step_index} to status={status}")
     else:
         # Update main step
         steps[step_index]["status"] = status
-        print(f"✅ Updated step {step_index} to status={status}")
+        # print(f"✅ Updated step {step_index} to status={status}")
         
         # If step is marked as "completed", mark all ministeps as "completed"
         if status == "completed":
             ministeps = steps[step_index].get("ministeps", [])
             for ministep in ministeps:
                 ministep["status"] = "completed"
-            print(f"✅ Auto-completed all {len(ministeps)} ministeps in step {step_index}")
+            # print(f"✅ Auto-completed all {len(ministeps)} ministeps in step {step_index}")
     
     # Force SQLAlchemy to detect change
     microstep.data = data
@@ -414,7 +414,7 @@ async def send_reflection_message(
     db.commit()
     db.refresh(microstep)
     
-    print(f"💬 Reflection chat: User sent message for step {step_index}")
+    # print(f"💬 Reflection chat: User sent message for step {step_index}")
     
     return {
         "microstep_id": microstep_id,
@@ -648,7 +648,7 @@ async def complete_launch(
     )
 
     if summary and journey and not journey.launch_completed:
-        print("🚀 Journey Trigger: Launch milestone completed via summary creation")
+        # print("🚀 Journey Trigger: Launch milestone completed via summary creation")
 
         from app.services.journey_service import apply_journey_update
         from app.api.schemas.journey_schemas import JourneyStateUpdate
@@ -661,7 +661,7 @@ async def complete_launch(
             )
         )
 
-    print(f"🚀 Launched: User {user.id} completed {microstep.career_title}")
+    # print(f"🚀 Launched: User {user.id} completed {microstep.career_title}")
     
     return {
         "message": "Congratulations! You've launched your career transition.",
@@ -702,7 +702,7 @@ async def rate_microstep(
     db.commit()
     db.refresh(microstep)
     
-    print(f"⭐ Rating received: {rating_data.rating}/5 for microstep {microstep_id}")
+    # print(f"⭐ Rating received: {rating_data.rating}/5 for microstep {microstep_id}")
     
     return {
         "message": "Thank you for your feedback!",

@@ -7,6 +7,9 @@ import ChatBubbleStatic from "../components/ChatBubbleStatic";
 import { getCareerDetail } from "../services/recommendationService";
 import "../styles/ActionPlanPreview.css";
 
+// ✅ Universal loader
+import ContentLoader from "../components/ContentLoader";
+
 const ActionPlanPreview: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -63,9 +66,7 @@ const ActionPlanPreview: React.FC = () => {
 
       {/* Body */}
       <div className="action-body">
-        {loading ? (
-          <p className="loading-text">Fetching your action plan...</p>
-        ) : career ? (
+        {!loading && career && (
           <>
             <ChatBubbleStatic
               text={`Looks like you're ready to step into the world of ${career.title}, exciting!`}
@@ -89,7 +90,12 @@ const ActionPlanPreview: React.FC = () => {
                 personalized next steps so you can start taking action.
               </p>
 
-              <button className="ready-btn" onClick={() => navigate(`/microsteps/${id}`)}>Ready To Try This Path?</button>
+              <button
+                className="ready-btn"
+                onClick={() => navigate(`/microsteps/${id}`)}
+              >
+                Ready To Try This Path?
+              </button>
 
               <button
                 className="explore-btn-alt"
@@ -101,12 +107,17 @@ const ActionPlanPreview: React.FC = () => {
               </button>
             </div>
           </>
-        ) : (
+        )}
+
+        {!loading && !career && (
           <p className="no-data">No action plan available for this career.</p>
         )}
       </div>
 
       <BottomNav />
+
+      {/* ✅ Full-page loader overlay */}
+      {loading && <ContentLoader text="Fetching your action plan…" />}
     </div>
   );
 };

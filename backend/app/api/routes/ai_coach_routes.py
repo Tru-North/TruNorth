@@ -219,7 +219,7 @@ async def submit_feedback(
         db.commit()
         db.refresh(feedback)
         
-        print(f"✅ Feedback saved: user_id={user.id}, message_id={chat_message.id}, type={feedback_type}")
+        # print(f"✅ Feedback saved: user_id={user.id}, message_id={chat_message.id}, type={feedback_type}")
         
         return {
             "message": f"Feedback '{feedback_type}' saved successfully",

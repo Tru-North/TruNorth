@@ -15,6 +15,9 @@ import CompletedIcon from "../assets/microsteps/completed_microstep_list_icon.sv
 import InProgressIcon from "../assets/microsteps/inprogress_microstep_list_icon.svg";
 import UnexploredIcon from "../assets/microsteps/unexplored_microstep_list_icon.svg";
 
+// ✅ UNIVERSAL LOADER
+import ContentLoader from "../components/ContentLoader";
+
 interface MicrostepItem {
   id: number;
   title: string;
@@ -93,21 +96,16 @@ const Microsteps: React.FC = () => {
       setError(null);
 
       try {
-        // STEP 1 → First try GET /microsteps/
-        console.log("🟣 Fetching ALL microsteps (GET /microsteps/)");
-        const all = await microstepsService.getAllMicrosteps();  // guaranteed array
-
-        console.log("All microsteps returned:", all);
+        // STEP 1 → GET ALL MICROSTEPS
+        const all = await microstepsService.getAllMicrosteps();
 
         const existing = all.find((m: any) => m.career_id === careerId);
 
         if (existing) {
-          console.log("🟢 MATCH FOUND → Using existing microstep_id:", existing.id);
           setMicrostepId(existing.id);
 
           try {
             const detail = await microstepsService.getMicrostepDetail(existing.id);
-            console.log("🟢 GET SUCCESS → Loaded microstep detail");
 
             const steps = detail?.data?.steps ?? [];
             const mapped = steps.map((step: any, index: number) => ({
@@ -123,15 +121,12 @@ const Microsteps: React.FC = () => {
             setLoading(false);
             return;
           } catch (err) {
-            console.log("🔴 ERROR loading existing microstep_id → regenerating...");
+            console.log("🔴 Error loading existing microstep detail → regenerating…");
           }
         }
 
-        // STEP 2 → No existing microsteps → Generate
-        console.log("🟠 NO EXISTING DATA → POST /microsteps/generate/", careerId);
+        // STEP 2 → GENERATE IF NOT FOUND
         const gen = await microstepsService.generateMicrosteps(careerId);
-
-        console.log("🟢 POST SUCCESS → Microsteps generated:", gen);
 
         setMicrostepId(gen.microstep_id ?? null);
         if (gen.career_title) setCareerTitleFromAPI(gen.career_title);
@@ -172,8 +167,6 @@ const Microsteps: React.FC = () => {
       CLICK HANDLER → MICROSTEP DETAIL
   ------------------------------------------------------ */
   const handleTakeStep = (stepId: number) => {
-    console.log("➡️ Opening microstep detail for step:", stepId);
-
     const step = microsteps.find((m) => m.id === stepId);
     if (!step) return;
 
@@ -188,8 +181,7 @@ const Microsteps: React.FC = () => {
     });
   };
 
-  const headerCareerTitle =
-    career?.title || careerTitleFromAPI || "";
+  const headerCareerTitle = career?.title || careerTitleFromAPI || "";
 
   /* ------------------------------------------------------
       RENDER
@@ -209,14 +201,12 @@ const Microsteps: React.FC = () => {
 
       <div className="microsteps-body">
         <div className="microsteps-body-inner">
-          {/* Intro bubble */}
           <ChatBubbleStatic
             text={`Here are some easy, low-pressure ways to start exploring what it's really like to be a ${headerCareerTitle}.`}
             width="80%"
             showAvatar={true}
           />
 
-          {/* Progress */}
           <div className="progress-section">
             <div className="progress-bar-wrap">
               <div className="progress-bar-bg" />
@@ -227,7 +217,6 @@ const Microsteps: React.FC = () => {
             </p>
           </div>
 
-          {/* Filters */}
           <div className="filter-row">
             <button
               className={`filter-pill ${activeFilter === "all" ? "active" : ""}`}
@@ -258,8 +247,8 @@ const Microsteps: React.FC = () => {
             </button>
           </div>
 
-          {/* Loader placed BELOW filters */}
-          {loading && <p className="no-steps-message">Loading microsteps...</p>}
+          {/* ❌ OLD INLINE LOADING TEXT REMOVED */}
+          {/* ❌ OLD error text kept as-is */}
           {error && <p className="no-steps-message">{error}</p>}
 
           {/* Steps list */}
@@ -292,6 +281,9 @@ const Microsteps: React.FC = () => {
       </div>
 
       <BottomNav />
+
+      {/* ✅ UNIVERSAL LOADER OVERLAY */}
+      {loading && <ContentLoader text="Loading microsteps…" />}
     </div>
   );
 };

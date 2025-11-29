@@ -190,7 +190,7 @@ const AICoachVoice: React.FC = () => {
   /* ---------------- Text Display (based on cases) ---------------- */
   let mainText = "Tap Microphone to start talking";
   if (isUserTalking) mainText = "I'm listening\nTap Microphone to stop talking";
-  else if (isRubyProcessing) mainText = "Ruby is processing the input audio";
+  else if (isRubyProcessing) mainText = "Ruby is thinking...";
   else if (isRubySpeaking) mainText = "Ruby is speaking\nTap Microphone to interrupt";
 
   /* ---------------- Determine Visual States ---------------- */

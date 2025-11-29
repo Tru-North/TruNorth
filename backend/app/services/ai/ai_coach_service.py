@@ -319,7 +319,7 @@ class AICoachService:
                     index_name=settings.INDEX_NAME,
                     embedding=embeddings
                 )
-                print(f"✅ Vector store connected to index: {settings.INDEX_NAME}")
+                # print(f"✅ Vector store connected to index: {settings.INDEX_NAME}")
             except Exception as e:
                 print(f"⚠️  Vector store initialization failed: {e}")
                 self._vector_store = None
@@ -585,7 +585,7 @@ class AICoachService:
             try:                
                 feedback_patterns = get_user_feedback_patterns(db, user.id, limit=20)
                 
-                print(f"🧠 Feedback patterns for user {user.id}: {feedback_patterns}")
+                # print(f"🧠 Feedback patterns for user {user.id}: {feedback_patterns}")
                 
                 if feedback_patterns["has_feedback"] and (feedback_patterns["like_count"] > 0 or feedback_patterns["dislike_count"] > 0):
                     feedback_context = f"""
@@ -614,7 +614,7 @@ class AICoachService:
                         "role": "system",
                         "content": feedback_context
                     })
-                    print(f"✅ Injected feedback context for user {user.id}")
+                    # print(f"✅ Injected feedback context for user {user.id}")
                 else:
                     print(f"ℹ️  No feedback data to inject for user {user.id}")
             
@@ -1140,7 +1140,7 @@ class AICoachService:
         
         try:
             json_out = await self._call_llm(messages)
-            print(f"🔍 Raw LLM response (first 200 chars): {json_out[:200]}...")
+            # print(f"🔍 Raw LLM response (first 200 chars): {json_out[:200]}...")
             
         
             microsteps = json.loads(json_out)
@@ -1181,7 +1181,7 @@ class AICoachService:
                 existing_microstep.updated_at = datetime.now(timezone.utc)
                 db.commit()
                 db.refresh(existing_microstep)
-                print(f"🔄 Updated existing microstep (ID: {existing_microstep.id}) for career_id={career_id}")
+                # print(f"🔄 Updated existing microstep (ID: {existing_microstep.id}) for career_id={career_id}")
                 
                 microstep_response = {
                     "microstep_id": existing_microstep.id,
@@ -1204,7 +1204,7 @@ class AICoachService:
             db.add(new_microstep)
             db.commit()
             db.refresh(new_microstep)
-            print(f"✅ Created new microstep (ID: {new_microstep.id}) for career_id={career_id}")
+            # print(f"✅ Created new microstep (ID: {new_microstep.id}) for career_id={career_id}")
             
             microstep_response = {
                 "microstep_id": new_microstep.id,
@@ -1231,7 +1231,7 @@ class AICoachService:
                     action_record.action = 'action_taken'
                     action_record.updated_at = datetime.now(timezone.utc)
                     db.commit()
-                    print(f"✅ Updated action to 'action_taken' for career_id={career_id} (was: {action_record.action})")
+                    # print(f"✅ Updated action to 'action_taken' for career_id={career_id} (was: {action_record.action})")
                 else:
                     print(f"ℹ️  Action already set to 'action_taken' for career_id={career_id}")
             else:
@@ -1245,7 +1245,7 @@ class AICoachService:
                 )
                 db.add(new_action)
                 db.commit()
-                print(f"✅ Created new action record with 'action_taken' for career_id={career_id}")
+                # print(f"✅ Created new action record with 'action_taken' for career_id={career_id}")
 
                 # -------------------------------------------------------------
                 # Journey Map Update → First “action_taken” triggers stage 4
@@ -1261,7 +1261,7 @@ class AICoachService:
                     )
                 )
 
-                print(f"🎯 Journey state updated: matches_completed=True for user {user.id}")
+                # print(f"🎯 Journey state updated: matches_completed=True for user {user.id}")
 
         
         except Exception as e:
@@ -1403,7 +1403,7 @@ class AICoachService:
             )
             
             ai_response = response.choices[0].message.content.strip()
-            print(f"✅ Generated reflection response ({len(ai_response)} chars)")
+            # print(f"✅ Generated reflection response ({len(ai_response)} chars)")
             return ai_response
             
         except Exception as e:
@@ -1599,7 +1599,7 @@ class AICoachService:
             microstep.is_ready_to_launch = True
             db.commit()
             
-            print(f"🚀 User {microstep.user_id} ready to launch! Completion: {completion}%")
+            # print(f"🚀 User {microstep.user_id} ready to launch! Completion: {completion}%")
 
             from app.services.journey_service import apply_journey_update
             from app.api.schemas.journey_schemas import JourneyStateUpdate
@@ -1612,7 +1612,7 @@ class AICoachService:
                     action_completed=True  # unlocks Action
                 )
             )
-            print(f"🚀 User {microstep.user_id} ready to launch! Completion: {completion}% is added to the Journey map")
+            # print(f"🚀 User {microstep.user_id} ready to launch! Completion: {completion}% is added to the Journey map")
             
             return {
                 "ready_to_launch": True,

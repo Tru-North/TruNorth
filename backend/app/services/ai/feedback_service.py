@@ -72,7 +72,7 @@ def get_user_feedback_patterns(db: Session, user_id: int, limit: int = 20) -> Di
             MessageFeedback.user_id == user_id
         ).order_by(desc(MessageFeedback.created_at)).limit(limit).all()
         
-        print(f"🔍 Feedback query result: found {len(recent_feedback)} feedback items for user {user_id}")
+        # print(f"🔍 Feedback query result: found {len(recent_feedback)} feedback items for user {user_id}")
         
         if not recent_feedback or len(recent_feedback) == 0:
             print(f"⚠️  No feedback found for user {user_id}")

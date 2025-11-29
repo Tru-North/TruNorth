@@ -18,6 +18,9 @@ import DifficultyIcon from "../assets/microsteps/difficulty_level_icon.svg";
 import GenerateAIIcon from "../assets/microsteps/generate_ai_content_icon.svg";
 import SendButtonReflection from "../assets/microsteps/send_button_icon_reflection_chat.svg";
 
+// ✅ NEW UNIVERSAL LOADER
+import ContentLoader from "../components/ContentLoader";
+
 interface ChecklistItem {
   id: number;
   text: string;
@@ -43,10 +46,9 @@ const MicrostepDetail: React.FC = () => {
   const [timeEstimate, setTimeEstimate] = useState("");
   const [careerTitleFromAPI, setCareerTitleFromAPI] = useState("");
 
-  const [careerIdFromAPI, setCareerIdFromAPI] = useState<number | null>(null); // ✅ ADDED
+  const [careerIdFromAPI, setCareerIdFromAPI] = useState<number | null>(null);
 
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
-
   const [messages, setMessages] = useState<any[]>([]);
   const [reflectionText, setReflectionText] = useState("");
 
@@ -61,11 +63,15 @@ const MicrostepDetail: React.FC = () => {
 
   const [allStepsCompleted, setAllStepsCompleted] = useState(false);
 
+  // ✅ NEW – LOADER STATE
+  const [loadingMicrostep, setLoadingMicrostep] = useState(true);
+
   // ---------------------------------------------------------
   // LOAD MICROSTEP DETAIL
   // ---------------------------------------------------------
   useEffect(() => {
     const loadDetail = async () => {
+      setLoadingMicrostep(true); // START LOADER
       console.log("🔵 [LOAD DETAIL] Fetching microstep detail for:", microstepId);
 
       try {
@@ -74,8 +80,7 @@ const MicrostepDetail: React.FC = () => {
         console.log("🔥 FULL MICROSTEP DETAIL:", detail);
 
         if (detail.career_title) setCareerTitleFromAPI(detail.career_title);
-
-        if (detail.career_id) setCareerIdFromAPI(detail.career_id); // ✅ ADDED
+        if (detail.career_id) setCareerIdFromAPI(detail.career_id);
 
         const steps = detail?.data?.steps ?? [];
 
@@ -85,9 +90,7 @@ const MicrostepDetail: React.FC = () => {
         );
 
         const allCompletedCheck = steps.every((s: any) => s.status === "completed");
-
         console.log("🔥 allStepsCompleted (AFTER CHECK):", allCompletedCheck);
-
         setAllStepsCompleted(allCompletedCheck);
 
         const selected = steps[stepIndex];
@@ -123,14 +126,16 @@ const MicrostepDetail: React.FC = () => {
 
         try {
           const summary = await microstepsService.getSummary(microstepId, stepIndex);
-
           if (summary) {
             setSummaryText(summary);
             setSummaryGenerated(true);
           }
         } catch {}
+
       } catch (err) {
         console.error("❌ Error loading microstep detail:", err);
+      } finally {
+        setLoadingMicrostep(false); // STOP LOADER
       }
     };
 
@@ -235,7 +240,7 @@ const MicrostepDetail: React.FC = () => {
   };
 
   // ---------------------------------------------------------
-  // MARK MICROSTEP DONE (MAIN TRIGGER LOGIC)
+  // MARK MICROSTEP DONE
   // ---------------------------------------------------------
   const handleMarkDone = async () => {
     console.log("🟦 Mark Done clicked!");
@@ -277,9 +282,6 @@ const MicrostepDetail: React.FC = () => {
     navigate("/explorematches");
   };
 
-  // ---------------------------------------------------------
-  // ✅ UPDATED HANDLE LAUNCH (ONLY CHANGE REQUIRED)
-  // ---------------------------------------------------------
   const handleLaunch = () => {
     if (!careerIdFromAPI) {
       console.error("❌ No career_id found for ready-to-launch navigation");
@@ -438,6 +440,9 @@ const MicrostepDetail: React.FC = () => {
         onKeepGoing={() => setShowSavePopup(false)}
         onSaveAndExit={() => navigate(-1)}
       />
+
+      {/* ✅ UNIVERSAL LOADER */}
+      {loadingMicrostep && <ContentLoader text="Loading microstep…" />}
     </div>
   );
 };

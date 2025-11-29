@@ -67,6 +67,7 @@ class Settings(BaseSettings):
     # Pinecone Configuration
     PINECONE_API_KEY: str = os.getenv("PINECONE_API_KEY", "")
     INDEX_NAME: str = os.getenv("INDEX_NAME", "trunorth-index")
+    PINECONE_INDEX_NAME: str = os.getenv("INDEX_NAME", "trunorth-index")
     
     # AI Model Configuration
     MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "1200"))

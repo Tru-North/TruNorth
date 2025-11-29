@@ -1,0 +1,65 @@
+.qn-coach-popup-overlay {
+  position: absolute;        /* ❗ important */
+  top: 0;
+  left: 0;
+  width: 100%;               /* now matches mobile-frame only */
+  height: 100%;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  pointer-events: auto;
+}
+
+.qn-coach-popup {
+  background: #9D8BF9;
+  padding: 32px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.qn-coach-popup-icon {
+  width: 40px;
+  margin-bottom: 12px;
+}
+
+.qn-coach-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 12px;
+}
+
+.qn-coach-text {
+  color: #f5f5f5;
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.qn-coach-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.qn-btn-outline {
+  border: 1px solid white;
+  background: transparent;
+  padding: 10px 20px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+}
+
+.qn-btn-filled {
+  background: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  color: #5b3dee;
+  font-weight: 600;
+}

@@ -35,8 +35,17 @@ const Auth: React.FC = () => {
         });
 
         if (result?.id) {
+          // store token if backend returns it
+          if (result.access_token) {
+            localStorage.setItem("token", result.access_token);
+          } else {
+            // fallback so ProtectedRoute doesn't kick user out
+            localStorage.setItem("token", "signup-temp");
+          }
+
+          localStorage.setItem("user_id", result.id.toString());
           setSuccess("Account created successfully! Redirecting...");
-          setTimeout(() => navigate("/intro"), 1200);
+          setTimeout(() => navigate("/journey"), 1200);
         } else {
           setError(result?.error || "Signup failed. Please try again.");
         }

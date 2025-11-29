@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../components/BottomNav";
 import Sidebar from "../components/Sidebar";
+import ContentLoader from "../components/ContentLoader"; // ✅ NEW
 import { FiMenu } from "react-icons/fi";
 import "../styles/global.css";
 import "../styles/journey.css";
@@ -238,46 +239,25 @@ const Journey: React.FC = () => {
       try {
         if (!userId) return;
 
-        const headers = authHeaders();
+        const response = await fetch(
+          `${API_BASE_URL}/questionnaire/progress/${userId}`,
+          { headers: authHeaders() }
+        );
 
-        let complete: boolean | null = null;
+        if (response.ok) {
+          const data = await response.json();
+          const completed = data?.is_completed === true;
 
-        try {
-          const [sR, rR] = await Promise.all([
-            fetch(`${API_BASE_URL}/questionnaire/`, { headers }),
-            fetch(`${API_BASE_URL}/questionnaire/responses/${userId}`, {
-              headers,
-            }),
-          ]);
+          setQuestionnaireComplete(completed);
 
-          if (sR.ok && rR.ok) {
-            const s = await sR.json();
-            const r = await rR.json();
-
-            const allSections = s?.data?.sections || [];
-
-            const required = allSections
-              .slice(0, -1)
-              .filter((x: any) => x?.required !== false);
-
-            const answered = new Set((r?.data || []).map((x: any) => x?.category));
-
-            complete = required.every((sec: any) =>
-              answered.has(sec.category)
-            );
+          if (completed) {
+            localStorage.setItem("questionnaire_complete", "true");
+            await updateJourneyState({ questionnaire_completed: true });
           }
-        } catch {}
-
-        const final =
-          complete ?? localStorage.getItem("questionnaire_complete") === "true";
-
-        setQuestionnaireComplete(final);
-
-        if (final) {
-          localStorage.setItem("questionnaire_complete", "true");
-          await updateJourneyState({ questionnaire_completed: true });
         }
-      } catch {}
+      } catch (err) {
+        console.error("Failed to load questionnaire progress:", err);
+      }
     };
 
     loadProgress();
@@ -471,13 +451,9 @@ const Journey: React.FC = () => {
         </div>
       </div>
 
-      {loadingJourney && (
-        <div className="jm-loading">
-          <span>Loading your journey...</span>
-        </div>
-      )}
+      {/* REPLACED WITH UNIVERSAL LOADER */}
+      {loadingJourney && <ContentLoader text="Loading your journey…" />}
 
-      {/* TAKE ACTION POPUP */}
       {showTakeActionPopup && (
         <TakeActionPopup
           careers={actionableCareers}
@@ -489,7 +465,6 @@ const Journey: React.FC = () => {
         />
       )}
 
-      {/* LAUNCH POPUP */}
       {showLaunchPopup && (
         <LaunchPopup
           careers={launchableCareers}
