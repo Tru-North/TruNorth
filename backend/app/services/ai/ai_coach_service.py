@@ -120,20 +120,31 @@ def save_langgraph_session(session_id: str, state: dict, session_log_path: str):
         json.dump(sessions, f, indent=2)
 
 
-def _save_langgraph_state(self, state: CoachState):
-        try:
-            save_langgraph_session(state["session_id"], state, self.langgraph_session_log)
-        except Exception as e:
-            print(f"Failed to save LangGraph state: {e}")
-
-def initiate_conversation(state: CoachState) -> CoachState:
-    """Coach initiates the conversation proactively."""
-    opening = generate_first_message(state)
+def load_langgraph_session(session_id: str, session_log_path: str) -> Optional[dict]:
+    """Load LangGraph session state from file"""
+    if not os.path.exists(session_log_path):
+        return None
     
-    state["messages"].append(AIMessage(content=opening))
-    state["conversation_stage"] = "discovery"
-    state["last_interaction"] = datetime.utcnow().isoformat()
-    state["question_count"] = 1
+    with open(session_log_path, "r") as f:
+        try:
+            sessions = json.load(f)
+        except:
+            return None
+    
+    if session_id not in sessions:
+        return None
+    
+    state = sessions[session_id]
+    
+    # Reconstruct messages
+    messages = []
+    for msg in state.get("messages", []):
+        if msg["type"] == "HumanMessage":
+            messages.append(HumanMessage(content=msg["content"]))
+        elif msg["type"] == "AIMessage":
+            messages.append(AIMessage(content=msg["content"]))
+    
+    state["messages"] = messages
     
     return state
 
@@ -169,6 +180,17 @@ def generate_first_message(state: CoachState) -> str:
     
     return opening
 
+def initiate_conversation(state: CoachState) -> CoachState:
+    """Coach initiates the conversation proactively (Node logic)."""
+    opening = generate_first_message(state)
+    
+    state["messages"].append(AIMessage(content=opening))
+    state["conversation_stage"] = "discovery"
+    state["last_interaction"] = datetime.utcnow().isoformat()
+    state["question_count"] = 1
+    
+    return state
+
 def should_initiate(state: CoachState) -> str:
     """Decide if coach should initiate conversation."""
     messages = state.get("messages", [])
@@ -184,6 +206,37 @@ def should_initiate(state: CoachState) -> str:
     # User spoke first, respond normally
     return "respond"
 
+def generate_follow_up(state: dict, last_response: str, llm_function) -> str:
+    """
+    Generate contextual follow-up questions using LLM.
+    This makes the coach proactive by always asking relevant follow-ups.
+    """
+    stage = state.get("conversation_stage", "discovery")
+    messages = state.get("messages", [])
+    
+    # Get conversation context
+    history = "\n".join([
+        f"{'User' if isinstance(m, HumanMessage) else 'Coach'}: {m.content}"
+        for m in messages[-4:]  # Last 2 exchanges
+    ])
+    
+    prompt = f"""Based on this conversation:
+{history}
+
+Coach's last response: {last_response}
+
+Stage: {stage}
+
+Generate ONE follow-up question that:
+- Is warm and engaging
+- Relates directly to what the user just said
+- Moves the conversation forward
+- Is short (one sentence)
+- Shows you're listening and care about their journey
+
+Return ONLY the question, nothing else."""
+    
+    return llm_function(prompt, history)
 
 class AzureFoundryEmbeddings:
     """Azure Foundry Embeddings Wrapper"""
@@ -235,11 +288,18 @@ class AICoachService:
     
     def __init__(self):
         """Initialize AI Coach Service"""
+        if self._initialized:
+            return
+            
         self._initialized = True
         self._azure_client = None
-        self._embeddings = None  # ✅ ADD THIS LINE
-        self._vector_store = None  # ✅ ADD THIS LINE
-        # Initialize Pinecone
+        self._embeddings = None
+        self._vector_store = None
+        
+        # Initialize LangGraph paths
+        self.log_file = os.path.join(settings.LOG_DIR, "ai_coach_history.jsonl")
+        self.langgraph_session_log = os.path.join(settings.LOG_DIR, "langgraph_sessions.json")
+        self._langgraph_workflow = None  # Lazy-loaded
         try:
             self.pc = Pinecone(api_key=settings.PINECONE_API_KEY)
             
@@ -1087,6 +1147,60 @@ class AICoachService:
         career_id: int,
         job_profile: str,
     ) -> dict:
+        
+        #####----------------------------------------------------------------- Old Prompt -----------------------------------------------------------------##### 
+        # SYSTEM_PROMPT = f"""
+        # You are an expert career transition coach specializing in skill development and strategic learning pathways. Generate a personalized microsteps plan to help someone transition into: {job_profile}.
+
+        # **Context:** This is for a career change application. Users need actionable steps focused on building competencies, not on resume writing or job applications.
+
+        # **Requirements:**
+
+        # For each step:
+        # - "title": Short, action-oriented skill or knowledge goal (e.g., "Master Core Python Concepts").
+        # - "mini_description": One concise sentence explaining the skill or knowledge area.
+        # - "detailed_description": 2–3 sentences explaining WHY this step matters for the career transition, what competencies it builds, and how it connects to real-world job requirements.
+        # - "ministeps": (2–4 per step) Practical sub-actions with:
+        # - "title": Specific learning action (e.g., "Complete Python crash course").
+        # - "description": Clear guidance on how to accomplish it (resources, time commitment, or approach).
+
+        # **Focus Areas (prioritize these):**
+        # 1. **Foundational Skills**: Core technical or domain-specific knowledge required for the role.
+        # 2. **Hands-On Practice**: Real projects, exercises, or simulations to build practical experience.
+        # 3. **Industry Knowledge**: Understanding workflows, tools, standards, and best practices in the field.
+        # 4. **Community & Learning**: Joining communities, forums, or mentorship programs for ongoing growth.
+        # 5. **Certification & Credibility**: Optional credentials or portfolios that demonstrate competence.
+
+        # **Avoid:**
+        # - Resume writing, job search strategies, interview prep, or networking for job opportunities.
+        # - Generic advice like "research the role" or "update LinkedIn profile."
+
+        # **CRITICAL OUTPUT RULES:**
+        # - Return ONLY valid JSON - NO markdown code blocks, NO explanatory text, NO ```
+        # - Start your response with [ and end with ]
+        # - Return exactly 8–10 microsteps
+        # - Only 50% of the microsteps should be focused on skill building, other 50% should include activities that help achieve the final goal
+        # - Each step should be completable within 1–7 days of focused effort
+        # - DO NOT include "step_index", "completed", or "ministep_index" in your output - these will be added automatically
+        # - Every ministep MUST have both "title" and "description" fields
+        # - Strictly generate excatly 2 ministeps for each microstep
+        # - Add difficulty level and time estimate for each microstep compulsory
+
+        # EXAMPLE OUTPUT (copy this exact structure):
+        # [
+        # {{
+        #     "title": "Master Fundamental Concepts",
+        #     "mini_description": "Build core knowledge in [specific skill/domain].",
+        #     "detailed_description": "Understanding [concept] is essential because it forms the foundation of [job role]. This knowledge enables you to [specific benefit] and prepares you for more advanced topics.",
+        #     "ministeps": [
+        #     {{"title": "Complete introductory course", "description": "Take [specific course name] on Coursera or Udemy (approx. 10 hours)."}},
+        #     {{"title": "Practice with guided exercises", "description": "Work through 5–10 beginner exercises on [platform/resource]."}}
+        #     ]
+        # }}
+        # ]
+        # """
+
+
         SYSTEM_PROMPT = f"""
         You are an expert career transition coach specializing in skill development and strategic learning pathways. Generate a personalized microsteps plan to help someone transition into: {job_profile}.
 
@@ -1109,6 +1223,25 @@ class AICoachService:
         4. **Community & Learning**: Joining communities, forums, or mentorship programs for ongoing growth.
         5. **Certification & Credibility**: Optional credentials or portfolios that demonstrate competence.
 
+        **Additional Focus Areas (50% of steps should use these):**
+        6. **Research & Discovery**: Watch day-in-life videos, read industry reports, explore job descriptions, research bootcamps/programs.
+        7. **Community Engagement**: Join online communities (Reddit, Discord, LinkedIn groups), follow industry leaders, attend virtual events.
+        8. **Validation Activities**: Conduct informational interviews, job shadow, take career fit assessments, reflect on values and ideal work environment.
+        9. **Self-Reflection**: Journal reactions to roles, identify transferable skills, define success metrics, list skills you enjoy using.
+
+        **Step Distribution:**
+        - Generate a balanced mix: approximately 50% skill-building steps (Focus Areas 1-5) and 50% exploratory/engagement steps (Focus Areas 6-9)
+        - Alternate between technical and exploratory steps - don't cluster all skill-building steps together
+
+        **Examples of Exploratory Steps to Include(dont be limited to these examples):**
+        - "Join an Online Community" → Find and join 2 active communities
+        - "Research Day-to-Day Reality" → Watch 3 videos about typical workdays
+        - "Conduct Informational Interviews" → Reach out to 2 professionals for chats
+        - "Follow Industry Leaders" → Identify and follow 5 thought leaders on LinkedIn
+        - "Review Job Listings" → Analyze 5-10 job descriptions to identify patterns
+        - "Attend a Virtual Event" → Register for 1 industry webinar or meetup
+        - "Read Career Change Stories" → Read 3 blog posts from career changers
+
         **Avoid:**
         - Resume writing, job search strategies, interview prep, or networking for job opportunities.
         - Generic advice like "research the role" or "update LinkedIn profile."
@@ -1116,12 +1249,13 @@ class AICoachService:
         **CRITICAL OUTPUT RULES:**
         - Return ONLY valid JSON - NO markdown code blocks, NO explanatory text, NO ```
         - Start your response with [ and end with ]
-        - Return exactly 8–10 microsteps
+        - Return exactly 8–10 microsteps    
         - Each step should be completable within 1–7 days of focused effort
         - DO NOT include "step_index", "completed", or "ministep_index" in your output - these will be added automatically
         - Every ministep MUST have both "title" and "description" fields
-        - Strictly generate excatly 2 ministeps for each microstep
+        - Strictly generate exactly 2 ministeps for each microstep
         - Add difficulty level and time estimate for each microstep compulsory
+        - Generate the microsteps in proper sequence so that the user have knowledge about current as they complete the previous steps and so on
 
         EXAMPLE OUTPUT (copy this exact structure):
         [
@@ -1129,13 +1263,27 @@ class AICoachService:
             "title": "Master Fundamental Concepts",
             "mini_description": "Build core knowledge in [specific skill/domain].",
             "detailed_description": "Understanding [concept] is essential because it forms the foundation of [job role]. This knowledge enables you to [specific benefit] and prepares you for more advanced topics.",
+            "difficulty_level": "Beginner",
+            "estimated_time": "3-5 days",
             "ministeps": [
             {{"title": "Complete introductory course", "description": "Take [specific course name] on Coursera or Udemy (approx. 10 hours)."}},
             {{"title": "Practice with guided exercises", "description": "Work through 5–10 beginner exercises on [platform/resource]."}}
             ]
+        }},
+        {{
+            "title": "Join Developer Communities",
+            "mini_description": "Connect with professionals in the field.",
+            "detailed_description": "Engaging with communities helps you learn from real experiences, get questions answered, and stay updated on trends. Being part of these groups provides mentorship and exposes you to common challenges.",
+            "difficulty_level": "Beginner",
+            "estimated_time": "1-2 days",
+            "ministeps": [
+            {{"title": "Join relevant subreddits", "description": "Subscribe to 2 active communities and read top posts from the last month."}},
+            {{"title": "Find a Discord server", "description": "Join an active Discord community and introduce yourself."}}
+            ]
         }}
         ]
         """
+
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         
         try:
@@ -1410,33 +1558,140 @@ class AICoachService:
             print(f"❌ Error generating reflection response: {e}")
             return "I'm having trouble responding right now. Could you try asking your question again?"
 
-
-    def load_langgraph_session(session_id: str, session_log_path: str) -> Optional[dict]:
-        if not os.path.exists(session_log_path):
-            return None
+    def _get_or_create_langgraph_state(
+        self,
+        user: User,
+        session_id: str,
+        db: Session
+    ) -> dict:
+        """
+        Get or create LangGraph state for a session.
+        Loads existing state or creates new one with user context.
+        """
+        # Try to load existing state
+        state = load_langgraph_session(session_id, self.langgraph_session_log)
         
-        with open(session_log_path, "r") as f:
-            try:
-                sessions = json.load(f)
-            except:
-                return None
+        if state:
+            print(f"📂 Loaded existing LangGraph state for session {session_id}")
+            return state
         
-        if session_id not in sessions:
-            return None
+        # Create new state with user context
+        print(f"🆕 Creating new LangGraph state for session {session_id}")
         
-        state = sessions[session_id]
+        # Load user context from database
+        user_context = {
+            "completed_strengths": True,
+            "completed_interests": True,
+            "has_experience": True
+        }
         
-        messages = []
-        for msg in state.get("messages", []):
-            if msg["type"] == "HumanMessage":
-                messages.append(HumanMessage(content=msg["content"]))
-            elif msg["type"] == "AIMessage":
-                messages.append(AIMessage(content=msg["content"]))
+        try:
+            from app.models.final_data import UserFinalData
+            final_data = db.query(UserFinalData).filter(
+                UserFinalData.user_id == user.id
+            ).first()
+            
+            if final_data and final_data.final_json:
+                user_context["profile_data"] = final_data.final_json
+        except Exception as e:
+            print(f"⚠️ Could not load user context: {e}")
         
-        state["messages"] = messages
+        state = {
+            "messages": [],
+            "user_id": str(user.id),
+            "session_id": session_id,
+            "conversation_stage": "first_interaction",
+            "onboarding_completed": True,
+            "user_context": user_context,
+            "last_interaction": datetime.utcnow().isoformat(),
+            "pending_follow_up": False,
+            "question_count": 0,
+            "ai_reasoning": None
+        }
+        
         return state
+    
+    def _save_langgraph_state(self, state: dict):
+        """
+        Save LangGraph state to file.
+        Runs in parallel with database saves.
+        """
+        try:
+            save_langgraph_session(
+                state["session_id"],
+                state,
+                self.langgraph_session_log
+            )
+        except Exception as e:
+            print(f"⚠️ Failed to save LangGraph state: {e}")
+    
+    def _respond_to_user_node(self, state: dict, llm_function, rag_function) -> dict:
+        """
+        LangGraph node for responding to user.
+        Generates response using existing AI logic but within LangGraph flow.
+        """
+        messages = state.get("messages", [])
+        last_user_msg = ""
+        for msg in reversed(messages):
+            if isinstance(msg, HumanMessage):
+                last_user_msg = msg.content
+                break
+        
+        # Get conversation history for context
+        history = "\n".join([
+            f"{'User' if isinstance(m, HumanMessage) else 'Coach'}: {m.content}"
+            for m in messages[-6:]
+        ])
+        
+        # RAG: Get relevant context
+        context = ""
+        if rag_function:
+            try:
+                context = rag_function(last_user_msg)
+            except Exception as e:
+                print(f"⚠️ RAG error: {e}")
+        
+        # Build prompt with full context
+        prompt = f"""User context:
+        - Onboarding completed: {state.get('onboarding_completed')}
+        - Stage: {state.get('conversation_stage')}
+        - User strengths/interests: {json.dumps(state.get('user_context', {}))}
 
+        {f'Relevant career data: {context}' if context else ''}
 
+        Current user message: {last_user_msg}
+
+        Respond warmly and concisely (2-3 sentences max). Address their specific question or concern.
+        Do NOT ask follow-up questions in this response - that will come next."""
+        
+        # Call LLM
+        answer = llm_function(prompt, history)
+        
+        state["messages"].append(AIMessage(content=answer))
+        state["pending_follow_up"] = True
+        state["last_interaction"] = datetime.utcnow().isoformat()
+        
+        return state
+    
+    def _ask_follow_up_node(self, state: dict, llm_function) -> dict:
+        """
+        LangGraph node for asking follow-up questions.
+        Makes the coach proactive by always continuing the conversation.
+        """
+        # Get the last AI response
+        last_response = ""
+        for msg in reversed(state["messages"]):
+            if isinstance(msg, AIMessage):
+                last_response = msg.content
+                break
+        
+        follow_up = generate_follow_up(state, last_response, llm_function)
+        
+        state["messages"].append(AIMessage(content=f"\n\n{follow_up}"))
+        state["pending_follow_up"] = False
+        state["question_count"] += 1
+        
+        return state
 
     def _get_langgraph_workflow(self):
         if self._langgraph_workflow is None:
@@ -1502,51 +1757,210 @@ class AICoachService:
         return self._langgraph_workflow
 
     async def initiate_session(
-            self,
-            user: User,
-            session_id: str,
-            db: Session
-        ) -> dict:
-            """
-            Proactively starts the conversation.
-            Uses the 'initiate_conversation' node in the workflow.
-            """
-            try:
-                langgraph_state = self._get_or_create_langgraph_state(user, session_id, db)
-                
-                # Check if new
-                if len(langgraph_state.get("messages", [])) > 0:
-                    # If not new, we can trigger a "Welcome Back" proactive message via logic
-                    # For now, we assume the frontend handles this check, or we append a welcome back
-                    pass
-                
-                workflow = self._get_langgraph_workflow()
-                # Invoke with empty input or existing state triggers 'should_initiate' logic
-                updated_state = workflow.invoke(langgraph_state)
-                
-                opening = ""
-                for msg in reversed(updated_state.get("messages", [])):
-                    if isinstance(msg, AIMessage):
-                        opening = msg.content
-                        break
-                
-                self._save_langgraph_state(updated_state)
-                save_message(db, user.id, session_id, "assistant", opening)
-                
-                return {
-                    "answer": opening,
-                    "session_id": session_id,
-                    "is_new": True,
-                    "conversation_stage": updated_state.get("conversation_stage")
-                }
-                
-            except Exception as e:
-                print(f"Init error: {e}")
-                fallback = "Welcome! I'm Ruby. Shall we get started?"
-                save_message(db, user.id, session_id, "assistant", fallback)
-                return {"answer": fallback, "session_id": session_id}
-            
+    self,
+    user: User,
+    session_id: str,
+    db: Session
+    ) -> dict:
 
+        try:
+            print(f"🎬 Initiating session for user {user.id}, session {session_id}")
+            
+            # Check existing messages in database
+            try:
+                from app.services.ai.chat_history_service import get_session_messages
+                existing_db_messages = get_session_messages(db, user.id, session_id)
+                
+                if existing_db_messages and len(existing_db_messages) > 0:
+                    # Count user messages
+                    user_msg_count = sum(1 for msg in existing_db_messages if hasattr(msg, 'role') and msg.role == "user")
+                    
+                    print(f"📊 Found {len(existing_db_messages)} existing messages, {user_msg_count} from user")
+                    
+                    # If user has already participated in conversation
+                    if user_msg_count > 0:
+                        # Check time since last message
+                        last_msg = existing_db_messages[-1]
+                        
+                        if hasattr(last_msg, 'timestamp') and last_msg.timestamp:
+                            from datetime import datetime, timezone, timedelta
+                            
+                            # Make timestamp timezone-aware if needed
+                            last_msg_time = last_msg.timestamp
+                            if last_msg_time.tzinfo is None:
+                                last_msg_time = last_msg_time.replace(tzinfo=timezone.utc)
+                            
+                            now = datetime.now(timezone.utc)
+                            time_diff = now - last_msg_time
+                            hours_since_last = time_diff.total_seconds() / 3600
+                            
+                            print(f"⏰ Time since last message: {hours_since_last:.1f} hours")
+                            
+                            # Only show greeting if more than 24 hours since last message
+                            if hours_since_last < 24:
+                                print(f"⏭️ Recent activity ({hours_since_last:.1f}h ago) - no greeting needed")
+                                return {
+                                    "answer": None,
+                                    "session_id": session_id,
+                                    "is_new": False,
+                                    "has_history": True,
+                                    "hours_since_last": round(hours_since_last, 1),
+                                    "instruction": "Load existing chat history - too soon for greeting"
+                                }
+                            else:
+                                # Been more than 24 hours - generate welcome back greeting
+                                print(f"🔄 {hours_since_last:.1f} hours since last message - generating welcome back")
+                                
+                                welcome_prompt = f"""You are Ruby, an AI career coach. The user is returning after being away for {int(hours_since_last)} hours.
+
+    Last message in conversation: "{last_msg.message[:200] if hasattr(last_msg, 'message') else 'previous discussion'}"
+
+    Generate a brief, warm welcome back message that:
+    1. Acknowledges they've been away
+    2. Asks if they want to continue or have something new to discuss
+    3. Is natural and conversational (1-2 sentences)
+
+    IMPORTANT: Write ONLY the greeting message. No labels, quotes, or formatting."""
+
+                                client = self._get_azure_client()
+                                response = client.chat.completions.create(
+                                    model=settings.AZURE_CHAT_DEPLOYMENT,
+                                    messages=[{"role": "user", "content": welcome_prompt}],
+                                    temperature=0.9,
+                                    max_tokens=150
+                                )
+                                
+                                opening = response.choices[0].message.content.strip()
+                                opening = opening.strip('"').strip("'").strip()
+                                
+                                print(f"🤖 Generated welcome back: {opening[:100]}...")
+                                
+                                # Save to database
+                                save_message(db, user.id, session_id, "assistant", opening)
+                                
+                                return {
+                                    "answer": opening,
+                                    "session_id": session_id,
+                                    "is_new": False,
+                                    "is_welcome_back": True,
+                                    "hours_away": round(hours_since_last, 1)
+                                }
+                        else:
+                            # No timestamp - assume recent, don't greet
+                            print(f"⏭️ Active conversation, no greeting needed")
+                            return {
+                                "answer": None,
+                                "session_id": session_id,
+                                "is_new": False,
+                                "has_history": True,
+                                "instruction": "Load existing chat history"
+                            }
+                    
+                    # No user messages yet - check if greeting already exists
+                    first_msg = existing_db_messages[0]
+                    if hasattr(first_msg, 'role') and first_msg.role == "assistant":
+                        print(f"⏭️ Greeting already exists (no user response yet), returning it")
+                        return {
+                            "answer": first_msg.message,
+                            "session_id": session_id,
+                            "is_new": False,
+                            "skipped_duplicate": True
+                        }
+            except Exception as e:
+                print(f"⚠️ Could not check existing messages: {e}")
+                import traceback
+                traceback.print_exc()
+            
+            # No existing conversation - generate first greeting
+            print("🆕 Generating first greeting")
+            
+            # Get or create LangGraph state
+            langgraph_state = self._get_or_create_langgraph_state(user, session_id, db)
+            user_context = langgraph_state.get("user_context", {})
+            
+            # Load user profile
+            profile_summary = "general career guidance"
+            try:
+                from app.models.final_data import UserFinalData
+                final_data = db.query(UserFinalData).filter(
+                    UserFinalData.user_id == user.id
+                ).first()
+                
+                if final_data and final_data.final_json:
+                    profile_summary = json.dumps(final_data.final_json)[:500]
+            except Exception as e:
+                print(f"⚠️ Could not load profile: {e}")
+            
+            # Generate first greeting
+            greeting_prompt = f"""You are Ruby, an AI career coach. A user just opened the chat.
+
+    User profile summary:
+    {profile_summary}
+
+    Context:
+    - Onboarding completed: {user_context.get('completed_strengths', False)}
+    - Has work experience: {user_context.get('has_experience', False)}
+
+    Generate a warm, personalized greeting that:
+    1. Welcomes them naturally
+    2. Acknowledges what you know about them (if applicable)
+    3. Asks ONE clear, engaging question to start the conversation
+
+    Keep it brief (2-3 sentences). Be warm and conversational.
+
+    IMPORTANT: Write ONLY the greeting message. No labels, quotes, or formatting."""
+
+            client = self._get_azure_client()
+            response = client.chat.completions.create(
+                model=settings.AZURE_CHAT_DEPLOYMENT,
+                messages=[{"role": "user", "content": greeting_prompt}],
+                temperature=0.9,
+                max_tokens=200
+            )
+            
+            opening = response.choices[0].message.content.strip()
+            opening = opening.strip('"').strip("'").strip()
+            
+            print(f"🤖 Generated first greeting: {opening[:100]}...")
+            
+            # Save to LangGraph state
+            langgraph_state["messages"].append(AIMessage(content=opening))
+            langgraph_state["conversation_stage"] = "discovery"
+            langgraph_state["last_interaction"] = datetime.utcnow().isoformat()
+            langgraph_state["question_count"] = 1
+            self._save_langgraph_state(langgraph_state)
+            
+            # Save to database
+            save_message(db, user.id, session_id, "assistant", opening)
+            
+            print(f"✅ First greeting generated and saved")
+            
+            return {
+                "answer": opening,
+                "session_id": session_id,
+                "is_new": True,
+                "conversation_stage": "discovery"
+            }
+            
+        except Exception as e:
+            print(f"❌ Session initiation error: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            # Fallback
+            fallback = "Hi! I'm Ruby, your career coach. What brings you here today?"
+            
+            try:
+                save_message(db, user.id, session_id, "assistant", fallback)
+            except:
+                pass
+            
+            return {
+                "answer": fallback,
+                "session_id": session_id,
+                "is_new": True,
+                "error": str(e)
+            }
 
 
 
