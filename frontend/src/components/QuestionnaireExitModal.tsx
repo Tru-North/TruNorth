@@ -1,6 +1,6 @@
 import React from "react";
 import "../styles/questionnaire.css";
-import ExitPopupIcon from "../assets/questionnaire/exit_popup_icon.svg";
+import ExitPopupIcon from "../assets/chatIntro_and_questionnaire/exit_popup_icon.svg";
 
 interface QuestionnaireExitModalProps {
   show: boolean;

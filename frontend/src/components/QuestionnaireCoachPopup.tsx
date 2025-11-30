@@ -1,6 +1,6 @@
 import React from "react";
 import "../styles/questionnaireCoachPopup.css";
-import ArrowIcon from "../assets/questionnaire/progress_popup_icon.svg";
+import ArrowIcon from "../assets/chatIntro_and_questionnaire/progress_popup_icon.svg";
 
 const QuestionnaireCoachPopup = ({ onGoToCoach, onContinue }) => {
   return (

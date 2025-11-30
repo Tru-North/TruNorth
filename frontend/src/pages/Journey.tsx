@@ -317,10 +317,45 @@ const Journey: React.FC = () => {
   // --------------------------------
   const go = async (k: Key) => {
     switch (k) {
+      // case "discovery":
+      //   try {
+      //     const headers = authHeaders();
+
+      //     const resp = await fetch(
+      //       `${API_BASE_URL}/questionnaire/chat_responses/${userId}`,
+      //       { headers }
+      //     );
+
+      //     if (resp.ok) {
+      //       const data = await resp.json();
+      //       const responses = data?.data || data;
+
+      //       const introDone = responses.some(
+      //         (r: any) =>
+      //           r.chat_id === "chat_5" ||
+      //           r.response?.includes("Yes, ready!") ||
+      //           r.response?.includes("Maybe later")
+      //       );
+
+      //       if (introDone) {
+      //         localStorage.setItem("chat_intro_done", "true");
+      //         await updateJourneyState({ chat_intro_done: true });
+      //         navigate("/questionnaire");
+      //         return;
+      //       }
+      //     }
+
+      //     navigate("/chat-intro");
+      //   } catch {
+      //     navigate("/chat-intro");
+      //   }
+      //   return;
+
       case "discovery":
         try {
           const headers = authHeaders();
 
+          // 1️⃣ CHECK CHAT INTRO FIRST
           const resp = await fetch(
             `${API_BASE_URL}/questionnaire/chat_responses/${userId}`,
             { headers }
@@ -337,12 +372,60 @@ const Journey: React.FC = () => {
                 r.response?.includes("Maybe later")
             );
 
-            if (introDone) {
-              localStorage.setItem("chat_intro_done", "true");
-              await updateJourneyState({ chat_intro_done: true });
-              navigate("/questionnaire");
+            // ✅ chat-intro NOT done → go to chat-intro
+            if (!introDone) {
+              navigate("/chat-intro");
               return;
             }
+
+            // ---------------------------------------------------
+            // 2️⃣ CHAT INTRO DONE → NOW RUN QUESTIONNAIRE RESUME
+            // ---------------------------------------------------
+            localStorage.setItem("chat_intro_done", "true");
+            await updateJourneyState({ chat_intro_done: true });
+
+            // Load questionnaire structure
+            const qs = await fetch(`${API_BASE_URL}/questionnaire/`);
+            const qJson = await qs.json();
+            const sections = qJson?.data?.sections || [];
+
+            // Flatten all questions
+            const flat = [];
+            sections.forEach((sec, sIdx) =>
+              sec.questions.forEach((q, qIdx) =>
+                flat.push({ qid: q.id, sIdx, qIdx })
+              )
+            );
+
+            // Load saved responses
+            const rs = await fetch(
+              `${API_BASE_URL}/questionnaire/responses/${userId}`
+            );
+            const rJson = await rs.json();
+            const saved = rJson?.data || [];
+            const answered = new Set(saved.map((r: any) => r.question_id));
+
+            // Find last answered question
+            let lastIdx = -1;
+            for (let i = 0; i < flat.length; i++) {
+              if (answered.has(flat[i].qid)) lastIdx = i;
+            }
+
+            if (lastIdx === -1) {
+              navigate(`/questionnaire?section=0`);
+              return;
+            }
+
+            if (lastIdx === flat.length - 1) {
+              navigate(`/questionnaire?section=0`);
+              return;
+            }
+
+            const next = flat[lastIdx + 1];
+            navigate(
+              `/questionnaire?section=${next.sIdx}&category=${sections[next.sIdx].category}`
+            );
+            return;
           }
 
           navigate("/chat-intro");

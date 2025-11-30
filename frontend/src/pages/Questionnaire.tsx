@@ -6,10 +6,10 @@ import "../styles/global.css";
 import "../styles/questionnaire.css";
 import QuestionnaireExitModal from "../components/QuestionnaireExitModal";
 import QuestionnaireCoachPopup from "../components/QuestionnaireCoachPopup";
-import TickCircle from "../assets/questionnaire/questionnaire_progress_bar_ticked_circle_icon.svg";
-import EmptyCircle from "../assets/questionnaire/questionnaire_progress_bar_empty_circle_icon.svg";
-import LineIcon from "../assets/questionnaire/questionnaire_progress_bar_line_icon.svg";
-import LockedCircle from "../assets/questionnaire/questionnaire_progress_bar_locked_section_icon.svg";
+import TickCircle from "../assets/chatIntro_and_questionnaire/questionnaire_progress_bar_ticked_circle_icon.svg";
+import EmptyCircle from "../assets/chatIntro_and_questionnaire/questionnaire_progress_bar_empty_circle_icon.svg";
+import LineIcon from "../assets/chatIntro_and_questionnaire/questionnaire_progress_bar_line_icon.svg";
+import LockedCircle from "../assets/chatIntro_and_questionnaire/questionnaire_progress_bar_locked_section_icon.svg";
 
 // ✅ UNIVERSAL LOADER
 import ContentLoader from "../components/ContentLoader";
