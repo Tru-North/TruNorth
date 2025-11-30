@@ -641,11 +641,22 @@ const Questionnaire: React.FC = () => {
       {showPopup && (
         <QuestionnaireCoachPopup
           onGoToCoach={async () => {
+            console.log("🚀 [GoToCoach] Triggered!");
+
+            // 1️⃣ Save questionnaire
+            console.log("📝 [GoToCoach] Saving ALL questionnaire responses...");
             await saveAllResponses();
+            console.log("✅ [GoToCoach] Questionnaire saved.");
+
             const userId = localStorage.getItem("user_id");
-            if (!userId) return; // or throw an error
-            // 👉 Mark chat intro as completed
-            await fetch(`${API_BASE_URL}/questionnaire/chat/save`, {
+            if (!userId) {
+              console.error("❌ [GoToCoach] user_id missing!");
+              return;
+            }
+
+            // 2️⃣ Mark chat intro done
+            console.log("💬 [GoToCoach] Marking chat intro as completed...");
+            const chatRes = await fetch(`${API_BASE_URL}/questionnaire/chat/save`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -655,8 +666,43 @@ const Questionnaire: React.FC = () => {
               }),
             });
 
-            navigate('/coach');
+            console.log("📨 [GoToCoach] Chat intro API response:", chatRes.status);
+            if (!chatRes.ok) {
+              console.error("❌ [GoToCoach] Failed to save chat intro!");
+            } else {
+              console.log("✅ [GoToCoach] Chat intro saved.");
+            }
+
+            // 3️⃣ Update journey state manually (to ensure DB is correct)
+            console.log("🌍 [GoToCoach] Updating journey state: chat_intro_done + questionnaire_completed...");
+            const journeyRes = await fetch(`${API_BASE_URL}/journey/state/update`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({
+                user_id: parseInt(userId, 10),
+                chat_intro_done: true,
+                questionnaire_completed: true,
+                discovery_completed: true, // optional but matches your logic
+              }),
+            });
+
+            console.log("📨 [GoToCoach] Journey state API response:", journeyRes.status);
+
+            if (!journeyRes.ok) {
+              console.error("❌ [GoToCoach] Failed to update journey state!");
+            } else {
+              const j = await journeyRes.json();
+              console.log("🌟 [GoToCoach] Updated journey state:", j);
+            }
+
+            // 4️⃣ Final navigation
+            console.log("➡️ [GoToCoach] Navigating to /coach ...");
+            navigate("/coach");
           }}
+
           onContinue={async () => {
             await saveAllResponses();
             navigate(`/questionnaire?section=2`);
