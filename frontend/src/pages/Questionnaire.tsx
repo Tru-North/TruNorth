@@ -642,7 +642,20 @@ const Questionnaire: React.FC = () => {
         <QuestionnaireCoachPopup
           onGoToCoach={async () => {
             await saveAllResponses();
-            navigate("/coach");
+            const userId = localStorage.getItem("user_id");
+            if (!userId) return; // or throw an error
+            // 👉 Mark chat intro as completed
+            await fetch(`${API_BASE_URL}/questionnaire/chat/save`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                user_id: parseInt(userId, 10),
+                chat_id: "chat_intro_completed",
+                response: "completed",
+              }),
+            });
+
+            navigate('/coach');
           }}
           onContinue={async () => {
             await saveAllResponses();
