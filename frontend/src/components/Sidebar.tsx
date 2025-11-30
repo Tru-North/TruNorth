@@ -146,7 +146,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   };
 
   const handleQuestionnaireClick = (index: number, category: string) => {
-    const isLocked = index > 0 && !completedSections.includes(index - 1);
+    // const isLocked = index > 0 && !completedSections.includes(index - 1);
+    const isLocked = isSidebarStepLocked(index);
     if (!isLocked) {
       onClose();
       navigate(`/questionnaire?section=${index}&category=${category}`);
@@ -169,6 +170,38 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     onClose();
     navigate("/savedcareers");
   };
+
+  const REQUIRED_COUNT = 2; // About Me & Values = required
+
+  const isRequiredSection = (i: number) => i < REQUIRED_COUNT;
+
+  const isSectionFullyCompleted = (i: number) => {
+    return completedSections.includes(i);
+  };
+
+  const areRequiredSectionsCompleted = () => {
+    return [...Array(REQUIRED_COUNT).keys()].every((i) =>
+      isSectionFullyCompleted(i)
+    );
+  };
+
+  /**
+   * Decide if a sidebar item is locked or not.
+   * No icons, no visual changes except CSS class.
+   */
+  const isSidebarStepLocked = (i: number) => {
+    // Section 0 is always open
+    if (i === 0) return false;
+
+    // Required sections: must complete previous required
+    if (isRequiredSection(i)) {
+      return !isSectionFullyCompleted(i - 1);
+    }
+
+    // Optional sections (2,3,4): unlocked only after required are fully done
+    return !areRequiredSectionsCompleted();
+  };
+
 
   // --------------------------------------------------
   // Render
@@ -219,7 +252,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <h4>Questionnaire</h4>
           </div>
 
-          <ul>
+          {/* <ul>
             {sections.map((section, i) => {
               const isLocked = !completedSections.includes(i);
               return (
@@ -236,7 +269,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 </li>
               );
             })}
+          </ul> */}
+          <ul>
+            {sections.map((section, i) => {
+              const locked = isSidebarStepLocked(i);
+
+              return (
+                <li
+                  key={section.category}
+                  onClick={() => !locked && handleQuestionnaireClick(i, section.category)}
+                  className={`sidebar-item ${locked ? "locked" : "unlocked"}`}
+                >
+                  {section.display_name}
+                </li>
+              );
+            })}
           </ul>
+
         </div>
 
         <div className="divider" />

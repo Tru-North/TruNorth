@@ -1,12 +1,13 @@
 /* Background dim */
 .modal-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: none !important;   /* 🔥 KEY FIX */
+  z-index: 99999 !important;
 }
 
 /* Main card */

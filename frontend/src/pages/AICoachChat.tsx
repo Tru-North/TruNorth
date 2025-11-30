@@ -784,10 +784,15 @@ const AICoachChat: React.FC = () => {
         <img
           src={SendIcon}
           alt="Send"
-          className={`chat-icon send ${
-            !inputValue.trim() || isLoading ? "disabled" : ""
-          }`}
-          onClick={handleSendMessage}
+          // className={`chat-icon send ${
+          //   !inputValue.trim() || isLoading ? "disabled" : ""
+          // }`}
+          // onClick={handleSendMessage}
+          className={`chat-icon send ${!inputValue.trim() ? "disabled" : ""}`}
+          onClick={() => {
+            if (!inputValue.trim()) return;
+            handleSendMessage();
+          }}
         />
       </div>
     </div>

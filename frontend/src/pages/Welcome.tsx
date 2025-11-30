@@ -15,7 +15,8 @@ const Welcome: React.FC = () => {
       className="mobile-frame"
       style={{
         width: isMobile ? '100vw' : '390px',
-        height: isMobile ? '100vh' : '844px',
+        height: '100vh',          // 🔹 changed from 844px
+        overflow: 'hidden',       // 🔹 keep content inside the frame
       }}
     >
       <div className="welcome-container">

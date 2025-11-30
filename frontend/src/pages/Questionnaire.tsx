@@ -6,6 +6,10 @@ import "../styles/global.css";
 import "../styles/questionnaire.css";
 import QuestionnaireExitModal from "../components/QuestionnaireExitModal";
 import QuestionnaireCoachPopup from "../components/QuestionnaireCoachPopup";
+import TickCircle from "../assets/questionnaire/questionnaire_progress_bar_ticked_circle_icon.svg";
+import EmptyCircle from "../assets/questionnaire/questionnaire_progress_bar_empty_circle_icon.svg";
+import LineIcon from "../assets/questionnaire/questionnaire_progress_bar_line_icon.svg";
+import LockedCircle from "../assets/questionnaire/questionnaire_progress_bar_locked_section_icon.svg";
 
 // ✅ UNIVERSAL LOADER
 import ContentLoader from "../components/ContentLoader";
@@ -229,7 +233,18 @@ const Questionnaire: React.FC = () => {
 
   /* ---------------- Loading State ---------------- */
   if (loading) {
-    return <ContentLoader text="Loading questionnaire…" />; // ✅ UNIVERSAL LOADER
+    return (
+      <div
+        className="mobile-frame"
+        style={{
+          width: "390px",
+          height: "100vh",
+          overflow: "hidden"
+        }}
+      >
+        <ContentLoader text="Loading questionnaire…" />
+      </div>
+    );
   }
 
   if (!sections.length) {
@@ -285,12 +300,21 @@ const Questionnaire: React.FC = () => {
     } else navigate("/journey");
   };
 
+  const handleSectionClick = (index: number) => {
+    if (!isStepClickable(index)) return; // block locked steps
+
+    // navigate to first question of that section
+    navigate(`/questionnaire?section=${index}&category=${sections[index].category}`);
+  };
+
   /* ---------------- Exit modal ---------------- */
   const handleCrossClick = () => setShowExitModal(true);
   const handleKeepGoing = () => setShowExitModal(false);
   const handleSaveAndExit = async () => {
-    await saveAllResponses();
+    setIsSavingExit(true);     // 🔥 show loading state & disable buttons
+    await saveAllResponses();  // wait for save
     setShowExitModal(false);
+    setIsSavingExit(false);
     navigate("/journey");
   };
 
@@ -384,6 +408,88 @@ const Questionnaire: React.FC = () => {
     }
   };
 
+  // 👇 Custom titles ONLY for progress bar
+  const PROGRESS_TITLES: Record<string, string> = {
+    "about_me": "About Me",
+    "your_work_values": "Values",
+    "skills_and_interests": "Skills",
+    "your_work_background": "Background",
+    "career_snapshot": "Snapshot",
+  };
+
+  /** Check if a section is fully completed */
+  const isSectionCompleted = (sectionIndex: number) => {
+    const sec = sections[sectionIndex];
+    return sec.questions.every(q => responses[q.id] !== undefined);
+  };
+
+  /** REQUIRED SECTIONS (0 and 1) must be completed */
+  const REQUIRED_COUNT = 2;
+
+  /** Check if all required sections are completed */
+  const requiredCompleted = () => {
+    return [...Array(REQUIRED_COUNT).keys()].every(i => isSectionCompleted(i));
+  };
+
+  /** Determine if a bubble is clickable */
+  const isStepClickable = (idx: number) => {
+    // first section always open
+    if (idx === 0) return true;
+
+    // required sections can only unlock one after other
+    if (idx < REQUIRED_COUNT) {
+      return isSectionCompleted(idx - 1);
+    }
+
+    // optional sections unlock only when required are done
+    if (idx >= REQUIRED_COUNT) {
+      if (requiredCompleted()) return true;
+      return isSectionCompleted(idx); // already finished → allow revisit
+    }
+
+    return false;
+  };
+
+  const getSectionStatus = (index: number) => {
+    const sec = sections[index];
+
+    const allAnswered = sec.questions.every(q => responses[q.id] !== undefined);
+
+    const REQUIRED_SECTIONS = [0, 1]; // About Me, Values
+
+    if (index === activeSection) return "current";
+
+    // Required section logic
+    if (REQUIRED_SECTIONS.includes(index)) {
+      // If required but not fully answered AND is ahead of current section → locked
+      const prevRequiredCompleted =
+        REQUIRED_SECTIONS.every(rIndex =>
+          sections[rIndex].questions.every(q => responses[q.id] !== undefined)
+        );
+
+      if (!allAnswered && index > activeSection && !prevRequiredCompleted) {
+        return "locked";
+      }
+
+      // Past or fully answered required section
+      return allAnswered ? "done" : "unanswered";
+    }
+
+    // Optional sections unlock ONLY after required completed
+    const requiredCompleted =
+      REQUIRED_SECTIONS.every(rIndex =>
+        sections[rIndex].questions.every(q => responses[q.id] !== undefined)
+      );
+
+    if (!requiredCompleted) {
+      // required not completed yet → optional sections locked
+      return "locked";
+    }
+
+    // Optional sections unlocked
+    return allAnswered ? "done" : "unanswered";
+  };
+
   /* ---------------- Render ---------------- */
   return (
     <div className="mobile-frame">
@@ -396,7 +502,95 @@ const Questionnaire: React.FC = () => {
         <FiMenu className="qn-icon right" onClick={() => setIsSidebarOpen(true)} />
       </div>
 
-      <div className="qn-progress-wrapper full-width-divider">
+      {/* 🌟 Figma Perfect Progress Bar */}
+      <div className="qn-sec-progress">
+        {/* Single line whose ends match first/last dot centers */}
+        <div
+          className="qn-sec-line"
+          style={{
+            left: `${50 / sections.length}%`,
+            right: `${50 / sections.length}%`,
+          }}
+        />
+
+        <div
+          className="qn-sec-steps"
+          style={{ gridTemplateColumns: `repeat(${sections.length}, 1fr)` }}
+        >
+          {sections.map((sec, idx) => {
+            const completed = isSectionCompleted(idx);
+            const current = idx === activeSection;
+            const clickable = isStepClickable(idx);
+
+            return (
+              <div
+                key={sec.category}
+                className={`qn-sec-step ${clickable ? "clickable" : ""}`}
+                onClick={() => clickable && handleSectionClick(idx)}
+              >
+                {/* <div className="qn-sec-bubble-wrap">
+                  {current ? (
+                    <div className="qn-sec-pill">
+                      Step {activeQuestion + 1}/{currentSection.questions.length}
+                    </div>
+                  ) : (
+                    <img
+                      src={completed ? TickCircle : EmptyCircle}
+                      className="qn-sec-circle"
+                      style={{ opacity: clickable ? 1 : 0.35 }}
+                      alt=""
+                    />
+                  )}
+                </div> */}
+
+                <div className="qn-sec-bubble-wrap" onClick={() => {
+                  const status = getSectionStatus(idx);
+                  if (status === "locked") return;
+                  handleSectionClick(idx);
+                }}>
+
+                  {(() => {
+                    const status = getSectionStatus(idx);
+
+                    if (status === "current") {
+                      return (
+                        <div className="qn-sec-pill">
+                          Step {activeQuestion + 1}/{currentSection.questions.length}
+                        </div>
+                      );
+                    }
+
+                    if (status === "done") {
+                      return <img src={TickCircle} className="qn-sec-circle" />;
+                    }
+
+                    if (status === "unanswered") {
+                      return <img src={EmptyCircle} className="qn-sec-circle" />;
+                    }
+
+                    if (status === "locked") {
+                      return <img src={LockedCircle} className="qn-sec-circle locked" />;
+                    }
+
+                    return null;
+                  })()}
+
+                </div>
+
+
+                <div className={`qn-sec-label ${current ? "active" : ""}`}>
+                  {PROGRESS_TITLES[sec.category] || sec.display_name}
+                </div>
+              </div>
+            );
+
+          })}
+        </div>
+
+      </div>
+
+
+      {/* <div className="qn-progress-wrapper full-width-divider">
         <div className="qn-progress-text">
           <span className="qn-current">{activeQuestion + 1}</span>
           <span className="qn-total">/{totalInSection}</span>
@@ -404,7 +598,7 @@ const Questionnaire: React.FC = () => {
         <div className="qn-progress-bar full-width-bar">
           <div className="qn-progress-fill" style={{ width: `${progressPct}%` }} />
         </div>
-      </div>
+      </div> */}
 
       <div className="qn-body">
         <div className="qn-body-scroll">

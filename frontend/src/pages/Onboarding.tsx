@@ -20,7 +20,8 @@ const Onboarding: React.FC = () => {
       className="mobile-frame"
       style={{
         width: isMobile ? '100vw' : '390px',
-        height: isMobile ? '100vh' : '844px',
+        height: '100vh',        // 🔥 FIXED — no more scroll
+        overflow: 'hidden',     // optional (extra safety)
       }}
     >
       {/* Step Components */}

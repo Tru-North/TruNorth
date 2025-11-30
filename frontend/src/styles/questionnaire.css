@@ -79,17 +79,27 @@
 }
 
 /* Body */
+/* .qn-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 170px); 
+  padding: 0 1.2rem;
+} */
+
 .qn-body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 170px); /* reclaim space after tab removal */
   padding: 0 1.2rem;
+  overflow: hidden;
 }
+
 .qn-body-scroll {
   flex: 1;
   overflow-y: auto;
-  max-height: calc(100vh - 270px);
+  /* max-height: calc(100vh - 270px); */
+  padding-bottom: 50px;   /* space so bottom text is never cut */
   scrollbar-width: thin;
   scrollbar-color: #c5c5c5 transparent;
 }
@@ -456,3 +466,96 @@
 /* .btn-exit.filled:hover {
   transform: scale(1.03);
 } */
+
+
+/* ==========================================
+   TOP SECTION PROGRESS — FIGMA EXACT
+========================================== */
+.qn-sec-progress {
+  width: 100%;
+  max-width: 390px;
+  margin: 0.8rem auto 1.1rem;
+  padding: 0 1.2rem;
+  position: relative;
+  box-sizing: border-box;
+  height: 80px;
+}
+
+/* single long line – vertical center of dots */
+.qn-sec-line {
+  position: absolute;
+  top: 30px;             /* line through dot centers */
+  height: 4px;
+  background: #9D8BF9;
+  border-radius: 999px;
+  z-index: 1;
+}
+
+/* equal columns so dot positions never move */
+.qn-sec-steps {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  align-items: flex-start;
+  margin-top: 0;
+}
+
+/* one step (column) */
+.qn-sec-step {
+  width: 100%;
+  text-align: center;
+  position: relative;
+}
+
+/* bubble wrapper */
+.qn-sec-bubble-wrap {
+  position: relative;
+  margin-top: 16px;      /* aligns dot center with line at 30px */
+  height: 28px;          /* dot height */
+}
+
+/* dot / pill centered in column */
+.qn-sec-circle,
+.qn-sec-pill {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* tick / empty circle */
+.qn-sec-circle {
+  width: 28px;
+  height: 28px;
+}
+
+/* current section pill */
+.qn-sec-pill {
+  min-height: 28px;
+  max-height: 28px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  border: 3px solid #9D8BF9;
+  background: #ffffff;
+  color: #9D8BF9;
+  font-size: 0.7rem;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+/* labels under line */
+.qn-sec-label {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #9D8BF9;
+}
+
+.qn-sec-label.active {
+  color: #9D8BF9;
+}
+
+.qn-sec-step.clickable {
+  cursor: pointer;
+}
