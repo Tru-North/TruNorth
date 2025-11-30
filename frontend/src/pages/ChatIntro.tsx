@@ -32,6 +32,38 @@ const ChatIntro: React.FC = () => {
   const userId = localStorage.getItem("user_id") || "1";
   const [showToast, setShowToast] = useState(false);
 
+  // -------------------------------------
+  // 🚀 NEW — Mark chat intro done
+  // -------------------------------------
+  const markChatIntroDone = async () => {
+    try {
+      await fetch(`${API_BASE_URL}/journey/state/update`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          user_id: parseInt(userId, 10),
+          chat_intro_done: true,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to update chat_intro_done:", err);
+    }
+  };
+
+  const markChatIntroDoneAndGoToQuestionnaire = async () => {
+    await markChatIntroDone();
+    navigate("/questionnaire");
+  };
+
+  const markChatIntroDoneAndGoToJourney = async () => {
+    await markChatIntroDone();
+    navigate("/journey");
+  };
+  // -------------------------------------
+
   // Fetch Chat Script
   useEffect(() => {
     const fetchChatScript = async () => {
@@ -89,7 +121,10 @@ const ChatIntro: React.FC = () => {
     }
 
     // Typing bubble
-    setMessages((prev) => [...prev, { id: "typing", sender: "bot", text: "..." }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: "typing", sender: "bot", text: "..." },
+    ]);
 
     setTimeout(() => {
       setMessages((prev) => prev.filter((m) => m.id !== "typing"));
@@ -101,9 +136,10 @@ const ChatIntro: React.FC = () => {
 
         if (lowerText.includes("maybe later") || lowerText.includes("remind me")) {
           setShowToast(true);
+
           setTimeout(() => {
             setShowToast(false);
-            navigate("/journey");
+            markChatIntroDoneAndGoToJourney();
           }, 2000);
         } else {
           setShowModal(true);
@@ -196,8 +232,8 @@ const ChatIntro: React.FC = () => {
         message="I've attached a series of questions to help us get to know you."
         primaryText="Answer"
         secondaryText="Remind Me"
-        onPrimary={() => navigate("/questionnaire")}
-        onSecondary={() => navigate("/journey")}
+        onPrimary={markChatIntroDoneAndGoToQuestionnaire}  
+        onSecondary={markChatIntroDoneAndGoToJourney}      
       />
 
       {showToast && (
