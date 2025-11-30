@@ -5,7 +5,7 @@
   background-color: #f5f5f5;
   font-family: "Outfit", system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
-  padding-top: 665px;   /* pushes search bar down so it never hides under header */
+  padding-top: 400px;   /* pushes search bar down so it never hides under header */
 }
 
 /* TOP PURPLE HEADER (FIGMA STYLE) */
