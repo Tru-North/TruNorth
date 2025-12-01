@@ -1266,8 +1266,8 @@ class AICoachService:
             "title": "Master Fundamental Concepts",
             "mini_description": "Build core knowledge in [specific skill/domain].",
             "detailed_description": "Understanding [concept] is essential because it forms the foundation of [job role]. This knowledge enables you to [specific benefit] and prepares you for more advanced topics.",
-            "difficulty_level": "Beginner",
-            "estimated_time": "3-5 days",
+            "difficulty": "Beginner",
+            "time_estimate": "3-5 days",
             "ministeps": [
             {{"title": "Complete introductory course", "description": "Take [specific course name] on Coursera or Udemy (approx. 10 hours)."}},
             {{"title": "Practice with guided exercises", "description": "Work through 5–10 beginner exercises on [platform/resource]."}}
@@ -1764,8 +1764,7 @@ class AICoachService:
     user: User,
     session_id: str,
     db: Session
-    ) -> dict:
-
+) -> dict:
         try:
             print(f"🎬 Initiating session for user {user.id}, session {session_id}")
             
@@ -1780,11 +1779,34 @@ class AICoachService:
                     
                     print(f"📊 Found {len(existing_db_messages)} existing messages, {user_msg_count} from user")
                     
+                    # ✅ Check if last message is a greeting from assistant
+                    last_msg = existing_db_messages[-1]
+                    if hasattr(last_msg, 'role') and last_msg.role == "assistant":
+                        # Check if it's a greeting by looking for greeting keywords
+                        last_msg_text = last_msg.message.lower() if hasattr(last_msg, 'message') else ""
+                        
+                        greeting_keywords = [
+                            "welcome", "good to see you", "great to see you", 
+                            "nice to see you", "glad you're back", "you're back",
+                            "been away", "been a while", "good to have you",
+                            "pick up where", "continue where"
+                        ]
+                        
+                        is_greeting = any(keyword in last_msg_text for keyword in greeting_keywords)
+                        
+                        if is_greeting:
+                            print(f"⏭️ Last message is a greeting - no new greeting needed")
+                            return {
+                                "answer": None,
+                                "session_id": session_id,
+                                "is_new": False,
+                                "has_history": True,
+                                "instruction": "Load existing chat history - last message is already a greeting"
+                            }
+                    
                     # If user has already participated in conversation
                     if user_msg_count > 0:
                         # Check time since last message
-                        last_msg = existing_db_messages[-1]
-                        
                         if hasattr(last_msg, 'timestamp') and last_msg.timestamp:
                             from datetime import datetime, timezone, timedelta
                             
@@ -1800,7 +1822,7 @@ class AICoachService:
                             print(f"⏰ Time since last message: {hours_since_last:.1f} hours")
                             
                             # Only show greeting if more than 24 hours since last message
-                            if hours_since_last < 24:
+                            if hours_since_last < 0.001:
                                 print(f"⏭️ Recent activity ({hours_since_last:.1f}h ago) - no greeting needed")
                                 return {
                                     "answer": None,
@@ -1814,16 +1836,17 @@ class AICoachService:
                                 # Been more than 24 hours - generate welcome back greeting
                                 print(f"🔄 {hours_since_last:.1f} hours since last message - generating welcome back")
                                 
-                                welcome_prompt = f"""You are Ruby, an AI career coach. The user is returning after being away for {int(hours_since_last)} hours.
+                                welcome_prompt = f"""You are an AI career coach. The user is returning after being away for {int(hours_since_last)} hours.
 
     Last message in conversation: "{last_msg.message[:200] if hasattr(last_msg, 'message') else 'previous discussion'}"
 
     Generate a brief, warm welcome back message that:
-    1. Acknowledges they've been away
-    2. Asks if they want to continue or have something new to discuss
-    3. Is natural and conversational (1-2 sentences)
+    1. Does NOT introduce yourself or say your name
+    2. Acknowledges they've been away (if appropriate)
+    3. Asks if they want to continue or have something new to discuss
+    4. Is natural and conversational (1-2 sentences)
 
-    IMPORTANT: Write ONLY the greeting message. No labels, quotes, or formatting."""
+    IMPORTANT: Write ONLY the greeting message. No introduction, no "I'm Ruby", no labels, no quotes, no formatting."""
 
                                 client = self._get_azure_client()
                                 response = client.chat.completions.create(
@@ -1895,7 +1918,7 @@ class AICoachService:
                 print(f"⚠️ Could not load profile: {e}")
             
             # Generate first greeting
-            greeting_prompt = f"""You are Ruby, an AI career coach. A user just opened the chat.
+            greeting_prompt = f"""You are an AI career coach. A user just opened the chat.
 
     User profile summary:
     {profile_summary}
@@ -1905,13 +1928,14 @@ class AICoachService:
     - Has work experience: {user_context.get('has_experience', False)}
 
     Generate a warm, personalized greeting that:
-    1. Welcomes them naturally
-    2. Acknowledges what you know about them (if applicable)
-    3. Asks ONE clear, engaging question to start the conversation
+    1. Does NOT introduce yourself or say your name (no "I'm Ruby" or similar)
+    2. Welcomes them naturally
+    3. Acknowledges what you know about them (if applicable)
+    4. Asks ONE clear, engaging question to start the conversation
 
     Keep it brief (2-3 sentences). Be warm and conversational.
 
-    IMPORTANT: Write ONLY the greeting message. No labels, quotes, or formatting."""
+    IMPORTANT: Write ONLY the greeting message. No introduction, no name, no labels, no quotes, no formatting."""
 
             client = self._get_azure_client()
             response = client.chat.completions.create(
@@ -1950,8 +1974,8 @@ class AICoachService:
             import traceback
             traceback.print_exc()
             
-            # Fallback
-            fallback = "Hi! I'm Ruby, your career coach. What brings you here today?"
+            # Fallback (no introduction)
+            fallback = "Welcome! What brings you here today?"
             
             try:
                 save_message(db, user.id, session_id, "assistant", fallback)
