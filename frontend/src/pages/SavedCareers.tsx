@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiX, FiMenu} from "react-icons/fi";
+import { FiX, FiMenu } from "react-icons/fi";
 import BottomNav from "../components/BottomNav";
 import Sidebar from "../components/Sidebar";
 import ChatBubbleStatic from "../components/ChatBubbleStatic";
@@ -19,6 +19,9 @@ const SavedCareers: React.FC = () => {
   const [selectedCareer, setSelectedCareer] = useState<any | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // ✅ Get first name from localStorage key "first_name"
+  const firstName = localStorage.getItem("first_name") || "user";
 
   useEffect(() => {
     const fetchSaved = async () => {
@@ -58,7 +61,10 @@ const SavedCareers: React.FC = () => {
     <div className="mobile-frame saved-careers-page">
       {/* ✅ Header */}
       <div className="saved-header">
-        <FiX className="saved-header-icon left" onClick={() => navigate("/journey")} />
+        <FiX
+          className="saved-header-icon left"
+          onClick={() => navigate("/journey")}
+        />
         <h3 className="saved-header-title">Saved Careers</h3>
         <FiMenu
           className="saved-header-icon right"
@@ -69,7 +75,10 @@ const SavedCareers: React.FC = () => {
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <div className="saved-body">
-        <ChatBubbleStatic text="Hi user, this is where you'll find your saved careers." />
+        {/* ✅ Personalized greeting */}
+        <ChatBubbleStatic
+          text={`Hi ${firstName}, this is where you'll find your saved careers.`}
+        />
 
         <hr className="saved-divider" />
 
