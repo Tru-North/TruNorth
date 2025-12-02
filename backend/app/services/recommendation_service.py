@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 from datetime import datetime
 import json
 import re
@@ -247,7 +248,7 @@ def _responses_to_summary(responses: List[Dict[str, Any]]) -> Tuple[str, List[st
                     skills.add(t)
                     keywords_parts.append(t)
     summary = " | ".join(parts)[:4000]
-    keywords = " ".join(sorted(set(keywords_parts)))[:256] or "software data machine learning backend"
+    keywords = " ".join(sorted(set(keywords_parts)))[:256] or "career options transferable skills"
     return summary, sorted(skills), keywords
 
 
@@ -322,9 +323,18 @@ def _compose_user_summary(
         context_snippet = coach_context.strip()
         summary = f"{summary} | Coach Context: {context_snippet}" if summary else f"Coach Context: {context_snippet}"
 
-    search_hints = " ".join(chat_highlights)
+    # Extract themes from the summary to guide search hints
+    themes = _extract_summary_themes(qa_summary, limit=2)
+    
+    hints_parts = []
+    if themes:
+        hints_parts.extend(themes)
+    if chat_highlights:
+        hints_parts.extend(chat_highlights)
     if coach_context:
-        search_hints = f"{search_hints} {coach_context}".strip()
+        hints_parts.append(coach_context)
+        
+    search_hints = " ".join(hints_parts).strip()
 
     return summary, search_hints
 
@@ -758,17 +768,34 @@ def _cos_sim(a: List[float], b: List[float]) -> float:
     if na == 0 or nb == 0: return 0.0
     return dot/(na*nb)
 
-async def _build_profile_from_external(soc: str, title_hint: Optional[str]) -> Optional[Dict[str, Any]]:
-    """Build a single profile dict from O*NET plus Adzuna enrichment."""
-    # print(f"[DEBUG] Building profile for SOC: {soc}, title_hint: {title_hint}")
+async def _build_profile_from_external(db: Session, soc: str, title_hint: Optional[str]) -> Optional[Dict[str, Any]]:
+    """Build a single profile dict from DB cache or O*NET plus Adzuna enrichment."""
+    
+    # 1. Try to load from DB first
+    cached = db.query(CareerProfile).filter(CareerProfile.soc_code == soc).first()
+    if cached and cached.embedding and cached.salary_range:
+        # If we have a rich profile already, reuse it
+        return {
+            "soc_code": cached.soc_code,
+            "title": cached.title,
+            "description": cached.description,
+            "required_skills": cached.required_skills or [],
+            "preferred_skills": cached.preferred_skills or [],
+            "trajectory": cached.trajectory or [],
+            "salary_range": _normalize_salary_range(cached.salary_range),
+            "demand_indicator": _normalize_growth_trend(cached.demand_indicator),
+            "demand_indicator_short": cached.demand_indicator,
+            "industry_tag": _infer_industry_tag(cached.soc_code, cached.title),
+            "embedding": cached.embedding,
+            "text_for_embed": None,
+        }
+
+    # 2. Fallback to external APIs
     onet = await onet_get_details(soc)
     if not onet:
-        # print(f"[DEBUG] O*NET returned None for SOC: {soc}")
         return None
 
     title = onet["title"] or title_hint or soc
-    # print(f"[DEBUG] Retrieved title from O*NET: {title}")
-    # print(f"[DEBUG] FEATURE_ADZUNA = {FEATURE_ADZUNA}")
     description = onet.get("description", "") or ""
     skills = onet.get("skills", []) or []
 
@@ -799,8 +826,8 @@ async def _build_profile_from_external(soc: str, title_hint: Optional[str]) -> O
     short_trend = _shorten_growth_trend(trend)
 
     text_for_embed = f"{title}. {description}. skills: {', '.join(skills)}"
-    emb = (await embed_texts([text_for_embed]))[0]
-
+    
+    # Return without embedding yet - will be batched in generate()
     return {
         "soc_code": soc,
         "title": title,
@@ -812,7 +839,8 @@ async def _build_profile_from_external(soc: str, title_hint: Optional[str]) -> O
         "demand_indicator": trend,
         "demand_indicator_short": short_trend,
         "industry_tag": _infer_industry_tag(soc, title),
-        "embedding": emb,
+        "embedding": None,
+        "text_for_embed": text_for_embed,
     }
 
 def _maybe_cache_profile(db: Session, prof: Dict[str, Any]) -> Optional[int]:
@@ -1172,6 +1200,7 @@ async def generate(
     chat_highlights = _extract_chat_highlights(final_json)
     user_summary, search_hints = _compose_user_summary(user, qa_summary, chat_highlights, coach_context)
 
+    # 1) Combine keywords + hints
     if search_hints:
         search_keywords = f"{search_keywords} {search_hints}".strip()[:256]
     else:
@@ -1181,17 +1210,23 @@ async def generate(
         search_keywords = "career transition development"
 
     # 2) O*NET search → candidates (SOC + title)
-    # Request more candidates to ensure we have fresh ones even after filtering
-    candidates = await onet_search_occupations(search_keywords, limit=50)
+    # Reduced limit to 25
+    candidates = await onet_search_occupations(search_keywords, limit=25)
     if not candidates:
         return []
 
     # 3) Build profiles from external sources (and embed)
     _seen_ids, seen_socs, seen_titles = _get_seen_profile_keys(db, user_id)
     built: List[Dict[str, Any]] = []
+    
+    # Cap max profiles to process
+    max_profiles = max(top_k * 3, 15)
+    
     for c in candidates:
+        if len(built) >= max_profiles:
+            break
         try:
-            prof = await _build_profile_from_external(c["soc"], c["title"])
+            prof = await _build_profile_from_external(db, c["soc"], c["title"])
         except Exception:
             prof = None
         if prof:
@@ -1200,13 +1235,43 @@ async def generate(
     if not built:
         return []
 
-    # 4) Embed user once
-    user_vec = (await embed_texts([user_summary]))[0]
+    # 4) Batch Embeddings
+    # Collect all texts to embed: user_summary, coach_context (optional), and any profiles missing embeddings
+    texts_to_embed = [user_summary]
+    if coach_context:
+        texts_to_embed.append(coach_context)
+    
+    profiles_needing_embedding = []
+    for p in built:
+        if p.get("embedding") is None and p.get("text_for_embed"):
+            profiles_needing_embedding.append(p)
+            texts_to_embed.append(p["text_for_embed"])
+            
+    # Call embed_texts once
+    all_embeddings = await embed_texts(texts_to_embed)
+    
+    # Distribute embeddings back
+    user_vec = all_embeddings[0]
+    ctx_vec = None
+    next_idx = 1
+    
+    if coach_context:
+        ctx_vec = all_embeddings[1]
+        next_idx = 2
+        
+    for i, p in enumerate(profiles_needing_embedding):
+        p["embedding"] = all_embeddings[next_idx + i]
 
-    # 5) Score: cosine + keyword bonus
+    # 5) Score: cosine + keyword bonus + coach context
     ranked: List[Tuple[float, Dict[str, Any]]] = []
     for p in built:
-        base = _cos_sim(user_vec, p.get("embedding") or [])
+        p_vec = p.get("embedding") or []
+        base = _cos_sim(user_vec, p_vec)
+        
+        # Mix in coach context if available
+        if ctx_vec:
+            base = 0.7 * base + 0.3 * _cos_sim(ctx_vec, p_vec)
+            
         kw_bonus = 0.0
         for s in (p.get("required_skills") or []):
             if isinstance(s, str) and s.lower() in user_skills:
@@ -1215,64 +1280,118 @@ async def generate(
         ranked.append((fit, p))
     ranked.sort(key=lambda x: x[0], reverse=True)
 
-    # 6) Exclude anything the user has already seen or acted on, while keeping order
+    # 6) Filter & Enforce Diversity
     filtered: List[Tuple[float, Dict[str, Any]]] = []
     batch_socs: Set[str] = set()
     batch_titles: Set[str] = set()
+    batch_industries: Set[str] = set()
+    
     target = max(1, top_k)
+    
+    # First pass: prefer distinct industries
+    candidates_pool = []
     for raw_score, profile in ranked:
         title_key = profile["title"].strip().lower()
         soc_key = (profile.get("soc_code") or "").strip().lower()
+        
         if soc_key and (soc_key in seen_socs or soc_key in batch_socs):
             continue
         if title_key in seen_titles or title_key in batch_titles:
             continue
-        filtered.append((raw_score, profile))
+            
+        candidates_pool.append((raw_score, profile))
+
+    # Select diverse candidates
+    unique_industry_picks = []
+    remaining_picks = []
+    
+    for item in candidates_pool:
+        score, profile = item
+        industry = profile.get("industry_tag")
+        if industry not in batch_industries:
+            unique_industry_picks.append(item)
+            batch_industries.add(industry)
+        else:
+            remaining_picks.append(item)
+            
+    final_selection = unique_industry_picks[:target]
+    if len(final_selection) < target:
+        needed = target - len(final_selection)
+        final_selection.extend(remaining_picks[:needed])
+        
+    # Sort final selection by score again
+    final_selection.sort(key=lambda x: x[0], reverse=True)
+    
+    # Update batch tracking
+    for _, profile in final_selection:
+        title_key = profile["title"].strip().lower()
+        soc_key = (profile.get("soc_code") or "").strip().lower()
         if soc_key:
             batch_socs.add(soc_key)
             seen_socs.add(soc_key)
         batch_titles.add(title_key)
         seen_titles.add(title_key)
-        if len(filtered) >= target:
-            break
+        filtered.append((_, profile))
 
     # If we don't have enough fresh recommendations, search with broader terms
     if len(filtered) < target:
-        # Try broader career search terms
-        broader_searches = [
-            "professional career opportunities",
-            "skilled occupations employment",
-            "career development positions"
-        ]
+        # User-aware fallback terms
+        themes = _extract_summary_themes(qa_summary, limit=2)
+        broader_searches = []
+        
+        if themes:
+            broader_searches.append(f"{' '.join(themes)} career options")
+        if coach_context:
+            broader_searches.append(f"{coach_context} related jobs")
+            
+        broader_searches.append("transferable skills career options")
         
         for broader_term in broader_searches:
             if len(filtered) >= target:
                 break
                 
-            additional_candidates = await onet_search_occupations(broader_term, limit=30)
+            additional_candidates = await onet_search_occupations(broader_term, limit=25)
             additional_built = []
             
             for c in additional_candidates:
+                if len(additional_built) >= 10: # limit fallback processing
+                    break
                 try:
-                    prof = await _build_profile_from_external(c["soc"], c["title"])
+                    prof = await _build_profile_from_external(db, c["soc"], c["title"])
                 except Exception:
                     prof = None
                 if prof:
                     additional_built.append(prof)
             
+            # Batch embed additional
+            if additional_built:
+                add_texts = []
+                add_profs_needing = []
+                for p in additional_built:
+                    if p.get("embedding") is None and p.get("text_for_embed"):
+                        add_profs_needing.append(p)
+                        add_texts.append(p["text_for_embed"])
+                
+                if add_texts:
+                    add_embeddings = await embed_texts(add_texts)
+                    for i, p in enumerate(add_profs_needing):
+                        p["embedding"] = add_embeddings[i]
+
             # Score and filter additional candidates
             for p in additional_built:
                 title_key = p["title"].strip().lower()
                 soc_key = (p.get("soc_code") or "").strip().lower()
                 
-                # Skip if already seen or in current batch
                 if soc_key and (soc_key in seen_socs or soc_key in batch_socs):
                     continue
                 if title_key in seen_titles or title_key in batch_titles:
                     continue
                 
-                # Calculate fit score
-                base = _cos_sim(user_vec, p.get("embedding") or [])
+                p_vec = p.get("embedding") or []
+                base = _cos_sim(user_vec, p_vec)
+                if ctx_vec:
+                    base = 0.7 * base + 0.3 * _cos_sim(ctx_vec, p_vec)
+                    
                 kw_bonus = 0.0
                 for s in (p.get("required_skills") or []):
                     if isinstance(s, str) and s.lower() in user_skills:
@@ -1292,7 +1411,6 @@ async def generate(
         # Re-sort all filtered results by fit score
         filtered.sort(key=lambda x: x[0], reverse=True)
     
-    # If still no results after all attempts, return empty (edge case)
     if not filtered:
         return []
     
@@ -1309,14 +1427,24 @@ async def generate(
             return scale_min + (scale_span / 2.0)
         return scale_min + scale_span * ((score - mn) / (mx - mn))
 
-    # 7) Why-this-fits + normalize
+    # 7) Why-this-fits + normalize (Parallelized)
     results = []
     persist_entries: List[Dict[str, Any]] = []
-    for idx, (raw_fit, p) in enumerate(top_candidates, start=1):
+    
+    # Prepare tasks for parallel explanation generation
+    explanation_tasks = []
+    for raw_fit, p in top_candidates:
+        matched = [s for s in (p.get("required_skills") or []) if isinstance(s, str) and s.lower() in user_skills]
+        explanation_tasks.append(
+            _generate_explanation(p["title"], user_summary, matched[:10], coach_context)
+        )
+        
+    explanations = await asyncio.gather(*explanation_tasks)
+    
+    for idx, ((raw_fit, p), why) in enumerate(zip(top_candidates, explanations), start=1):
         fit = _rescale(raw_fit)
         matched = [s for s in (p.get("required_skills") or []) if isinstance(s, str) and s.lower() in user_skills]
-        why = await _generate_explanation(p["title"], user_summary, matched[:10], coach_context)
-
+        
         try:
             career_id = _maybe_cache_profile(db, p)
         except Exception:
@@ -1326,7 +1454,6 @@ async def generate(
         growth_trend = _normalize_growth_trend(growth_value)
         salary_range = _normalize_salary_range(p.get("salary_range"))
         
-        # Ensure salary is never null - provide fallback
         if not salary_range:
             salary_range = {
                 "min": 35000,

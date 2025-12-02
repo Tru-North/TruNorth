@@ -336,7 +336,7 @@
   background: transparent;
   color: #9d8bf9;
   border-radius: 24px;
-  font-size: 14px;
+  font-size: 18px;
   padding: 8px 26px;
   cursor: pointer;
   font-weight: 500;
@@ -348,18 +348,18 @@
   background: #9d8bf9;
   color: white;
   border-radius: 24px;
-  font-size: 14px;
+  font-size: 18px;
   padding: 8px 26px;
   cursor: pointer;
   font-weight: 600;
   transition: all 0.2s ease;
 }
 
-.explore-btn:hover,
+/* .explore-btn:hover,
 .decline-btn:hover {
   transform: scale(1.04);
   opacity: 0.9;
-}
+} */
 
 .career-card-footer-strip {
   width: 100%;
@@ -367,4 +367,13 @@
   background: #9d8bf9;         /* Purple */
   border-radius: 0 0 16px 16px; /* Fully rounded bottom edges */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18); /* Same shadow as screenshot */
+}
+
+
+.career-card-footer button {
+  width: 120px;        /* ✔ set same width for both */
+  height: 46px;        /* ✔ perfect pill shape */
+  padding: 0;          /* padding no longer controls width */
+  border-radius: 24px;
+  font-size: 18px;
 }

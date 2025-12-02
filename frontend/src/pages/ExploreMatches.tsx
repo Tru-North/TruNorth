@@ -4,7 +4,7 @@ import BottomNav from "../components/BottomNav";
 import Sidebar from "../components/Sidebar";
 import CareerPathCard from "../components/CareerPathCard";
 import ChatBubbleStatic from "../components/ChatBubbleStatic";
-import Loader from "../components/Loader"
+import Loader from "../components/Loader";
 import {
   getLatestRecommendations,
   generateRecommendations,
@@ -101,7 +101,15 @@ const ExploreMatches: React.FC = () => {
   const handleDismiss = async (id: number) => {
     try {
       await dismissRecommendation({ career_id: id });
-      setRecommendations((prev) => prev.filter((rec) => rec.id !== id));
+      // setRecommendations((prev) => prev.filter((rec) => rec.id !== id));
+      setRecommendations((prev) => {
+        const updated = prev.filter((rec) => rec.id !== id);
+        // FIX: prevent invalid index after deletion
+        if (currentIndex >= updated.length) {
+          setCurrentIndex(Math.max(updated.length - 1, 0));
+        }
+        return updated;
+      });
     } catch (err) {
       console.error("Error dismissing recommendation:", err);
     }
@@ -128,7 +136,12 @@ const ExploreMatches: React.FC = () => {
     }
   };
 
-  const currentCard = recommendations[currentIndex];
+  // const currentCard = recommendations[currentIndex];
+  // SAFETY: prevent crashes if index is invalid
+  const currentCard =
+    recommendations.length > 0 && currentIndex < recommendations.length
+      ? recommendations[currentIndex]
+      : null;
 
   return (
     <div
@@ -243,7 +256,7 @@ const ExploreMatches: React.FC = () => {
               </button>
             </div>
 
-          ) : (
+          ) : currentCard ? (
             <CareerPathCard
               card={{
                 id: currentCard.id!,
@@ -282,7 +295,7 @@ const ExploreMatches: React.FC = () => {
               onDismiss={handleDismiss}
               onExplore={handleExplore}
             />
-          )}
+          ) : null}
         </div>
 
         {/* Load More button */}

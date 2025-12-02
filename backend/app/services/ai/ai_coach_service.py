@@ -401,11 +401,16 @@ class AICoachService:
         # Heuristic: is the user replying to the specific "are you ready to explore your career paths?"
         from_unlock_prompt = False
         if last:
-            if (
+            # Check for various prompt styles
+            is_standard_prompt = (
                 "ready" in last
                 and "explore" in last
-                and any(word in last for word in ["career", "careers", "matches", "paths"])
-            ) or "unlock your career matches" in last:
+                and any(word in last for word in ["career", "careers", "matches", "paths", "jobs"])
+            )
+            is_unlock_prompt = "unlock your career matches" in last
+            is_soft_prompt = "show you some personalized career matches" in last or "explore your career matches" in last
+
+            if is_standard_prompt or is_unlock_prompt or is_soft_prompt:
                 from_unlock_prompt = True
 
         # Single-word/short affirmations
@@ -444,6 +449,10 @@ class AICoachService:
             return "yes"
         if re.search(r"\b(check|see|explore)\s+(possible\s+)?career\s+paths\b", t):
             return "yes"
+        # Catch "yes lets explore", "lets explore", "sure lets explore"
+        if re.search(r"\b(yes|yeah|sure|ok|okay)?\s*,?\s*let'?s\s+explore\b", t):
+            return "yes"
+
 
         if re.search(r"\bnot\s+ready\b", t) or "i'm not sure" in t or "im not sure" in t:
             return "unclear"
@@ -826,60 +835,8 @@ class AICoachService:
             except Exception as e:
                 print(f"⚠️ Could not load all messages for interval unlock detection: {e}")
 
-            # 1. Interval-based unlock prompt every 10 user messages, repeat every additional 10
-            if not is_unlocked and user_message_count >= 10 and (user_message_count % 10 == 0 or user_message_count % 10 == 1):
-                unlock_prompt_text = "Would you like to explore your career matches now? This will show you roles that fit your strengths and interests."
-                if not last_ai_message or unlock_prompt_text.lower() not in last_ai_message.lower():
-                    answer = unlock_prompt_text
-                    try:
-                        save_message(db, user.id, session_id, "assistant", answer)
-                    except ImportError:
-                        pass
-                    self._log_event({
-                        "type": "interval_unlock_prompt",
-                        "question": question,
-                        "answer": answer,
-                        "session_id": session_id,
-                        "user_id": user.id
-                    })
-                    return {
-                        "answer": answer,
-                        "session_id": session_id,
-                        "trigger_explore_unlock": False,
-                    }
+            # (Logic for interval/end-of-convo prompts moved to post-LLM generation)
 
-            # 2. End-of-conversation unlock prompt
-            end_phrases = [
-                "anything else you'd like to discuss",
-                "is there something specific you'd like to focus on",
-                "what should we talk about next",
-                "how would you like to proceed",
-                "is there anything else I can help with",
-                "what would you like to do next",
-                "should I ask something else",
-                "is there anything else",
-                "should I ask what you want",
-                "should I ask what it should be"
-            ]
-            if not is_unlocked and last_ai_message and any(phrase in last_ai_message.lower() for phrase in end_phrases):
-                unlock_prompt_text = "Before we wrap up, would you like to explore your career matches?"
-                answer = unlock_prompt_text
-                try:
-                    save_message(db, user.id, session_id, "assistant", answer)
-                except ImportError:
-                    pass
-                self._log_event({
-                    "type": "end_convo_unlock_prompt",
-                    "question": question,
-                    "answer": answer,
-                    "session_id": session_id,
-                    "user_id": user.id
-                })
-                return {
-                    "answer": answer,
-                    "session_id": session_id,
-                    "trigger_explore_unlock": False,
-                }
 
             # 3. Explicit intent detection (user says yes/no/unclear)
             if not is_unlocked:
@@ -966,6 +923,50 @@ class AICoachService:
         
         answer = response.choices[0].message.content.strip()
         
+        # ---------- Post-processing: Append unlock prompts if needed ----------
+        show_explore_matches_prompt = False
+        if user:
+            # 1. Interval-based unlock prompt
+            # Ensure variables are defined (they should be from the top `if user:` block)
+            if 'is_unlocked' in locals() and not is_unlocked and 'user_message_count' in locals() and user_message_count >= 10 and (user_message_count % 10 == 0 or user_message_count % 10 == 1):
+                unlock_prompt_text = "\n\nBy the way, would you like to explore your career matches now? I can show you some personalized roles based on what we’ve discussed."
+                if "explore" not in answer.lower() and "career matches" not in answer.lower():
+                    answer += unlock_prompt_text
+                    show_explore_matches_prompt = True
+                    self._log_event({
+                        "type": "interval_unlock_prompt_appended",
+                        "question": question,
+                        "answer": answer,
+                        "session_id": session_id,
+                        "user_id": user.id
+                    })
+
+            # 2. End-of-conversation unlock prompt
+            end_phrases = [
+                "anything else you'd like to discuss",
+                "is there something specific you'd like to focus on",
+                "what should we talk about next",
+                "how would you like to proceed",
+                "is there anything else I can help with",
+                "what would you like to do next",
+                "should I ask something else",
+                "is there anything else",
+                "should I ask what you want",
+                "should I ask what it should be"
+            ]
+            if 'is_unlocked' in locals() and not is_unlocked and any(phrase in answer.lower() for phrase in end_phrases):
+                 unlock_prompt_text = "\n\nBefore we wrap up, would you like to explore your career matches?"
+                 if "explore" not in answer.lower() and "career matches" not in answer.lower():
+                    answer += unlock_prompt_text
+                    show_explore_matches_prompt = True
+                    self._log_event({
+                        "type": "end_convo_unlock_prompt_appended",
+                        "question": question,
+                        "answer": answer,
+                        "session_id": session_id,
+                        "user_id": user.id
+                    })
+
         # Save assistant message
         if user:
             try:
@@ -984,7 +985,8 @@ class AICoachService:
         return {
             "answer": answer,
             "session_id": session_id,
-            "trigger_explore_unlock": False
+            "trigger_explore_unlock": False,
+            "show_explore_matches_prompt": show_explore_matches_prompt
         }
     
     async def text_to_speech(self, text: str, voice: Optional[str] = None) -> bytes:
@@ -1776,7 +1778,8 @@ class AICoachService:
     user: User,
     session_id: str,
     db: Session
-) -> dict:
+    ) -> dict:
+
         try:
             print(f"🎬 Initiating session for user {user.id}, session {session_id}")
             
@@ -1790,7 +1793,7 @@ class AICoachService:
                     user_msg_count = sum(1 for msg in existing_db_messages if hasattr(msg, 'role') and msg.role == "user")
                     
                     print(f"📊 Found {len(existing_db_messages)} existing messages, {user_msg_count} from user")
-                    
+
                     # ✅ Check if last message is a greeting from assistant
                     last_msg = existing_db_messages[-1]
                     if hasattr(last_msg, 'role') and last_msg.role == "assistant":
@@ -1815,7 +1818,7 @@ class AICoachService:
                                 "has_history": True,
                                 "instruction": "Load existing chat history - last message is already a greeting"
                             }
-                    
+
                     # If user has already participated in conversation
                     if user_msg_count > 0:
                         # Check time since last message
