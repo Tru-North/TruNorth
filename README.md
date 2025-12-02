@@ -4,50 +4,51 @@
 
 <h1 align="center">🧭 TruNorth — AI-Powered Career Navigation Platform</h1>
 
-TruNorth is a mobile-first AI career-guidance platform that helps individuals discover strengths, talk to an intelligent AI Coach, explore personalized career paths, and take action through guided micro-steps.  
-It combines conversational AI, structured inputs, recommendations, and a clear journey map.
+TruNorth is a mobile-first AI career-guidance platform that helps individuals discover strengths, interact with an intelligent AI Coach, explore personalized career paths, and take meaningful action through guided microsteps.  
+It blends conversational AI, structured inputs, recommendations, and a clear user journey.
 
 ---
 
 ## ⭐ Key Features
 
 ### **🧠 AI Career Coach (Text + Voice)**
-- Real-time text + voice interaction  
+- Real-time text + voice conversation  
 - Whisper STT + TTS playback  
 - Barge-in behavior and replay controls  
-- Uses questionnaire + chat history for personalization  
-- Seamless mode switching  
+- Personalized outputs using questionnaire + chat history  
+- Seamless text ↔ voice switching  
 
 ### **📝 Multi-Step Questionnaire**
-- Five structured sections  
-- Required + optional tabs  
-- Autosave and validation  
-- Unlocks the AI Coach upon completion  
+- 5 structured sections (first 2 required)  
+- Autosave  
+- Validation-driven flow  
+- Unlocks AI Coach upon completion  
 
 ### **🔍 Personalized Career Recommendations**
-- Embedding-based matching  
+- Embedding-driven matching  
 - Fit Score, Growth Trend, Salary Range  
+- “Why this fits you” explanation  
 - Favorite, dismiss, explore  
-- Horizontal card navigation  
 
 ### **🪜 Microstep Action System**
 - Career-specific guided actions  
-- Connect / Reflect / Explore tabs  
-- Progress tracking  
+- Connect / Reflect / Explore views  
+- Live progress tracking  
 - AI-generated summaries  
+- Completion animation  
 
 ### **🚀 Ready to Launch**
 - Final reflection  
 - Rating + review  
-- Summary of the journey  
-- Journey map updates to completion  
+- AI-generated journey summary  
+- Updates Journey Map to completion  
 
-### **🖥️ Admin Dashboard (Desktop-Only)**
-- Role-based admin login  
-- User table with search + sorting  
+### **🖥️ Admin Dashboard**
+- Secure admin login  
+- User list with search + sorting  
 - Full chat transcript viewer  
-- AI output editor, tags, comments, nudges  
-- All actions logged  
+- Editable AI outputs, tags, comments, nudges  
+- Audit logging for all admin actions  
 
 ---
 
@@ -57,17 +58,128 @@ It combines conversational AI, structured inputs, recommendations, and a clear j
   <img src="./frontend/src/assets/trunorth/system_architecture_design.png" width="100%" />
 </p>
 
-Architecture details are fully covered in the project documentation  
-:contentReference[oaicite:0]{index=0} :contentReference[oaicite:1]{index=1}
+### **Frontend**
+- React + Vite  
+- Shadcn/UI  
+- CSS  
+- Zustand  
+- Firebase Auth JS SDK  
+- WebSockets  
+- Mobile-first UI  
+
+### **Backend**
+- FastAPI (REST + WebSockets)  
+- Firebase token validation  
+- Questionnaire, Journey, Recommendation, Microsteps, AI Coach services  
+- AI orchestration layer  
+
+### **Databases**
+- PostgreSQL (AWS RDS) → structured data  
+- Pinecone → embeddings + semantic search  
+
+### **AI Layer**
+- GPT-4.x for reasoning  
+- LangChain + LangGraph  
+- Pinecone for retrieval  
+- AI scoring + recommendations  
+
+### **Voice Layer**
+- Whisper for Speech-to-Text  
+- TTS provider for voice responses  
+
+### **Auth**
+- Firebase Authentication  
+- Frontend retrieves token  
+- Backend verifies JWT  
+
+### **Hosting**
+- Frontend → Vercel  
+- Backend → Render  
+- Database → AWS RDS  
+- Vector DB → Pinecone Cloud  
 
 ---
 
 ## 🧠 AI Confidence Score
 
-The AI Confidence Score (ACS) shows how confidently the system can generate career recommendations for a user.
+The **AI Confidence Score (ACS)** measures how confidently TruNorth can generate accurate and personalized career recommendations.
 
-Milestones, weights, formulas, and normalization logic are defined in  
-:contentReference[oaicite:2]{index=2}
+### **Milestones & Weights**
+| Milestone | Weight |
+|----------|--------|
+| Questionnaire Quality | 20 |
+| AI Coach Interaction | 25 |
+| Recommendation Match Strength | 25 |
+| Microsteps & Actions | 20 |
+| Ready to Launch | 10 |
+
+### **Scoring Breakdown**
+
+#### **1. Questionnaire Score (0–20)**
+```
+
+completion_rate = answered_required / total_required
+completion_score = completion_rate * 12
+
+penalties =
++4 inconsistent answers
++3 vague responses
++5 contradictory inputs
+
+consistency_score = max(0, 8 - penalties)
+
+Final = completion_score + consistency_score
+
+```
+
+#### **2. AI Coach Interaction Score (0–25)**
+```
+
+base = 0
+if >=3 meaningful turns: +12
+if >=1 detailed answer: +8
+if on-topic: +5
+if drifting: -3
+
+```
+
+#### **3. Recommendation Match Strength (0–25)**
+```
+
+avg_similarity (0–1)
+RecommendationScore = avg_similarity * 25
+
+```
+
+#### **4. Microsteps & Actions (0–20)**
+```
+
+if started microstep: +10
+if saved any career: +6
+if low dismiss count: +4
+
+```
+
+#### **5. Ready to Launch (0–10)**
+```
+
+> =80% microsteps complete: +5
+> selected preferred path: +3
+> coach confirms readiness: +2
+
+```
+
+### **Final ACS Formula**
+```
+
+ActualScore = sum(completed milestone scores)
+PossibleScore = sum(weights of completed milestones)
+
+AIConfidence = floor((ActualScore / PossibleScore) * 100)
+
+```
+
+This ensures users are **not penalized** for milestones they haven’t reached yet.
 
 ---
 
@@ -119,43 +231,6 @@ trunorth/
 
 ---
 
-## 🏗 Tech Stack Summary
-
-Based on the detailed breakdown in the uploaded documentation  
-:contentReference[oaicite:3]{index=3}
-
-### **Frontend**
-- React + Vite  
-- CSS + Shadcn/UI  
-- Zustand  
-- WebSockets  
-
-### **Backend**
-- Python  
-- FastAPI (REST + WebSockets)  
-- SQLAlchemy ORM  
-
-### **Databases**
-- PostgreSQL (AWS RDS)  
-- Pinecone (embeddings)  
-
-### **AI**
-- OpenAI GPT-4.x  
-- Whisper STT + TTS  
-- LangChain + LangGraph  
-
-### **Auth**
-- Firebase Authentication  
-- JWT validation  
-
-### **Deployment**
-- Frontend → Vercel  
-- Backend → Render  
-- DB → AWS RDS  
-- Pinecone Cloud  
-
----
-
 ## 🛠 Local Development Setup
 
 ### **1. Clone**
@@ -185,13 +260,12 @@ uvicorn app.main:app --reload
 ```
 
 ### **4. Environment Variables**
-Copy:
+Copy template:
 ```
 
 cp .env.example .env
 
 ```
-
 Set:
 - Firebase config  
 - PostgreSQL URI  
@@ -203,19 +277,20 @@ Set:
 
 ## 🌐 Deployment
 
-### **Frontend → Vercel**
+### **Frontend — Vercel**
 - Auto deploy on push  
-- Env vars managed in dashboard  
+- Environment variables via dashboard  
 
-### **Backend → Render**
-- FastAPI server with Uvicorn/Gunicorn  
-- Env vars managed in dashboard  
+### **Backend — Render**
+- FastAPI with Uvicorn/Gunicorn  
+- Environment variables in dashboard  
 
-### **Database → AWS RDS**
+### **Database — AWS RDS**
 - PostgreSQL instance  
 
-### **Vector DB → Pinecone**
-- Index per environment  
+### **Vector DB — Pinecone**
+- Stores embeddings  
+- Used for retrieval + scoring  
 
 ---
 
@@ -225,6 +300,6 @@ Set:
 2. Create a feature branch  
 3. Follow ESLint/Prettier + Ruff/MyPy  
 4. Add tests  
-5. Open a PR  
+5. Open a pull request  
 
 Contributions welcome.
