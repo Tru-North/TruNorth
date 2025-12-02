@@ -68,6 +68,19 @@ class AIConfidenceService:
     # -----------------------------
     # 3. M3: Recommendation Match
     # -----------------------------
+    # def compute_recommendation_score(self, db: Session, user_id: int) -> int:
+    #     recs = db.query(UserCareerRecommendation).filter(
+    #         UserCareerRecommendation.user_id == user_id
+    #     ).order_by(UserCareerRecommendation.rank.asc()).limit(3).all()
+
+    #     if not recs:
+    #         return 0
+
+    #     # sims = [rec.similarity or 0 for rec in recs]
+    #     sims = [rec.fit_score or 0 for rec in recs]
+    #     avg_sim = sum(sims) / len(sims)
+    #     return int(avg_sim * 25)
+
     def compute_recommendation_score(self, db: Session, user_id: int) -> int:
         recs = db.query(UserCareerRecommendation).filter(
             UserCareerRecommendation.user_id == user_id
@@ -76,9 +89,25 @@ class AIConfidenceService:
         if not recs:
             return 0
 
-        sims = [rec.similarity or 0 for rec in recs]
-        avg_sim = sum(sims) / len(sims)
-        return int(avg_sim * 25)
+        sims = [rec.fit_score or 0 for rec in recs]
+        avg = sum(sims) / len(sims)
+
+        # --- NORMALIZATION LOGIC ---
+        if avg <= 1:
+            # case: model returned 0–1
+            norm = avg * 25
+        elif avg <= 25:
+            # case: model returned 0–25
+            norm = avg
+        elif avg <= 100:
+            # case: model returned 0–100
+            norm = avg / 4
+        else:
+            # case: corrupted / old values
+            norm = min(avg / 10, 25)
+
+        return int(norm)
+
 
     # -----------------------------
     # 4. M4: Microsteps & Actions
@@ -89,12 +118,12 @@ class AIConfidenceService:
         ).all()
 
         score = 0
-        if any(a.action_type == "started_microstep" for a in actions):
+        if any(a.action == "action_taken" for a in actions):
             score += 10
-        if any(a.action_type == "saved" for a in actions):
+        if any(a.action == "saved" for a in actions):
             score += 6
 
-        dismiss_count = len([a for a in actions if a.action_type == "dismissed"])
+        dismiss_count = len([a for a in actions if a.action == "dismissed"])
         if dismiss_count < 3:
             score += 4
 
