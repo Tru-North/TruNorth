@@ -294,6 +294,40 @@ Set:
 
 ---
 
+## 👥 Team
+
+### **⭐ Lead Product Manager**
+
+* **Sarah Verducci** — [LinkedIn](https://www.linkedin.com/in/sarah-verducci-68196721/)
+
+### **📌 Product Managers**
+
+* **Julian Abam** — [LinkedIn](https://www.linkedin.com/in/julian-abam-617387156/)
+* **Rosie** — [LinkedIn](https://www.linkedin.com/in/spotlessng)
+* **Tanisha** — *(LinkedIn not provided)*
+
+### **💻 Lead Software Engineer**
+
+* **Aishwarya Bhargava** — [LinkedIn](https://www.linkedin.com/in/aishwarya-bhargava05/)
+
+### **🧑‍💻 Software Engineers**
+
+* **Abdullah Khaled** — [LinkedIn](https://www.linkedin.com/in/abdullah-khaled-8626a0314)
+* **Chaitanya Erukula** — [LinkedIn](https://www.linkedin.com/in/erukula-chaitanya-00787833b)
+* **Tushar Gwal** — [LinkedIn](https://www.linkedin.com/in/tushargwal)
+* **Vansh Patel** — [LinkedIn](https://www.linkedin.com/in/patel-vansh)
+
+### **🎨 Lead Designer**
+
+* **Muhammad Azal** — [LinkedIn](https://www.linkedin.com/in/muhammad-azal)
+
+### **🎨 Designers**
+
+* **Williams Olamide** — [LinkedIn](https://www.linkedin.com/in/olamide-williams-061bb72b4)
+* **Lily Shaker** — [LinkedIn](https://www.linkedin.com/in/lilyshaker)
+
+---
+
 ## 🤝 Contributing
 
 1. Fork the repo  
